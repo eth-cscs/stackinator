@@ -1,0 +1,53 @@
+-include ../Make.user
+
+MAKEFLAGS += --output-sync=recurse
+
+.PHONY: all .locks
+
+all:{% for compiler in compilers %} {{ compiler }}/env {% endfor %}
+
+# Make sure spack.lock files are never removed as intermediate files...
+.locks:{% for compiler in compilers %} {{ compiler }}/spack.lock{% endfor %}
+
+# Configure the install location.
+{% for compiler in compilers %}{{ compiler }}/config.yaml {% endfor %}: | store
+	$(SPACK) config --scope=user add config:install_tree:root:$(STORE)
+
+# Configure external system dependencies for each compiler toolchain
+{% for compiler, config in compilers.items() %}
+{%- if config.external -%}
+{{ compiler }}/packages.yaml:
+	$(SPACK) external find --scope=user {% for package in config.external %} {{package}} {% endfor %}
+{% endif %}
+{% endfor -%}
+
+# Configure dependencies between compilers
+{%- for config in requirements %}
+{%- if config.upstream -%}
+{{ config.compiler }}/compilers.yaml: {{ config.upstream.name }}/generated/env
+	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK) -e ./{{ config.upstream.name }} find --format '{prefix}' {{ config.upstream.spec }}))
+{% endif %}
+{% endfor -%}
+
+include ../Make.inc
+
+# GNU Make isn't very smart about dependencies across included Makefiles, so we
+# specify the order here by conditionally including them, when the dependent exists.
+ifeq (,$(filter clean,$(MAKECMDGOALS)))
+
+{% for config in requirements -%}
+{% if not config.upstream -%}
+include {{ config.compiler }}/Makefile
+{% endif -%}
+{% endfor %}
+
+{% for config in requirements -%}
+{% if config.upstream %}
+ifneq (,$(wildcard {{ config.upstream.name }}/Makefile))
+include {{ config.compiler }}/Makefile
+endif
+{% endif -%}
+{% endfor %}
+
+endif
+

@@ -1,0 +1,54 @@
+# vim: filetype=make
+
+# Copy this file to Make.user and set some variables.
+
+# This is the root of the software stack directory.
+SOFTWARE_STACK_PROJECT := {{ config.build_path }}
+
+# What Spack should we use?
+SPACK := spack
+
+# The Spack installation root.
+STORE := {{ config.store }}
+
+# When already building inside a sandbox, use `SANDBOX :=` (empty string)
+# Without a sandbox, make sure to hide sensitive data such as ~/.ssh through bubblewrap.
+# Also bind the directories `./tmp -> /tmp` and `./store -> $(STORE)`, so that
+# builds and installs happen inside the current directory. For speed, either
+# put the project itself in-memory, or use a flag like --bind /dev/shm/store
+# $(STORE). Use `bwrap-mutable-root.sh` in case you need to create a new
+# directory at the root /.
+SANDBOX := $(SOFTWARE_STACK_PROJECT)/bwrap-mutable-root.sh $\
+	--tmpfs ~ $\
+	--bind $(SOFTWARE_STACK_PROJECT)/tmp /tmp $\
+	--bind $(SOFTWARE_STACK_PROJECT)/store $(STORE)
+
+# Makes sure that make -Orecurse continues to print in color.
+export SPACK_COLOR := always
+
+# Do not use user config, cause more often than not you pick up the wrong
+# config files in ~/.spack. Note that our recommended bwrap setup already puts
+# a tmpfs in the home folder, but when bwrap isn't used, this also helps a bit
+# with reproducibility.
+export SPACK_USER_CONFIG_PATH := /dev/null
+
+# Set up the system config scope that has the system packages we don't want
+# build, for example slurm, pmix, etc. Also should have the system compiler.
+export SPACK_SYSTEM_CONFIG_PATH := $(SOFTWARE_STACK_PROJECT)/config
+
+# Put clingo and friends here...
+export SPACK_USER_CACHE_PATH := $(SOFTWARE_STACK_PROJECT)/cache
+
+# Output the full build log to stdout.
+{% if config.verbose %}
+export SPACK_INSTALL_FLAGS := --verbose
+{% endif %}
+
+# Reproducibility
+export LC_ALL := C
+export TZ := UTC
+
+# I tried UNIX epoch 0 here, but it results in build errors with Python
+# packages using wheels, since they rely on zipfiles, and zipfiles can only
+# handle DOS epoch, which is the magic number below (1980-01-01).
+export SOURCE_DATE_EPOCH := 315576060
