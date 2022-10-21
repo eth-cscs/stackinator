@@ -1,0 +1,6 @@
+name: host-example
+store: '/user-environment'
+system: 'balfrin'
+spack:
+    repo: https://github.com/spack/spack.git
+    commit: 1e4732d

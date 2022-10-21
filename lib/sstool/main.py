@@ -2,6 +2,7 @@ import argparse
 import os
 import os.path
 import shutil
+import subprocess
 import sys
 
 import jinja2
@@ -23,6 +24,7 @@ def make_argparser():
 class Recipe:
     path = ''
     compilers = {}
+    config = {}
 
     def __init__(self, args):
         path = args.recipe
@@ -38,6 +40,12 @@ class Recipe:
         with open(compiler_path) as fid:
             raw_compilers = yaml.load(fid, Loader=yaml.Loader)
             self.compilers = raw_compilers['compilers']
+
+        config_path = os.path.join(path, 'config.yaml')
+        if not os.path.isfile(config_path):
+            raise FileNotFoundError('The recipe path \'{path}\' does not contain compilers.yaml'.format(path=config_path))
+        with open(config_path) as fid:
+            self.config = yaml.load(fid, Loader=yaml.Loader)
 
     def generate_compilers(self):
         # TODO tests for validity
@@ -94,6 +102,8 @@ class Build:
 
     def generate(self, recipe):
         os.makedirs(self.path, exist_ok=True)
+        os.makedirs(os.path.join(self.path, 'store'), exist_ok=True)
+        os.makedirs(os.path.join(self.path, 'tmp'), exist_ok=True)
 
         template_path = os.path.join(tool_prefix, 'templates')
         env = jinja2.Environment(
@@ -103,13 +113,30 @@ class Build:
         # generate top level makefiles
         make_user_template = env.get_template('make.user.jinja2')
         with open(os.path.join(self.path, 'Make.user'), 'w') as f:
-            f.write(make_user_template.render(build_path=self.path, store='/user-environment', verbose=False))
+            f.write(make_user_template.render(build_path=self.path, store=recipe.config['store'], verbose=False))
             f.write('\n')
             f.close()
 
         etc_path = os.path.join(tool_prefix, 'etc')
-        for f in ['Makefile', 'Make.inc']:
+        for f in ['Makefile', 'Make.inc', 'bwrap-mutable-root.sh']:
             shutil.copy2(os.path.join(etc_path, f), os.path.join(self.path, f))
+
+        # generate the system configuration
+        config_path = os.path.join(self.path, 'config')
+        os.makedirs(config_path, exist_ok=True)
+        system = recipe.config['system']
+        system_configs_path = os.path.join(os.path.join( os.path.join(tool_prefix, 'share'), 'cluster-config'), system)
+        if not os.path.isdir(system_configs_path):
+            raise RuntimeError('the system name {0} does not match any known system configuration'.format(system))
+
+
+        for f in os.listdir(system_configs_path):
+            # construct full file path
+            src = os.path.join(system_configs_path, f)
+            dst = os.path.join(config_path, f)
+            # copy only files
+            if os.path.isfile(src):
+                shutil.copy(src, dst)
 
         # generate the makefile and spack.yaml files that describe the compilers
         compilers = recipe.generate_compilers()
@@ -126,8 +153,22 @@ class Build:
                 f.write(yaml)
                 f.close()
 
+        # check out the version of spack
+        spack = recipe.config['spack']
+        spack_path = os.path.join(self.path, 'spack')
+        # clone the repository if the repos has not already been checked out
+        if not os.path.isdir(os.path.join(spack_path, '.git')):
+            return_code = subprocess.call(["git", "clone", spack['repo'], spack_path], shell=False)
+            if return_code != 0:
+                raise RuntimeError('error cloning the repository {0}'.format(spack['repo']))
+        return_code = subprocess.call(["git", "-C", spack_path, "checkout", spack['commit']], shell=False)
+        if return_code != 0:
+            raise RuntimeError('unable to change to the requested commit {0}'.format(spack['commit']))
+
 def main(prefix):
+    global tool_prefix
     tool_prefix = prefix
+
     try:
         parser = make_argparser()
         args = parser.parse_args()

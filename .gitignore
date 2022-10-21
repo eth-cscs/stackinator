@@ -2,3 +2,6 @@
 work
 
 __pycache__
+
+# vim working files
+.*.sw[opnq]
