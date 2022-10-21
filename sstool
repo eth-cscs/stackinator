@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/usr/bin/python3
 
 import os
 import os.path
@@ -7,9 +7,12 @@ import sys
 # Find this tool's location and prefix.
 tool_file = os.path.realpath(os.path.expanduser(__file__))
 tool_prefix = os.path.dirname(tool_file)
-tool_lib_path = os.path.join(tool_prefix, "lib")
 
+tool_lib_path = os.path.join(tool_prefix, "lib")
 sys.path.insert(0, tool_lib_path)
+
+external_lib_path = os.path.join(tool_lib_path, "external")
+sys.path.insert(0, external_lib_path)
 
 import sstool.main
 
