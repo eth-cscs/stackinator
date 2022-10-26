@@ -21,6 +21,15 @@ def make_argparser():
     parser.add_argument('-d', '--debug', action='store_true')
     return parser
 
+def validate_recipe_config(config):
+    print(config)
+    # TODO: create config error type
+    if "target" not in config.keys():
+        raise FileNotFoundError('config.yaml: missing target')
+    if config["target"] not in ["zen3", "zen3-a100", "zen3-mi200"]:
+        raise FileNotFoundError('config.yaml: invalid target "{0}"'.format(config["target"]))
+    return config
+
 class Recipe:
     path = ''
     compilers = {}
@@ -45,7 +54,7 @@ class Recipe:
         if not os.path.isfile(config_path):
             raise FileNotFoundError('The recipe path \'{path}\' does not contain compilers.yaml'.format(path=config_path))
         with open(config_path) as fid:
-            self.config = yaml.load(fid, Loader=yaml.Loader)
+            self.config = validate_recipe_config(yaml.load(fid, Loader=yaml.Loader))
 
     def generate_compilers(self):
         # TODO tests for validity

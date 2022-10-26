@@ -12,8 +12,10 @@ spack:
   view: false
   concretizer:
     unify: true
+{% if config.variants %}
   packages:
 {% for target, variant in config.variants.items() %}
     {{ target }}:
       variants: {{ variant }}
 {% endfor %}
+{% endif %}

@@ -1,34 +1,12 @@
 compilers:
   bootstrap:
-    specs:
-    - gcc@11 languages=c,c++
-    - squashfs default_compression=zstd
-    variants:
-      gcc: [build_type=Release ~bootstrap +strip]
-      mpc: [libs=static]
-      gmp: [libs=static]
-      mpfr: [libs=static]
-      zstd: [libs=static]
-      zlib: [~shared]
-    external: [perl, m4, autoconf, automake, libtool, gawk, python]
-  gcc:
-    requires:
-      bootstrap: gcc@11
-    specs:
     - gcc@11
-    variants:
-      gcc: [build_type=Release +strip] #[build_type=Release +profiled +strip]
-      mpc: [libs=static]
-      gmp: [libs=static]
-      mpfr: [libs=static]
-      zstd: [libs=static]
-      zlib: [~shared]
-    external: [perl, m4, autoconf, automake, libtool, gawk, python]
+  gcc:
+    - gcc@11
+    - gcc@12
   llvm:
     requires:
       gcc: gcc@11
     specs:
     - nvhpc~blas~lapack~mpi
     - llvm@14
-    variants:
-      llvm: [+clang targets=x86,nvptx ~gold ^ninja@kitware]
