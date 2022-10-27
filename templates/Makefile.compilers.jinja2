@@ -4,7 +4,7 @@ MAKEFLAGS += --output-sync=recurse
 
 .PHONY: all .locks
 
-all:{% for compiler in compilers %} {{ compiler }}/env {% endfor %}
+all:{% for compiler in compilers %} {{ compiler }}/generated/env{% endfor %}
 
 
 # Make sure spack.lock files are never removed as intermediate files...
@@ -19,7 +19,7 @@ all:{% for compiler in compilers %} {{ compiler }}/env {% endfor %}
 {% for compiler, config in compilers.items() %}
 {% if config.external %}
 {{ compiler }}/packages.yaml:
-	$(SPACK) external find --scope=user {% for package in config.external %} {{package}} {% endfor %}
+	$(SPACK) external find --scope=user {% for package in config.external %} {{package}}{% endfor %}
 
 
 {% endif %}
