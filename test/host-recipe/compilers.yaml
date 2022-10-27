@@ -24,9 +24,11 @@ compilers:
       zstd: [libs=static]
       zlib: [~shared]
     external: [perl, m4, autoconf, automake, libtool, gawk, python]
-# llvm:
-#   requires:
-#     gcc: gcc@11
-#   specs:
+  llvm:
+    requires:
+      gcc: gcc@11
+    specs:
+    - llvm@14 +clang targets=x86 ~gold ^ninja@kitware
+
 #   - nvhpc~blas~lapack~mpi
-#   - llvm@14 +clang targets=x86,nvptx ~gold ^ninja@kitware
+#  - llvm@14 +clang targets=x86,nvptx ~gold ^ninja@kitware

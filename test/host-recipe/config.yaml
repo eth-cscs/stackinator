@@ -5,4 +5,4 @@ system: 'balfrin'
 target: zen3
 spack:
     repo: https://github.com/spack/spack.git
-    commit: 1e4732d
+    commit: 6408b51
