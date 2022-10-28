@@ -2,13 +2,17 @@
 
 MAKEFLAGS += --output-sync=recurse
 
-.PHONY: all .locks
+.PHONY: all .locks .packages.yaml
 
 all:{% for compiler in compilers %} {{ compiler }}/generated/env{% endfor %}
 
 
 # Make sure spack.lock files are never removed as intermediate files...
 .locks:{% for compiler in compilers %} {{ compiler }}/spack.lock{% endfor %}
+
+
+# Make sure package yaml files are never removed as intermediate files...
+.packages.yaml:{% for compiler in compilers %} {{ compiler }}/packages.yaml{% endfor %}
 
 
 # Configure the install location.
