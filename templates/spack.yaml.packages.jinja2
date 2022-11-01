@@ -1,0 +1,14 @@
+spack:
+  include:
+  - compilers.yaml
+  - config.yaml
+  view: false
+  concretizer:
+    unify: {{ config.unify }}
+  specs:
+{% for spec in config.specs %}
+  - {{ spec }}
+{% endfor %}
+  packages:
+    all:
+      compiler: [{{ config.compiler }}]

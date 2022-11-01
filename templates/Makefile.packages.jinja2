@@ -1,0 +1,36 @@
+-include ../Make.user
+
+MAKEFLAGS += --output-sync=recurse
+
+# TODO: create these prefixes
+{% for prefix in prefixes %}
+{{ prefix.name }} = $$($(SPACK) -e {{ prefix.path }} find --format '{prefix}' {{ prefix.spec }})
+{% endfor %}
+#GCC_PREFIX = $$($(SPACK) -e ../compilers/2-gcc find --format '{prefix}' gcc@11)
+#NVHPC_PREFIX = $$($(SPACK) -e ../compilers/3-llvm find --format '{prefix}' nvhpc)
+
+.PHONY: all .locks
+
+all:{% for env in environments %} {{ env }}/generated/env{% endfor %}
+
+
+# Make sure spack.lock files are never removed as intermediate files...
+.locks:{% for env in environments %} {{ env }}/spack.lock{% endfor %}
+
+{% for env in environments %}{{ env }}/config.yaml {% endfor %}: | store
+	$(SPACK) config --scope=user add config:install_tree:root:$(STORE)
+
+# TODO: create the compiler files
+gcc/compilers.yaml:
+	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $(GCC_PREFIX))
+
+tools/compilers.yaml:
+	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $(GCC_PREFIX))
+
+-include ../Make.inc
+
+ifeq (,$(filter clean,$(MAKECMDGOALS)))
+{% for env in environments %}
+include {{ env }}/Makefile
+{% endfor %}
+endif
