@@ -1,13 +1,17 @@
 packages:
     gcc-env:
-      compiler: gcc@11.3.0
+      compiler:
+          toolchain: gcc
+          spec: gcc@11.3.0
       unify: true
       specs:
       - cray-mpich-binary
       - osu-micro-benchmarks@5.9
       - hdf5 +mpi ^cray-mpich-binary
     tools:
-      compiler: gcc@11.3.0
+      compiler:
+          toolchain: gcc
+          spec: gcc@11.3.0
       unify: true
       specs:
       - cmake

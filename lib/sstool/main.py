@@ -66,6 +66,16 @@ class Recipe:
         with open(config_path) as fid:
             self.config = validate_recipe_config(yaml.load(fid, Loader=yaml.Loader))
 
+        modules_path = os.path.join(path, 'modules.yaml')
+        if not os.path.isfile(modules_path):
+            modules_path = os.path.join(args.build, 'spack/etc/spack/defaults/modules.yaml')
+        self.modules = modules_path
+
+    def generate_modules(self):
+        with open(self.modules) as fid:
+            raw = yaml.load(fid, Loader=yaml.Loader)
+            raw['modules']['default']['roots']['tcl'] = os.path.join(self.config['store'], 'modules')
+            return yaml.dump(raw)
 
     def generate_compilers(self):
         # TODO tests for validity
@@ -73,7 +83,6 @@ class Recipe:
         #   - at least one compiler must have no upstream (typically bootstrap/1-gcc)
         #   - each compiler is only allowed to have one upstream requirements
         #   - the requires statements must form a tree (should be fulfilled if the first two are met)
-
         files = {}
 
         # generate compilers/Makefile
@@ -110,24 +119,15 @@ class Recipe:
                 loader = jinja2.FileSystemLoader(template_path),
                 trim_blocks=True, lstrip_blocks=True)
 
-        print(self.packages)
         makefile_template = jenv.get_template('Makefile.packages.jinja2')
         files['makefile'] = makefile_template.render(compilers=self.compilers, environments=self.packages)
-        print(files['makefile'])
-
-        print('------------------------------------------------------------------')
-        print(self.packages)
-        print('------------------------------------------------------------------')
 
         files['config'] = {}
         for env, config in self.packages.items():
             spack_yaml_template = jenv.get_template('spack.yaml.packages.jinja2')
             files['config'][env] = spack_yaml_template.render(config=config)
-            print(files['config'][env])
-            print('------------------------------------------------------------------')
 
         return files
-
 
 class Build:
     # The path where the project is to be created
@@ -146,13 +146,19 @@ class Build:
         self.path = path
 
     def generate(self, recipe):
+        # make the paths
+        store_path = os.path.join(self.path, 'store')
+        tmp_path = os.path.join(self.path, 'tmp')
+
         os.makedirs(self.path, exist_ok=True)
-        os.makedirs(os.path.join(self.path, 'store'), exist_ok=True)
-        os.makedirs(os.path.join(self.path, 'tmp'), exist_ok=True)
+        os.makedirs(store_path, exist_ok=True)
+        os.makedirs(tmp_path, exist_ok=True)
 
         # check out the version of spack
+
         spack = recipe.config['spack']
         spack_path = os.path.join(self.path, 'spack')
+
         # clone the repository if the repos has not already been checked out
         if not os.path.isdir(os.path.join(spack_path, '.git')):
             return_code = subprocess.call(["git", "clone", spack['repo'], spack_path], shell=False)
@@ -162,6 +168,13 @@ class Build:
         if return_code != 0:
             raise RuntimeError('unable to change to the requested commit {0}'.format(spack['commit']))
 
+        # patch in the cray-mpich-binary package to spack
+        mpi_pkg_path = os.path.join(spack_path, 'var/spack/repos/builtin/packages/cray-mpich-binary')
+        mpi_pkg_src = os.path.join(tool_prefix, 'etc/cray-mpich-binary-package.py')
+        os.makedirs(mpi_pkg_path, exist_ok=True)
+        shutil.copy(mpi_pkg_src, os.path.join(mpi_pkg_path, 'package.py'))
+
+        # load the jinja templating environment
         template_path = os.path.join(tool_prefix, 'templates')
         env = jinja2.Environment(
                 loader = jinja2.FileSystemLoader(template_path),
@@ -217,7 +230,6 @@ class Build:
             f.write(packages['makefile'])
             f.close()
 
-
         for name, yaml in packages['config'].items():
             pkg_config_path = os.path.join(package_path, name)
             os.makedirs(pkg_config_path, exist_ok=True)
@@ -225,14 +237,26 @@ class Build:
                 f.write(yaml)
                 f.close()
 
+        #
         # generate the makefile that generates the configuration for the spack installation
+        #
         make_config_template = env.get_template('Makefile.generate-config.jinja2')
         generate_config_path = os.path.join(self.path, 'generate-config')
         os.makedirs(generate_config_path, exist_ok=True)
+
+        # write the modules.yaml file
+        modules_yaml=recipe.generate_modules()
+        with open(os.path.join(generate_config_path, 'modules.yaml'), 'w') as f:
+            f.write(modules_yaml)
+            f.close()
+
+        # write the Makefile
         compiler_names=[x for x in recipe.compilers.keys() if x!="bootstrap"]
         with open(os.path.join(generate_config_path, 'Makefile'), 'w') as f:
-            f.write(make_config_template.render(build_path=self.path, compilers=compiler_names, verbose=False))
-            f.write('\n')
+            f.write(make_config_template.render(
+                build_path=self.path,
+                compilers=compiler_names,
+                verbose=False))
             f.close()
 
 def main(prefix):

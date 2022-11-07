@@ -2,13 +2,6 @@
 
 MAKEFLAGS += --output-sync=recurse
 
-# TODO: create these prefixes
-{% for prefix in prefixes %}
-{{ prefix.name }} = $$($(SPACK) -e {{ prefix.path }} find --format '{prefix}' {{ prefix.spec }})
-{% endfor %}
-#GCC_PREFIX = $$($(SPACK) -e ../compilers/2-gcc find --format '{prefix}' gcc@11)
-#NVHPC_PREFIX = $$($(SPACK) -e ../compilers/3-llvm find --format '{prefix}' nvhpc)
-
 .PHONY: all .locks
 
 all:{% for env in environments %} {{ env }}/generated/env{% endfor %}
@@ -20,12 +13,13 @@ all:{% for env in environments %} {{ env }}/generated/env{% endfor %}
 {% for env in environments %}{{ env }}/config.yaml {% endfor %}: | store
 	$(SPACK) config --scope=user add config:install_tree:root:$(STORE)
 
-# TODO: create the compiler files
-gcc/compilers.yaml:
-	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $(GCC_PREFIX))
+# create the compiler files
+{% for env, config in environments.items() %}
+{{ env }}_PREFIX = $$($(SPACK) -e ../compilers/{{ config.compiler.toolchain }} find --format '{prefix}' {{ config.compiler.spec }})
+{{ env }}/compilers.yaml:
+	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $({{ env }}_PREFIX))
 
-tools/compilers.yaml:
-	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $(GCC_PREFIX))
+{% endfor %}
 
 -include ../Make.inc
 
@@ -34,3 +28,4 @@ ifeq (,$(filter clean,$(MAKECMDGOALS)))
 include {{ env }}/Makefile
 {% endfor %}
 endif
+
