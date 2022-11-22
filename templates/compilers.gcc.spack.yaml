@@ -1,0 +1,25 @@
+spack:
+  include:
+  - packages.yaml
+  - config.yaml
+  - compilers.yaml
+  specs:
+{% for spec in config.specs %}
+  - {{ spec }}
+{% endfor %}
+  view: false
+  concretizer:
+    unify: true
+  packages:
+    gcc:
+      variants: [build_type=Release +strip]
+    mpc:
+      variants: [libs=static]
+    gmp:
+      variants: [libs=static]
+    mpfr:
+      variants: [libs=static]
+    zstd:
+      variants: [libs=static]
+    zlib:
+      variants: [~shared]

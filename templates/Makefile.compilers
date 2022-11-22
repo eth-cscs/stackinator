@@ -21,40 +21,42 @@ all:{% for compiler in compilers %} {{ compiler }}/generated/env{% endfor %}
 
 # Configure external system dependencies for each compiler toolchain
 {% for compiler, config in compilers.items() %}
-{% if config.external %}
+{% if config.packages and config.packages.external %}
 {{ compiler }}/packages.yaml:
-	$(SPACK) external find --scope=user {% for package in config.external %} {{package}}{% endfor %}
+	$(SPACK) external find --scope=user {% for package in config.packages.external %} {{package}}{% endfor %}
 
 
 {% endif %}
 {% endfor %}
 # Configure dependencies between compilers
-{% for config in requirements %}
-{% if config.upstream %}
-{{ config.compiler }}/compilers.yaml: {{ config.upstream.name }}/generated/env
-	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK) -e ./{{ config.upstream.name }} find --format '{prefix}' {{ config.upstream.spec }}))
+gcc/compilers.yaml: bootstrap/generated/env
+	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK) -e ./bootstrap find --format '{prefix}' {{ compilers.gcc.requires }}))
 
+{% if compilers.llvm %}
+llvm/compilers.yaml: gcc/generated/env
+	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK) -e ./gcc find --format '{prefix}' {{ compilers.llvm.requires }}))
 {% endif %}
-{% endfor %}
+
+
 include ../Make.inc
 
 # GNU Make isn't very smart about dependencies across included Makefiles, so we
 # specify the order here by conditionally including them, when the dependent exists.
 ifeq (,$(filter clean,$(MAKECMDGOALS)))
 
-{% for config in requirements %}
-{% if not config.upstream %}
-include {{ config.compiler }}/Makefile
-{% endif %}
-{% endfor %}
+include bootstrap/Makefile
 
-{% for config in requirements %}
-{% if config.upstream %}
-ifneq (,$(wildcard {{ config.upstream.name }}/Makefile))
-include {{ config.compiler }}/Makefile
+ifneq (,$(wildcard bootstrap/Makefile))
+include gcc/Makefile
+endif
+
+{% if compilers.llvm %}
+ifneq (,$(wildcard gcc/Makefile))
+include llvm/Makefile
 endif
 {% endif %}
-{% endfor %}
+
 
 endif
+
 

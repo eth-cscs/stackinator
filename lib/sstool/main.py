@@ -51,7 +51,7 @@ class Recipe:
             raise FileNotFoundError('The recipe path \'{path}\' does not contain compilers.yaml'.format(path=compiler_path))
         with open(compiler_path) as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            self.compilers = raw['compilers']
+            self.generate_compiler_specs(raw['compilers'])
 
         packages_path = os.path.join(path, 'packages.yaml')
         if not os.path.isfile(packages_path):
@@ -77,36 +77,82 @@ class Recipe:
             raw['modules']['default']['roots']['tcl'] = os.path.join(self.config['store'], 'modules')
             return yaml.dump(raw)
 
-    def generate_compilers(self):
-        # TODO tests for validity
-        # - requires statements:
-        #   - at least one compiler must have no upstream (typically bootstrap/1-gcc)
-        #   - each compiler is only allowed to have one upstream requirements
-        #   - the requires statements must form a tree (should be fulfilled if the first two are met)
-        files = {}
+    # creates the self.compilers field that describes the full specifications
+    # for all of teh compilers from the raw compilers.yaml input
+    def generate_compiler_specs(self, raw):
+        # TODO: error checking
+        #   bootstrap and gcc have been specified
+        #   gcc specs are of the form gcc@version
+        #   llvm specs are of the form {llvm@version, nvhpc@version}
+        # TODO: extend specs of compilers
+        #   nvhpc@v ... nvhpc@v~blas~lapack~mpi
+        #   llvm@v ... nvhpc@v targets=x86_64,nvptx +gold ...
+        #   bootstrap gcc@v... gcc@v languages=c,c++
+        # TODO: additional specs
+        #   add "squashfs default_compression=zstd" to bootstrap specs
+        compilers = {}
 
-        # generate compilers/Makefile
-        requirements=[]
-        for compiler, config in self.compilers.items():
-            requirement = {'compiler': compiler, 'upstream': False}
-            if 'requires' in config:
-                # python is icky like this
-                R=list(config['requires'].items())[0]
-                requirement['upstream'] = {'name': R[0], 'spec': R[1]}
-            requirements.append(requirement)
+        bootstrap = {}
+        bootstrap["packages"]= {
+            "external": ["perl", "m4", "autoconf", "automake", "libtool", "gawk", "python"],
+            "variants": {
+                "gcc": "[build_type=Release ~bootstrap +strip]",
+                "mpc": "[libs=static]",
+                "gmp": "[libs=static]",
+                "mpfr": "[libs=static]",
+                "zstd": "[libs=static]",
+                "zlib": "[~shared]"
+            }
+        }
+        bootstrap_spec = raw["bootstrap"]["specs"][0]
+        bootstrap["specs"] = [bootstrap_spec + " languages=c,c++", "squashfs default_compression=zstd"]
+        compilers["bootstrap"] = bootstrap
+
+        gcc = {}
+        gcc["packages"] = {
+            "external": ["perl", "m4", "autoconf", "automake", "libtool", "gawk", "python"],
+            "variants": {
+                "gcc": "[build_type=Release +strip]",
+                "mpc": "[libs=static]",
+                "gmp": "[libs=static]",
+                "mpfr": "[libs=static]",
+                "zstd": "[libs=static]",
+                "zlib": "[~shared]"
+            }
+        }
+        gcc["specs"] = raw["gcc"]["specs"]
+        gcc["requires"] = bootstrap_spec
+        compilers["gcc"] = gcc
+        if "llvm" in raw:
+            llvm = {}
+            llvm["packages"] = False
+            llvm["specs"] = []
+            for spec in raw["llvm"]["specs"]:
+                if spec.startswith("nvhpc"):
+                    llvm["specs"].append(spec + "~mpi~blas~lapack")
+                if spec.startswith("llvm"):
+                    llvm["specs"].append(spec + " +clang targets=x86 ~gold ^ninja@kitware")
+            llvm["requires"] = raw["llvm"]["requires"]
+            compilers["llvm"] = llvm
+
+        self.compilers = compilers
+
+
+    def generate_compilers(self):
+        files = {}
 
         template_path = os.path.join(tool_prefix, 'templates')
         env = jinja2.Environment(
                 loader = jinja2.FileSystemLoader(template_path),
                 trim_blocks=True, lstrip_blocks=True)
 
-        makefile_template = env.get_template('Makefile.compilers.jinja2')
-        files['makefile'] = makefile_template.render(compilers=self.compilers, requirements=requirements)
+        makefile_template = env.get_template('Makefile.compilers')
+        files['makefile'] = makefile_template.render(compilers=self.compilers)
 
         # generate compilers/<compiler>/spack.yaml
         files['config'] = {}
         for compiler, config in self.compilers.items():
-            spack_yaml_template = env.get_template('spack.yaml.jinja2')
+            spack_yaml_template = env.get_template('compilers.'+compiler+'.spack.yaml')
             files['config'][compiler] = spack_yaml_template.render(config=config)
 
         return files
@@ -119,12 +165,12 @@ class Recipe:
                 loader = jinja2.FileSystemLoader(template_path),
                 trim_blocks=True, lstrip_blocks=True)
 
-        makefile_template = jenv.get_template('Makefile.packages.jinja2')
+        makefile_template = jenv.get_template('Makefile.packages')
         files['makefile'] = makefile_template.render(compilers=self.compilers, environments=self.packages)
 
         files['config'] = {}
         for env, config in self.packages.items():
-            spack_yaml_template = jenv.get_template('spack.yaml.packages.jinja2')
+            spack_yaml_template = jenv.get_template('packages.spack.yaml')
             files['config'][env] = spack_yaml_template.render(config=config)
 
         return files
@@ -140,8 +186,6 @@ class Build:
         if os.path.exists(path):
             if not os.path.isdir(path):
                 raise IOError('build path is not a directory')
-            #if os.listdir(path):
-                #raise IOError('build path must be empty if it exists')
 
         self.path = path
 
@@ -181,7 +225,7 @@ class Build:
                 trim_blocks=True, lstrip_blocks=True)
 
         # generate top level makefiles
-        make_user_template = env.get_template('make.user.jinja2')
+        make_user_template = env.get_template('Make.user')
         with open(os.path.join(self.path, 'Make.user'), 'w') as f:
             f.write(make_user_template.render(build_path=self.path, store=recipe.config['store'], verbose=False))
             f.write('\n')
@@ -240,7 +284,7 @@ class Build:
         #
         # generate the makefile that generates the configuration for the spack installation
         #
-        make_config_template = env.get_template('Makefile.generate-config.jinja2')
+        make_config_template = env.get_template('Makefile.generate-config')
         generate_config_path = os.path.join(self.path, 'generate-config')
         os.makedirs(generate_config_path, exist_ok=True)
 
