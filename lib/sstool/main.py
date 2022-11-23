@@ -58,7 +58,7 @@ class Recipe:
             raise FileNotFoundError('The recipe path \'{path}\' does not contain packages.yaml'.format(path=packages_path))
         with open(packages_path) as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            self.packages = raw['packages']
+            self.generate_package_specs(raw['packages'])
 
         config_path = os.path.join(path, 'config.yaml')
         if not os.path.isfile(config_path):
@@ -77,6 +77,21 @@ class Recipe:
             raw['modules']['default']['roots']['tcl'] = os.path.join(self.config['store'], 'modules')
             return yaml.dump(raw)
 
+    # creates the self.packages field that describes the full specifications
+    # for all of the package sets from the raw packages.yaml input
+    def generate_package_specs(self, raw):
+        packages = raw
+
+        for name, config in packages.items():
+            spec = config["mpi"]
+            if spec == "cray-mpich-binary":
+                if config["gpu"]:
+                    spec = spec + ' +' + config["gpu"]
+                packages[name]["specs"].append(spec)
+
+        self.packages = packages
+
+
     # creates the self.compilers field that describes the full specifications
     # for all of teh compilers from the raw compilers.yaml input
     def generate_compiler_specs(self, raw):
@@ -84,12 +99,6 @@ class Recipe:
         #   bootstrap and gcc have been specified
         #   gcc specs are of the form gcc@version
         #   llvm specs are of the form {llvm@version, nvhpc@version}
-        # TODO: extend specs of compilers
-        #   nvhpc@v ... nvhpc@v~blas~lapack~mpi
-        #   llvm@v ... nvhpc@v targets=x86_64,nvptx +gold ...
-        #   bootstrap gcc@v... gcc@v languages=c,c++
-        # TODO: additional specs
-        #   add "squashfs default_compression=zstd" to bootstrap specs
         compilers = {}
 
         bootstrap = {}

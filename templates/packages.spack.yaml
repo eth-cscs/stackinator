@@ -12,3 +12,7 @@ spack:
   packages:
     all:
       compiler: [{{ config.compiler.spec }}]
+    {% if config.mpi %}
+    mpi:
+      require: {{ config.mpi }}
+    {% endif %}

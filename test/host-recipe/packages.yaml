@@ -5,9 +5,11 @@ packages:
           spec: gcc@11.3.0
       unify: true
       specs:
-      - cray-mpich-binary
       - osu-micro-benchmarks@5.9
-      - hdf5 +mpi ^cray-mpich-binary
+      - hdf5 +mpi
+      mpi: cray-mpich-binary
+      gpu: false
+      #gpu: cuda,rocm
     tools:
       compiler:
           toolchain: gcc
@@ -15,3 +17,5 @@ packages:
       unify: true
       specs:
       - cmake
+      mpi: false
+      gpu: false
