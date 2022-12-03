@@ -1,0 +1,8 @@
+name: cuda-env
+store: /user-environment
+system: hohgant
+# one of zen3-a100, zen3-mi200, zen3
+cpu: zen3
+spack:
+    repo: https://github.com/spack/spack.git
+    commit: 6408b51
