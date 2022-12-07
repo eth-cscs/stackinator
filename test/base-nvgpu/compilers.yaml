@@ -1,7 +1,7 @@
 compilers:
   bootstrap:
     specs:
-    - gcc@12
+    - gcc@11
   gcc:
     specs:
-    - gcc@12
+    - gcc@11
