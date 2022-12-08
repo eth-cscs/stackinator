@@ -23,14 +23,10 @@ def make_argparser():
 
 def validate_recipe_config(config):
     # TODO: create config error type
-    if "cpu" not in config.keys():
-        raise FileNotFoundError('config.yaml: missing cpu')
-    if config["cpu"] not in ["zen3", "zen2"]:
-        raise FileNotFoundError('config.yaml: invalid target cpu architecture "{0}"'.format(config["cpu"]))
-    if "gpu" not in config.keys():
-        config["gpu"] = "NONE"
-    if config["gpu"] not in ["A100", "Mi200", "NONE"]:
-        raise FileNotFoundError('config.yaml: invalid target gpu architecture "{0}"'.format(config["gpu"]))
+    if "arch" not in config.keys():
+        raise FileNotFoundError('config.yaml: missing arch')
+    if config["arch"] not in ["zen3", "zen2"]:
+        raise FileNotFoundError('config.yaml: invalid target cpu architecture "{0}"'.format(config["arch"]))
     return config
 
 class Recipe:
