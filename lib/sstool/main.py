@@ -121,7 +121,7 @@ class Recipe:
         gcc["packages"] = {
             "external": ["perl", "m4", "autoconf", "automake", "libtool", "gawk", "python"],
             "variants": {
-                "gcc": "[build_type=Release +strip]",
+                "gcc": "[build_type=Release +profiled +strip]",
                 "mpc": "[libs=static]",
                 "gmp": "[libs=static]",
                 "mpfr": "[libs=static]",
