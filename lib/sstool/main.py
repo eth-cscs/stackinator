@@ -78,9 +78,19 @@ class Recipe:
     def generate_package_specs(self, raw):
         packages = raw
 
+        # check the package descriptions and ammend where features are missing
+        for name, config in packages.items():
+            if ("specs" not in config) or (config["specs"] == None):
+                packages[name]["specs"] = []
+            if ("mpi" not in config):
+                packages[name]["mpi"] = False
+            if ("gpu" not in config):
+                packages[name]["gpu"] = False
+
         for name, config in packages.items():
             spec = config["mpi"]
-            if spec == "cray-mpich-binary":
+            print(name, "has spec", spec)
+            if spec and spec.startswith("cray-mpich-binary"):
                 if config["gpu"]:
                     spec = spec + ' +' + config["gpu"]
                 packages[name]["specs"].append(spec)
