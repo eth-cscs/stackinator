@@ -13,17 +13,22 @@ class CrayMpichBinary(Package):
     """Install cray-mpich as a binary package"""
 
     homepage = "https://www.hpe.com/us/en/compute/hpc/hpc-software.html"
-    # url = "https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.18.4-gcc.tar.gz"
-    url = "file:///scratch/e1000/hstoppel/cray-mpich-8.1.18.4-gcc.tar.gz"
+    url = "https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.18.4-gcc.tar.gz"
 
     maintainers = ["haampie"]
 
-    version(
-        "8.1.18.4-gcc", sha256="0b265d521494671e1db525e546ad3088919deb407599717005721fd45eba7dd4"
-    )
-    version(
-        "8.1.18.4-nvhpc", sha256="f4ac252115d7690cd188be9843b8a13870c80c1ee4c7aea8107337ed60fefadc"
-    )
+    version("8.1.21.1-gcc",
+            sha256="0a6852ebf06afd249285fd09566e8489300cba96ad66e90c40df36b6af9a631e",
+            url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.21.1-gcc.tar.gz")
+    version("8.1.21.1-nvhpc",
+            sha256="791b39f2ecb933060abaa8c8704e71da01c6962c4211cc99d12b9d964e9be4cb",
+            url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.21.1-nvhpc.tar.gz")
+    version("8.1.18.4-gcc",
+            sha256="3e7d8c562e4d210a9658f35a7f5fbf23e550e1b9e57b6df6b99adbec7d983903",
+            url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.18.4-gcc.tar.gz")
+    version("8.1.18.4-nvhpc",
+            sha256="d0049c7acf4e90c16c1f169f1f96913e786c5d4cf98230deb51af158664c9b50",
+            url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.18.4-nvhpc.tar.gz")
 
     variant("cuda", default=False)
     variant("rocm", default=False)
@@ -46,7 +51,22 @@ class CrayMpichBinary(Package):
 
     # libfabric.so.1
     depends_on("libfabric@1:", type="link")
-    # Conflicts for gcc
+
+    with when("@8.1.21.1-gcc"):
+        # libgfortran.so.5
+        conflicts("%gcc@:7")
+        for __compiler in spack.compilers.supported_compilers():
+            if __compiler != "gcc":
+                conflicts("%{}".format(__compiler), msg="gcc required")
+
+    with when("@8.1.21.1-nvhpc"):
+        conflicts("%nvhpc@:20.6")
+        conflicts("+rocm")
+        conflicts("~cuda")
+        for __compiler in spack.compilers.supported_compilers():
+            if __compiler != "nvhpc":
+                conflicts("%{}".format(__compiler), msg="nvhpc required")
+
     with when("@8.1.18.4-gcc"):
         # libgfortran.so.5
         conflicts("%gcc@:7")
@@ -54,7 +74,6 @@ class CrayMpichBinary(Package):
             if __compiler != "gcc":
                 conflicts("%{}".format(__compiler), msg="gcc required")
 
-    # Conflicts for nvhpc
     with when("@8.1.18.4-nvhpc"):
         conflicts("%nvhpc@:20.6")
         conflicts("+rocm")
