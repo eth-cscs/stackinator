@@ -67,7 +67,7 @@ compilers:
   llvm:
     requires: gcc@11
     specs:
-    - nvhpc@21.7`
+    - nvhpc@21.7
     - llvm@14
 ```
 
