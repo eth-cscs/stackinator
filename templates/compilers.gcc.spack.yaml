@@ -9,7 +9,7 @@ spack:
 {% endfor %}
   view: false
   concretizer:
-    unify: true
+    unify: when_possible
   packages:
     gcc:
       variants: [build_type=Release +strip]

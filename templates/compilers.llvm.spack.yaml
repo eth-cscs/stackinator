@@ -9,5 +9,5 @@ spack:
 {% endfor %}
   view: false
   concretizer:
-    unify: true
+    unify: when_possible
 

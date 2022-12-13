@@ -89,7 +89,6 @@ class Recipe:
 
         for name, config in packages.items():
             spec = config["mpi"]
-            print(name, "has spec", spec)
             if spec and spec.startswith("cray-mpich-binary"):
                 if config["gpu"]:
                     spec = spec + ' +' + config["gpu"]
