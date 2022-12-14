@@ -24,10 +24,10 @@ class CrayMpichBinary(Package):
             sha256="791b39f2ecb933060abaa8c8704e71da01c6962c4211cc99d12b9d964e9be4cb",
             url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.21.1-nvhpc.tar.gz")
     version("8.1.18.4-gcc",
-            sha256="3e7d8c562e4d210a9658f35a7f5fbf23e550e1b9e57b6df6b99adbec7d983903",
+            sha256="776c695aeed62b3f64a1bca11b30a2537a907777a8664d2f092e3deac288e4ad",
             url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.18.4-gcc.tar.gz")
     version("8.1.18.4-nvhpc",
-            sha256="d0049c7acf4e90c16c1f169f1f96913e786c5d4cf98230deb51af158664c9b50",
+            sha256="2285433363c75a04ccdf4798be5b0e296e0c9a8fb8fcb38eb0aa4ccf8d1e0843",
             url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.18.4-nvhpc.tar.gz")
 
     variant("cuda", default=False)
