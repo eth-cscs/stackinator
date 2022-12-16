@@ -1,6 +1,6 @@
 name: host-example
 store: '/user-environment'
-system: 'balfrin'
+system: 'hohgant'
 arch: zen3
 spack:
     repo: https://github.com/spack/spack.git

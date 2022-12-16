@@ -9,4 +9,3 @@ compilers:
     requires: gcc@11
     specs:
     - llvm@14
-    #- nvhpc@22.7
