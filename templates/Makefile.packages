@@ -4,16 +4,27 @@ MAKEFLAGS += --output-sync=recurse
 
 .PHONY: all .locks
 
-all:{% for env in environments %} {{ env }}/generated/env{% endfor %}
+#all:{% for env in environments %} {{ env }}/generated/env{% endfor %}
+all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 
 
-# Make sure spack.lock files are never removed as intermediate files...
+# Ensure that spack.lock files are never removed as intermediate files
 .locks:{% for env in environments %} {{ env }}/spack.lock{% endfor %}
 
+
+# Push built packages to a binary cache if a key has been provided
+{% for env, config in environments.items() %}
+{{ env }}/generated/build_cache: {{ env }}/generated/env
+{% if push_to_cache %}
+	$(SPACK) -e ./{{ env }} buildcache create --rebuild-index --allow-root --only=package -m alpscache $$($(SPACK) -e ./{{ env }} find --format '/$${hash}')
+{% endif %}
+	touch $@
+
+{% endfor %}
 {% for env in environments %}{{ env }}/config.yaml {% endfor %}: | store
 	$(SPACK) config --scope=user add config:install_tree:root:$(STORE)
 
-# create the compiler files
+# Create the compilers.yaml configuration for each environment
 {% for env, config in environments.items() %}
 {{ env }}_PREFIX = $$($(SPACK) -e ../compilers/{{ config.compiler.toolchain }} find --format '{prefix}' {{ config.compiler.spec }})
 {{ env }}/compilers.yaml:
