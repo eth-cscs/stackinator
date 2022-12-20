@@ -302,12 +302,6 @@ class Build:
         generate_config_path = os.path.join(self.path, 'generate-config')
         os.makedirs(generate_config_path, exist_ok=True)
 
-        # write the modules.yaml file
-        modules_yaml=recipe.generate_modules()
-        with open(os.path.join(generate_config_path, 'modules.yaml'), 'w') as f:
-            f.write(modules_yaml)
-            f.close()
-
         # write the Makefile
         compiler_names=[x for x in recipe.compilers.keys() if x!="bootstrap"]
         with open(os.path.join(generate_config_path, 'Makefile'), 'w') as f:
@@ -315,6 +309,14 @@ class Build:
                 build_path=self.path,
                 compilers=compiler_names,
                 verbose=False))
+            f.close()
+
+        # write the modules.yaml file
+        modules_yaml=recipe.generate_modules()
+        generate_modules_path = os.path.join(self.path, 'modules')
+        os.makedirs(generate_modules_path, exist_ok=True)
+        with open(os.path.join(generate_modules_path, 'modules.yaml'), 'w') as f:
+            f.write(modules_yaml)
             f.close()
 
 def main(prefix):
