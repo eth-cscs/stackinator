@@ -1,22 +1,21 @@
 include ../Make.user
 
 CONFIG_DIR = $(STORE)/config
+MODULE_DIR = $(SOFTWARE_STACK_PROJECT)/modules
 
 # These will be the prefixes of the GCCs, LLVMs and NVHPCs in the respective environments.
 ALL_COMPILER_PREFIXES ={% for compiler in compilers %} $$($(SPACK) -e ../compilers/{{ compiler }} find --format='{prefix}' gcc llvm nvhpc){% endfor %}
 
+all: $(CONFIG_DIR)/upstreams.yaml $(CONFIG_DIR)/compilers.yaml
 
-all: $(CONFIG_DIR)/compilers.yaml $(CONFIG_DIR)/upstreams.yaml $(CONFIG_DIR)/modules.yaml
-
-# Generate a compiler config file
+# Generate the compiler config file
 $(CONFIG_DIR)/compilers.yaml:
 	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $(ALL_COMPILER_PREFIXES))
+	cp $@ $(MODULE_DIR)
 
+# Generate the upstreams config file
 $(CONFIG_DIR)/upstreams.yaml:
 	$(SPACK) config --scope=user add upstreams:system:install_tree:$(STORE)
-
-$(CONFIG_DIR)/modules.yaml:
-	mkdir -p $(CONFIG_DIR)
-	cp modules.yaml $(CONFIG_DIR)/modules.yaml
+	cp $@ $(MODULE_DIR)
 
 include ../Make.inc
