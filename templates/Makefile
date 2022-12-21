@@ -51,7 +51,7 @@ packages: compilers
 	$(SANDBOX) $(MAKE) -C $@
 
 modules: packages generate-config
-	$(SANDBOX) $(SPACK) -C $(STORE)/config module tcl refresh --upstream-modules --delete-tree --yes-to-all
+	$(SANDBOX) $(SPACK) -C $(SOFTWARE_STACK_PROJECT)/modules module tcl refresh --upstream-modules --delete-tree --yes-to-all
 
 # Create a squashfs file from the installed software.
 store.squashfs: packages generate-config
