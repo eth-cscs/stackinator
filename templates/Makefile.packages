@@ -4,7 +4,6 @@ MAKEFLAGS += --output-sync=recurse
 
 .PHONY: all .locks
 
-#all:{% for env in environments %} {{ env }}/generated/env{% endfor %}
 all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 
 
