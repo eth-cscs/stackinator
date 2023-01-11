@@ -1,4 +1,8 @@
 import argparse
+import hashlib
+import logging
+import platform
+import time
 import os
 import os.path
 import shutil
@@ -9,6 +13,30 @@ import jinja2
 import yaml
 
 tool_prefix = ''
+logger = None
+
+def generate_logfile_name(name=''):
+    idstr = str(time.localtime()) + str(os.getpid()) + str(platform.uname())
+    return 'log'+name+'_'+hashlib.md5(idstr.encode('utf-8')).hexdigest()
+
+def configure_logging():
+    # create logger
+    logger = logging.getLogger('spack-stack-tool')
+    logger.setLevel(logging.DEBUG)
+
+    # create stdout handler and set level to info
+    ch = logging.StreamHandler(stream=sys.stdout)
+    ch.setLevel(logging.INFO)
+    ch.setFormatter(logging.Formatter('%(message)s'))
+    logger.addHandler(ch)
+
+    # create log file handler and set level to debug
+    fh = logging.FileHandler(generate_logfile_name('_config')) #, mode='w')
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(logging.Formatter('%(asctime)s : %(levelname)-7s : %(message)s'))
+    logger.addHandler(fh)
+
+    return logger
 
 def make_argparser():
     parser = argparse.ArgumentParser(description='Generate a build configuration for a spack stack from a recipe.')
@@ -274,18 +302,36 @@ class Build:
         os.makedirs(tmp_path, exist_ok=True)
 
         # check out the version of spack
-
         spack = recipe.config['spack']
         spack_path = os.path.join(self.path, 'spack')
 
         # clone the repository if the repos has not already been checked out
+        logger.info('spack: using {}@{}'.format(spack['commit'], spack['repo']))
         if not os.path.isdir(os.path.join(spack_path, '.git')):
-            return_code = subprocess.call(["git", "clone", spack['repo'], spack_path], shell=False)
-            if return_code != 0:
-                raise RuntimeError('error cloning the repository {0}'.format(spack['repo']))
-        return_code = subprocess.call(["git", "-C", spack_path, "checkout", spack['commit']], shell=False)
-        if return_code != 0:
-            raise RuntimeError('unable to change to the requested commit {0}'.format(spack['commit']))
+
+            # clone the repository
+            capture = subprocess.run(
+                    ["git", "clone", spack['repo'], spack_path],
+                    shell=False,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT)
+            logger.debug(capture.stdout.decode('utf-8'))
+
+            if capture.returncode != 0:
+                logger.debug('error cloning the repository {0}'.format(spack['repo']))
+                capture.check_returncode()
+
+        # Check out the requested branch
+        capture = subprocess.run(
+                ["git", "-C", spack_path, "checkout", spack['commit']],
+                shell=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT)
+        logger.debug(capture.stdout.decode('utf-8'))
+
+        if capture.returncode != 0:
+            logger.debug('unable to change to the requested commit {0}'.format(spack['commit']))
+            capture.check_returncode()
 
         # patch in the cray-mpich-binary package to spack
         mpi_pkg_path = os.path.join(spack_path, 'var/spack/repos/builtin/packages/cray-mpich-binary')
@@ -399,17 +445,21 @@ def main(prefix):
     global tool_prefix
     tool_prefix = prefix
 
+    global logger
+    logger = configure_logging()
+
     try:
         parser = make_argparser()
         args = parser.parse_args()
+        logger.debug('Command line arguments: {}'.format(args))
+
         recipe = Recipe(args)
         build = Build(args)
+
         build.generate(recipe)
 
         return 0
     except Exception as e:
-        print(str(e))
-        if args.debug:
-            raise
+        logger.exception(e)
         return 1
 
