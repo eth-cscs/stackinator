@@ -21,18 +21,49 @@ def make_argparser():
     parser.add_argument('-d', '--debug', action='store_true')
     return parser
 
+def value_if_set(d, key, default):
+    if key in d:
+        return d[key]
+    return default
+
 def validate_recipe_config(config):
-    # TODO: create config error type
-    if "arch" not in config.keys():
-        raise FileNotFoundError('config.yaml: missing arch')
-    if config["arch"] not in ["zen3", "zen2"]:
-        raise FileNotFoundError('config.yaml: invalid target cpu architecture "{0}"'.format(config["arch"]))
+    if 'mirror' in config:
+        if 'key' in config['mirror']:
+            p = config['mirror']['key']
+            if not os.path.isfile(p):
+                raise FileNotFoundError('The key file \'{path}\' does not exist'.format(path=p))
+    if 'system' in config:
+        if config['system'] not in ['hohgant', 'balfrin']:
+            raise FileNotFoundError('The  system \'{name}\' must be one of hohgant or balfrin'.format(name=config['system']))
+    else:
+        raise FileNotFoundError('The  \'{path}\' does not exist'.format(path=p))
+
     return config
+
+class Mirror:
+    _key = None
+    _source = None
+
+    def __init__(self, config, source):
+        enabled = value_if_set(config, 'enable', True)
+        key = value_if_set(config, 'key', None)
+
+        self._source = None if not enabled else source
+        self._key  = key
+
+    @property
+    def key(self):
+        return self._key
+
+    @property
+    def source(self):
+        return self._source
 
 class Recipe:
     path = ''
     compilers = {}
     config = {}
+    user_mirror_config = None
 
     def __init__(self, args):
         path = args.recipe
@@ -66,6 +97,19 @@ class Recipe:
         if not os.path.isfile(modules_path):
             modules_path = os.path.join(args.build, 'spack/etc/spack/defaults/modules.yaml')
         self.modules = modules_path
+
+        # Select location of the mirrors.yaml file to use.
+        # Look first in the recipe path, then in the system configuration path.
+        mirrors_path = os.path.join(path, 'mirrors.yaml')
+        mirrors_source = mirrors_path if os.path.isfile(mirrors_path) else None
+        if mirrors_source == None:
+            mirrors_path = os.path.join(self.configs_path, 'mirrors.yaml')
+            mirrors_source = mirrors_path if os.path.isfile(mirrors_path) else None
+        self._mirror = Mirror(config=self.config['mirror'], source=mirrors_source)
+
+    @property
+    def mirror(self):
+        return self._mirror
 
     def generate_modules(self):
         with open(self.modules) as fid:
@@ -151,7 +195,17 @@ class Recipe:
 
         self.compilers = compilers
 
+    # The path of the default configuration for the target system/cluster
+    @property
+    def configs_path(self):
+        system = self.config['system']
+        return os.path.join(
+                os.path.join(
+                    os.path.join(tool_prefix, 'share'),
+                    'cluster-config'),
+                system)
 
+    # Boolean flag that indicates whether the recipe is configured to use a binary cache.
     def generate_compilers(self):
         files = {}
 
@@ -161,7 +215,10 @@ class Recipe:
                 trim_blocks=True, lstrip_blocks=True)
 
         makefile_template = env.get_template('Makefile.compilers')
-        files['makefile'] = makefile_template.render(compilers=self.compilers)
+        push_to_cache = self.mirror.source and self.mirror.key
+        files['makefile'] = makefile_template.render(
+                compilers=self.compilers,
+                push_to_cache=push_to_cache)
 
         # generate compilers/<compiler>/spack.yaml
         files['config'] = {}
@@ -180,7 +237,11 @@ class Recipe:
                 trim_blocks=True, lstrip_blocks=True)
 
         makefile_template = jenv.get_template('Makefile.packages')
-        files['makefile'] = makefile_template.render(compilers=self.compilers, environments=self.packages)
+        push_to_cache = self.mirror.source and self.mirror.key
+        files['makefile'] = makefile_template.render(
+                compilers=self.compilers,
+                environments=self.packages,
+                push_to_cache=push_to_cache)
 
         files['config'] = {}
         for env, config in self.packages.items():
@@ -239,6 +300,13 @@ class Build:
                 trim_blocks=True, lstrip_blocks=True)
 
         # generate top level makefiles
+        makefile_template = env.get_template('Makefile')
+        with open(os.path.join(self.path, 'Makefile'), 'w') as f:
+            cache = {'key': recipe.mirror.key, 'enabled': recipe.mirror.source}
+            f.write(makefile_template.render(cache=cache, verbose=False))
+            f.write('\n')
+            f.close()
+
         make_user_template = env.get_template('Make.user')
         with open(os.path.join(self.path, 'Make.user'), 'w') as f:
             f.write(make_user_template.render(build_path=self.path, store=recipe.config['store'], verbose=False))
@@ -246,18 +314,22 @@ class Build:
             f.close()
 
         etc_path = os.path.join(tool_prefix, 'etc')
-        for f in ['Makefile', 'Make.inc', 'bwrap-mutable-root.sh']:
+        for f in ['Make.inc', 'bwrap-mutable-root.sh']:
             shutil.copy2(os.path.join(etc_path, f), os.path.join(self.path, f))
 
-        # generate the system configuration
+        # Generate the system configuration: the compilers, packages, mirrors etc
+        # that are defined for the target cluster.
         config_path = os.path.join(self.path, 'config')
         os.makedirs(config_path, exist_ok=True)
-        system = recipe.config['system']
-        system_configs_path = os.path.join(os.path.join(os.path.join(tool_prefix, 'share'), 'cluster-config'), system)
-        if not os.path.isdir(system_configs_path):
-            raise RuntimeError('the system name {0} does not match any known system configuration'.format(system))
+        system_configs_path = recipe.configs_path
 
+        # Copy the yaml files to the spack config path
         for f in os.listdir(system_configs_path):
+            # skip copying mirrors.yaml - this is done in the next step only if
+            # mirrors have been enabled and the recipe did not provide a mirror
+            # configuration
+            if f in ['mirrors.yaml']:
+                continue
             # construct full file path
             src = os.path.join(system_configs_path, f)
             dst = os.path.join(config_path, f)
@@ -265,7 +337,11 @@ class Build:
             if os.path.isfile(src):
                 shutil.copy(src, dst)
 
-        # generate the makefile and spack.yaml files that describe the compilers
+        if recipe.mirror.source:
+            dst = os.path.join(config_path, 'mirrors.yaml')
+            shutil.copy(recipe.mirror.source, dst)
+
+        # Generate the makefile and spack.yaml files that describe the compilers
         compilers = recipe.generate_compilers()
         compiler_path = os.path.join(self.path, 'compilers')
         os.makedirs(compiler_path, exist_ok=True)

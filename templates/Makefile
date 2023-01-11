@@ -32,7 +32,16 @@ spack-setup: spack-version
 	$(SANDBOX) $(SPACK) spec zlib > /dev/null; \
 	printf "yup\n"
 
-compilers: spack-setup
+mirror-setup: spack-setup
+	{% if cache.enabled %}
+	$(SANDBOX) $(SPACK) buildcache keys --install --trust
+	{% if cache.key %}
+	$(SANDBOX) $(SPACK) gpg trust {{ cache.key }}
+	{% endif %}
+	{% endif %}
+	touch mirror-setup
+
+compilers: mirror-setup
 	$(SANDBOX) $(MAKE) -C $@
 
 generate-config: compilers

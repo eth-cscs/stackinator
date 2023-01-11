@@ -4,16 +4,29 @@ MAKEFLAGS += --output-sync=recurse
 
 .PHONY: all .locks .packages.yaml
 
-all:{% for compiler in compilers %} {{ compiler }}/generated/env{% endfor %}
+all:{% for compiler in compilers %} {{ compiler }}/generated/build_cache{% endfor %}
 
 
-# Make sure spack.lock files are never removed as intermediate files...
+# Ensure that spack.lock files are never removed as intermediate files...
 .locks:{% for compiler in compilers %} {{ compiler }}/spack.lock{% endfor %}
 
 
-# Make sure package yaml files are never removed as intermediate files...
+# Ensure that package yaml files are never removed as intermediate files...
 .packages.yaml:{% for compiler in compilers %} {{ compiler }}/packages.yaml{% endfor %}
 
+
+{% for compiler, config in compilers.items() %}
+{{ compiler }}/generated/build_cache: {{ compiler }}/generated/env
+{% if push_to_cache %}
+	$(SPACK) -e ./{{ compiler }} buildcache create --rebuild-index --allow-root --only=package -m alpscache $$($(SPACK) -e ./{{ compiler }} find --format '/$${hash}')
+{% endif %}
+	touch $@
+
+{% endfor %}
+
+# Configure the install location.
+{% for compiler in compilers %}{{ compiler }}/config.yaml {% endfor %}: | store
+	$(SPACK) config --scope=user add config:install_tree:root:$(STORE)
 
 # Configure the install location.
 {% for compiler in compilers %}{{ compiler }}/config.yaml {% endfor %}: | store

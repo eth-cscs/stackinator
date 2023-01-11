@@ -19,3 +19,8 @@ packages:
     externals:
     - spec: xpmem@2.4.4
       prefix: /opt/cray/xpmem/2.4.4-2.3_9.1__gff0e1d9.shasta
+  fontconfig:
+    buildable: false
+    externals:
+    - spec: fontconfig@2.13.94
+      prefix: /usr
