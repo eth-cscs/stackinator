@@ -37,7 +37,6 @@ A recipe is the input provided to the tool. A recipe is comprised of the followi
 name: nvgpu-basic
 store: /user-environment
 system: hohgant
-arch: zen3
 spack:
     repo: https://github.com/spack/spack.git
     commit: 6408b51
@@ -48,9 +47,6 @@ spack:
 * `system`: the name of the vCluster on which the stack will be deployed.
     * one of `balfrin` or `hohgant`.
     * cluster-specific details such as the version and location of libfabric are used when configuring and building the stack.
-* `arch`: the CPU architecture
-    * e.g. `zen2`, `zen3`, `x86_64`.
-    * **note** currently not used.
 * `spack`: which spack repository to use for installation.
 
 ### compilers
