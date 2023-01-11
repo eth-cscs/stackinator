@@ -38,6 +38,11 @@ def configure_logging():
 
     return logger
 
+def log_header(args):
+    logger.info('Spack Stack Tool')
+    logger.info('  recipe path: {}'.format(args.recipe))
+    logger.info('  build path : {}'.format(args.build))
+
 def make_argparser():
     parser = argparse.ArgumentParser(description='Generate a build configuration for a spack stack from a recipe.')
     parser.add_argument('-b', '--build',
@@ -94,6 +99,7 @@ class Recipe:
     user_mirror_config = None
 
     def __init__(self, args):
+        logger.debug('Generating recipe')
         path = args.recipe
         if not os.path.isabs(path):
             path = os.path.join(os.path.abspath(os.path.curdir), path)
@@ -102,6 +108,7 @@ class Recipe:
         self.path=path
 
         compiler_path = os.path.join(path, 'compilers.yaml')
+        logger.debug('opening {}'.format(compiler_path))
         if not os.path.isfile(compiler_path):
             raise FileNotFoundError('The recipe path \'{path}\' does not contain compilers.yaml'.format(path=compiler_path))
         with open(compiler_path) as fid:
@@ -109,6 +116,7 @@ class Recipe:
             self.generate_compiler_specs(raw['compilers'])
 
         packages_path = os.path.join(path, 'packages.yaml')
+        logger.debug('opening {}'.format(packages_path))
         if not os.path.isfile(packages_path):
             raise FileNotFoundError('The recipe path \'{path}\' does not contain packages.yaml'.format(path=packages_path))
         with open(packages_path) as fid:
@@ -116,14 +124,17 @@ class Recipe:
             self.generate_package_specs(raw['packages'])
 
         config_path = os.path.join(path, 'config.yaml')
+        logger.debug('opening {}'.format(config_path))
         if not os.path.isfile(config_path):
             raise FileNotFoundError('The recipe path \'{path}\' does not contain compilers.yaml'.format(path=config_path))
         with open(config_path) as fid:
             self.config = validate_recipe_config(yaml.load(fid, Loader=yaml.Loader))
 
         modules_path = os.path.join(path, 'modules.yaml')
+        logger.debug('opening {}'.format(modules_path))
         if not os.path.isfile(modules_path):
             modules_path = os.path.join(args.build, 'spack/etc/spack/defaults/modules.yaml')
+            logger.debug('no modules.yaml provided - using the {}'.format(modules_path))
         self.modules = modules_path
 
         # Select location of the mirrors.yaml file to use.
@@ -452,6 +463,7 @@ def main(prefix):
         parser = make_argparser()
         args = parser.parse_args()
         logger.debug('Command line arguments: {}'.format(args))
+        log_header(args)
 
         recipe = Recipe(args)
         build = Build(args)
