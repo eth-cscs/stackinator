@@ -1,0 +1,10 @@
+packages:
+    tools:
+      compiler:
+          toolchain: gcc
+          spec: gcc@12
+      unify: true
+      specs:
+      - cmake
+      mpi: false
+      gpu: false

@@ -1,0 +1,6 @@
+name: example
+store: '/user-environment'
+system: 'hohgant'
+spack:
+    repo: https://github.com/spack/spack.git
+    commit: devel

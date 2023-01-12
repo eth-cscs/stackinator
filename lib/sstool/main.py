@@ -65,6 +65,8 @@ def validate_recipe_config(config):
             p = config['mirror']['key']
             if not os.path.isfile(p):
                 raise FileNotFoundError('The key file \'{path}\' does not exist'.format(path=p))
+    else:
+        config['mirror'] = None
     if 'system' in config:
         if config['system'] not in ['hohgant', 'balfrin']:
             raise FileNotFoundError('The  system \'{name}\' must be one of hohgant or balfrin'.format(name=config['system']))
@@ -78,11 +80,14 @@ class Mirror:
     _source = None
 
     def __init__(self, config, source):
-        enabled = value_if_set(config, 'enable', True)
-        key = value_if_set(config, 'key', None)
+        if config:
+            enabled = value_if_set(config, 'enable', True)
+            key = value_if_set(config, 'key', None)
 
-        self._source = None if not enabled else source
-        self._key  = key
+            self._source = None if not enabled else source
+            self._key  = key
+        else:
+            self._source = self._key = None
 
     @property
     def key(self):
@@ -191,7 +196,7 @@ class Recipe:
 
         bootstrap = {}
         bootstrap["packages"]= {
-            "external": ["perl", "m4", "autoconf", "automake", "libtool", "gawk", "python"],
+            "external": ["perl", "m4", "autoconf", "automake", "libtool", "gawk", "python", "texinfo", "gawk"],
             "variants": {
                 "gcc": "[build_type=Release ~bootstrap +strip]",
                 "mpc": "[libs=static]",
@@ -207,7 +212,7 @@ class Recipe:
 
         gcc = {}
         gcc["packages"] = {
-            "external": ["perl", "m4", "autoconf", "automake", "libtool", "gawk", "python"],
+            "external": ["perl", "m4", "autoconf", "automake", "libtool", "gawk", "python", "texinfo", "gawk"],
             "variants": {
                 "gcc": "[build_type=Release +profiled +strip]",
                 "mpc": "[libs=static]",
@@ -436,11 +441,13 @@ class Build:
         os.makedirs(generate_config_path, exist_ok=True)
 
         # write the Makefile
-        compiler_names=[x for x in recipe.compilers.keys() if x!="bootstrap"]
+        all_compilers=[x for x in recipe.compilers.keys()]
+        release_compilers=[x for x in all_compilers if x!="bootstrap"]
         with open(os.path.join(generate_config_path, 'Makefile'), 'w') as f:
             f.write(make_config_template.render(
                 build_path=self.path,
-                compilers=compiler_names,
+                all_compilers=all_compilers,
+                release_compilers=release_compilers,
                 verbose=False))
             f.close()
 

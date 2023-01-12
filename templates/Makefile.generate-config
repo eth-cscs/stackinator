@@ -4,18 +4,25 @@ CONFIG_DIR = $(STORE)/config
 MODULE_DIR = $(SOFTWARE_STACK_PROJECT)/modules
 
 # These will be the prefixes of the GCCs, LLVMs and NVHPCs in the respective environments.
-ALL_COMPILER_PREFIXES ={% for compiler in compilers %} $$($(SPACK) -e ../compilers/{{ compiler }} find --format='{prefix}' gcc llvm nvhpc){% endfor %}
+ALL_COMPILER_PREFIXES ={% for compiler in all_compilers %} $$($(SPACK) -e ../compilers/{{ compiler }} find --format='{prefix}' gcc llvm nvhpc){% endfor %}
+COMPILER_PREFIXES ={% for compiler in release_compilers %} $$($(SPACK) -e ../compilers/{{ compiler }} find --format='{prefix}' gcc llvm nvhpc){% endfor %}
 
-all: $(CONFIG_DIR)/upstreams.yaml $(CONFIG_DIR)/compilers.yaml
+all: $(CONFIG_DIR)/upstreams.yaml $(CONFIG_DIR)/compilers.yaml $(MODULE_DIR)/upstreams.yaml $(MODULE_DIR)/compilers.yaml
 
 # Generate the compiler config file
 $(CONFIG_DIR)/compilers.yaml:
-	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $(ALL_COMPILER_PREFIXES))
-	cp $@ $(MODULE_DIR)
+	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $(COMPILER_PREFIXES))
 
 # Generate the upstreams config file
 $(CONFIG_DIR)/upstreams.yaml:
 	$(SPACK) config --scope=user add upstreams:system:install_tree:$(STORE)
-	cp $@ $(MODULE_DIR)
+
+# Generate the compiler config file
+$(MODULE_DIR)/compilers.yaml:
+	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $(ALL_COMPILER_PREFIXES))
+
+# Generate the upstreams config file
+$(MODULE_DIR)/upstreams.yaml:
+	$(SPACK) config --scope=user add upstreams:system:install_tree:$(STORE)
 
 include ../Make.inc
