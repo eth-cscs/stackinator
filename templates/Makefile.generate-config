@@ -20,8 +20,7 @@ $(CONFIG_DIR)/upstreams.yaml:
 	$(SPACK) config --scope=user add upstreams:system:install_tree:$(STORE)
 
 $(CONFIG_DIR)/packages.yaml:
-	[[ -f $(SPACK_SYSTEM_CONFIG_PATH)/packages.yaml ]] \
-    && cp $(SPACK_SYSTEM_CONFIG_PATH)/packages.yaml $(CONFIG_DIR)/packages.yaml
+	cp ../config/packages.yaml ../store/config/packages.yaml
 
 # Generate a configuration used to generate the module files
 # The configuration in CONFIG_DIR can't be used for this purpose, because a compilers.yaml
