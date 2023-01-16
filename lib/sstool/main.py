@@ -321,7 +321,7 @@ class Build:
         spack = recipe.config['spack']
         spack_path = os.path.join(self.path, 'spack')
 
-        # clone the repository if the repos has not already been checked out
+        # Clone the spack repository if it has not already been checked out
         logger.info('spack: using {}@{}'.format(spack['commit'], spack['repo']))
         if not os.path.isdir(os.path.join(spack_path, '.git')):
 
@@ -348,12 +348,6 @@ class Build:
         if capture.returncode != 0:
             logger.debug('unable to change to the requested commit {0}'.format(spack['commit']))
             capture.check_returncode()
-
-        # patch in the cray-mpich-binary package to spack
-        mpi_pkg_path = os.path.join(spack_path, 'var/spack/repos/builtin/packages/cray-mpich-binary')
-        mpi_pkg_src = os.path.join(tool_prefix, 'etc/cray-mpich-binary-package.py')
-        os.makedirs(mpi_pkg_path, exist_ok=True)
-        shutil.copy(mpi_pkg_src, os.path.join(mpi_pkg_path, 'package.py'))
 
         # load the jinja templating environment
         template_path = os.path.join(tool_prefix, 'templates')
@@ -402,6 +396,24 @@ class Build:
         if recipe.mirror.source:
             dst = os.path.join(config_path, 'mirrors.yaml')
             shutil.copy(recipe.mirror.source, dst)
+
+        # Configure the CSCS custom spack packages.
+        # Step 1: copy the CSCS repo to store_path where, it will be used to
+        #         build the stack, and then be part of the upstream provided
+        #         to users of the stack.
+        repo_src = os.path.join(tool_prefix, 'repo')
+        repo_dst = os.path.join(store_path, 'repo')
+        if os.path.exists(repo_dst):
+            shutil.rmtree(repo_dst)
+        shutil.copytree(repo_src, repo_dst)
+
+        # Step 2: Create a repos.yaml file in build_path/config
+        repos_yaml_template = env.get_template('repos.yaml')
+        with open(os.path.join(config_path, 'repos.yaml'), 'w') as f:
+            repo_path = os.path.join(recipe.config['store'], 'repo')
+            f.write(repos_yaml_template.render(repo_path=repo_path, verbose=False))
+            f.write('\n')
+            f.close()
 
         # Generate the makefile and spack.yaml files that describe the compilers
         compilers = recipe.generate_compilers()
