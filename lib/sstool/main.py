@@ -489,6 +489,11 @@ def main(prefix):
 
         build.generate(recipe)
 
+        logger.info('\nConfiguration finished, run the following to build the environment:\n')
+        logger.info('cd {}'.format(build.path))
+        logger.info('env --ignore-environment PATH=/usr/bin:/bin:`pwd`/spack/bin make modules -j32')
+        logger.info('env --ignore-environment PATH=/usr/bin:/bin:`pwd`/spack/bin make store.squashfs')
+
         return 0
     except Exception as e:
         logger.exception(e)

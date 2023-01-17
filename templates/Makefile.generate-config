@@ -10,7 +10,7 @@ ALL_COMPILER_PREFIXES ={% for compiler in all_compilers %} $$($(SPACK) -e ../com
 COMPILER_PREFIXES ={% for compiler in release_compilers %} $$($(SPACK) -e ../compilers/{{ compiler }} find --format='{prefix}' gcc llvm nvhpc){% endfor %}
 
 
-all: $(CONFIG_DIR)/upstreams.yaml $(CONFIG_DIR)/compilers.yaml $(CONFIG_DIR)/packages.yaml $(MODULE_DIR)/upstreams.yaml $(MODULE_DIR)/compilers.yaml
+all: $(CONFIG_DIR)/upstreams.yaml $(CONFIG_DIR)/compilers.yaml $(CONFIG_DIR)/packages.yaml $(CONFIG_DIR)/repos.yaml $(MODULE_DIR)/upstreams.yaml $(MODULE_DIR)/compilers.yaml
 
 # Generate the upstream configuration that will be provided by the mounted image
 $(CONFIG_DIR)/compilers.yaml:
@@ -23,6 +23,9 @@ $(CONFIG_DIR)/upstreams.yaml:
 # requires compilers.yaml to ensure that the path $(CONFIG_DIR) has been created.
 $(CONFIG_DIR)/packages.yaml: $(CONFIG_DIR)/compilers.yaml
 	cp $(SOFTWARE_STACK_PROJECT)/config/packages.yaml $(CONFIG_DIR)/packages.yaml
+
+$(CONFIG_DIR)/repos.yaml: $(CONFIG_DIR)/compilers.yaml
+	cp $(SOFTWARE_STACK_PROJECT)/config/repos.yaml $(CONFIG_DIR)/repos.yaml
 
 # Generate a configuration used to generate the module files
 # The configuration in CONFIG_DIR can't be used for this purpose, because a compilers.yaml
