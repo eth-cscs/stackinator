@@ -54,11 +54,6 @@ def make_argparser():
     parser.add_argument('-d', '--debug', action='store_true')
     return parser
 
-def value_if_set(d, key, default):
-    if key in d:
-        return d[key]
-    return default
-
 def validate_recipe_config(config):
     if 'mirror' in config:
         if 'key' in config['mirror']:
@@ -81,8 +76,8 @@ class Mirror:
 
     def __init__(self, config, source):
         if config:
-            enabled = value_if_set(config, 'enable', True)
-            key = value_if_set(config, 'key', None)
+            enabled = config.get('enable', True)
+            key = config.get('key', None)
 
             self._source = None if not enabled else source
             self._key  = key
@@ -177,7 +172,8 @@ class Recipe:
 
         for name, config in packages.items():
             spec = config["mpi"]
-            if spec and spec.startswith("cray-mpich-binary"):
+            valid_mpi_packages = ("cray-mpich-binary", "mpich", "mvapich2")
+            if spec and spec.startswith(valid_mpi_packages):
                 if config["gpu"]:
                     spec = spec + ' +' + config["gpu"]
                 packages[name]["specs"].append(spec)
