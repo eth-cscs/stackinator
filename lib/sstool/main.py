@@ -12,8 +12,14 @@ import sys
 import jinja2
 import yaml
 
+# The path where this tool is installed
 tool_prefix = ''
+
+# The logger, initalised with logging.getLogger
 logger = None
+
+# A unique name for the logfile
+logfile = ''
 
 def generate_logfile_name(name=''):
     idstr = str(time.localtime()) + str(os.getpid()) + str(platform.uname())
@@ -31,7 +37,7 @@ def configure_logging():
     logger.addHandler(ch)
 
     # create log file handler and set level to debug
-    fh = logging.FileHandler(generate_logfile_name('_config')) #, mode='w')
+    fh = logging.FileHandler(logfile) #, mode='w')
     fh.setLevel(logging.DEBUG)
     fh.setFormatter(logging.Formatter('%(asctime)s : %(levelname)-7s : %(message)s'))
     logger.addHandler(fh)
@@ -475,6 +481,9 @@ def main(prefix):
     global tool_prefix
     tool_prefix = prefix
 
+    global logfile
+    logfile = generate_logfile_name('_config')
+
     global logger
     logger = configure_logging()
 
@@ -497,5 +506,6 @@ def main(prefix):
         return 0
     except Exception as e:
         logger.exception(e)
+        logger.info("see {} for more information".format(logfile))
         return 1
 
