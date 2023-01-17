@@ -52,8 +52,6 @@ class CrayMpichBinary(Package):
     # libfabric.so.1
     depends_on("libfabric@1:", type="link")
 
-    print('----- XXXX installing cray-mpich-binary')
-
     with when("@8.1.21.1-gcc"):
         # libgfortran.so.5
         conflicts("%gcc@:7")
@@ -131,13 +129,12 @@ class CrayMpichBinary(Package):
         for root, _, files in os.walk(self.prefix):
             for name in files:
                 f = os.path.join(root, name)
-                print('----- XXXX testing {}'.format(f))
                 if not self.should_patch(f):
                     continue
-                print('----- XXXX patching {}'.format(f))
                 patchelf("--force-rpath", "--set-rpath", rpath, f, fail_on_error=False)
+                # The C compiler wrapper can fail because libmpi_gtl_cuda refers to the symbol
+                # __gxx_personality_v0 but wasn't linked against libstdc++.
                 if "libmpi_gtl_cuda.so" in str(f):
-                    print('----- XXXX fixing {}'.format(f))
                     patchelf("--add-needed", "libstdc++.so", f, fail_on_error=False)
 
     @run_after("install")
@@ -157,8 +154,6 @@ class CrayMpichBinary(Package):
             gtl_library = "-lmpi_gtl_hsa"
         else:
             gtl_library = ""
-
-        print('----- XXXX patching compilers {}'.format(gtl_library))
 
         filter_file("@@GTL_LIBRARY@@", gtl_library, self.prefix.bin.mpicc, string=True)
         filter_file("@@GTL_LIBRARY@@", gtl_library, self.prefix.bin.mpicxx, string=True)
