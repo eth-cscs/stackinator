@@ -103,6 +103,13 @@ class Recipe:
     compilers = {}
     config = {}
     user_mirror_config = None
+    valid_mpi_specs = {
+        "cray-mpich-binary":  (None, "cray-mpich-binary"),
+        "mpich":  ("4.1rc2", "device=ch4 netmod=ofi +slurm"),
+        "mvapich2": ("3.0a", "+xpmem fabrics=ch4ofi process_managers=slurm")
+    }
+
+
 
     def __init__(self, args):
         logger.debug('Generating recipe')
@@ -176,13 +183,20 @@ class Recipe:
             if ("gpu" not in config):
                 packages[name]["gpu"] = False
 
+
         for name, config in packages.items():
-            spec = config["mpi"]
-            valid_mpi_packages = ("cray-mpich-binary", "mpich", "mvapich2")
-            if spec and spec.startswith(valid_mpi_packages):
-                if config["gpu"]:
-                    spec = spec + ' +' + config["gpu"]
+            mpi_impl = config["mpi"]
+            if mpi_impl in Recipe.valid_mpi_specs:
+                version, options = Recipe.valid_mpi_specs[mpi_impl]
+                version_opt = f"@{version}" if version else "" 
+                spec = f"{mpi_impl}{version_opt} {options}"
+                if config["gpu"] and mpi_impl != 'cray-mpich-binary':
+                    spec = f"{spec} cuda_arch=80"
+
                 packages[name]["specs"].append(spec)
+            else:
+                # TODO: Create a custom exception type
+                raise Exception(f'Unsupported mpi: {mpi_impl}')
 
         self.packages = packages
 
