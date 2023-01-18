@@ -12,8 +12,14 @@ import sys
 import jinja2
 import yaml
 
+# The path where this tool is installed
 tool_prefix = ''
+
+# The logger, initalised with logging.getLogger
 logger = None
+
+# A unique name for the logfile
+logfile = ''
 
 def generate_logfile_name(name=''):
     idstr = str(time.localtime()) + str(os.getpid()) + str(platform.uname())
@@ -31,7 +37,7 @@ def configure_logging():
     logger.addHandler(ch)
 
     # create log file handler and set level to debug
-    fh = logging.FileHandler(generate_logfile_name('_config')) #, mode='w')
+    fh = logging.FileHandler(logfile) #, mode='w')
     fh.setLevel(logging.DEBUG)
     fh.setFormatter(logging.Formatter('%(asctime)s : %(levelname)-7s : %(message)s'))
     logger.addHandler(fh)
@@ -471,6 +477,9 @@ def main(prefix):
     global tool_prefix
     tool_prefix = prefix
 
+    global logfile
+    logfile = generate_logfile_name('_config')
+
     global logger
     logger = configure_logging()
 
@@ -485,8 +494,14 @@ def main(prefix):
 
         build.generate(recipe)
 
+        logger.info('\nConfiguration finished, run the following to build the environment:\n')
+        logger.info('cd {}'.format(build.path))
+        logger.info('env --ignore-environment PATH=/usr/bin:/bin:`pwd`/spack/bin make modules -j32')
+        logger.info('env --ignore-environment PATH=/usr/bin:/bin:`pwd`/spack/bin make store.squashfs')
+
         return 0
     except Exception as e:
         logger.exception(e)
+        logger.info("see {} for more information".format(logfile))
         return 1
 

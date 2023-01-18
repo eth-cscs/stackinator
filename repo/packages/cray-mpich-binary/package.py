@@ -132,6 +132,10 @@ class CrayMpichBinary(Package):
                 if not self.should_patch(f):
                     continue
                 patchelf("--force-rpath", "--set-rpath", rpath, f, fail_on_error=False)
+                # The C compiler wrapper can fail because libmpi_gtl_cuda refers to the symbol
+                # __gxx_personality_v0 but wasn't linked against libstdc++.
+                if "libmpi_gtl_cuda.so" in str(f):
+                    patchelf("--add-needed", "libstdc++.so", f, fail_on_error=False)
 
     @run_after("install")
     def fixup_compiler_paths(self):
