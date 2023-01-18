@@ -104,12 +104,10 @@ class Recipe:
     config = {}
     user_mirror_config = None
     valid_mpi_specs = {
-        "cray-mpich-binary":  (None, "cray-mpich-binary"),
+        "cray-mpich-binary":  (None, None),
         "mpich":  ("4.1rc2", "device=ch4 netmod=ofi +slurm"),
-        "mvapich2": ("3.0a", "+xpmem fabrics=ch4ofi process_managers=slurm")
+        "mvapich2": ("3.0a", "+xpmem fabrics=ch4ofi ch4_max_vcis=4 process_managers=slurm")
     }
-
-
 
     def __init__(self, args):
         logger.debug('Generating recipe')
@@ -179,24 +177,35 @@ class Recipe:
             if ("specs" not in config) or (config["specs"] == None):
                 packages[name]["specs"] = []
             if ("mpi" not in config):
-                packages[name]["mpi"] = False
+                packages[name]["mpi"] = None 
             if ("gpu" not in config):
-                packages[name]["gpu"] = False
+                packages[name]["gpu"] = None 
 
 
         for name, config in packages.items():
-            mpi_impl = config["mpi"]
-            if mpi_impl in Recipe.valid_mpi_specs:
-                version, options = Recipe.valid_mpi_specs[mpi_impl]
-                version_opt = f"@{version}" if version else "" 
-                spec = f"{mpi_impl}{version_opt} {options}"
-                if config["gpu"] and mpi_impl != 'cray-mpich-binary':
-                    spec = f"{spec} cuda_arch=80"
+            mpi = config["mpi"]
+            if mpi:
+                try:
+                    mpi_impl, mpi_ver = mpi.strip().split(sep='@', maxsplit=1)
+                except ValueError:
+                    mpi_impl = mpi.strip()
+                    mpi_ver = None
 
-                packages[name]["specs"].append(spec)
-            else:
-                # TODO: Create a custom exception type
-                raise Exception(f'Unsupported mpi: {mpi_impl}')
+                if mpi_impl in Recipe.valid_mpi_specs:
+                    default_ver, options = Recipe.valid_mpi_specs[mpi_impl]
+                    if mpi_ver:
+                        version_opt = f"@{mpi_ver}" 
+                    else:
+                        version_opt = f"@{default_ver}" if default_ver else ""
+
+                    spec = f"{mpi_impl}{version_opt} {options or ''}".strip()
+                    if config["gpu"] and mpi_impl != 'cray-mpich-binary':
+                        spec = f"{spec} cuda_arch=80"
+
+                    packages[name]["specs"].append(spec)
+                else:
+                    # TODO: Create a custom exception type
+                    raise Exception(f'Unsupported mpi: {mpi_impl}')
 
         self.packages = packages
 
