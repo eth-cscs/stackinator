@@ -177,18 +177,17 @@ class Recipe:
             if ("specs" not in config) or (config["specs"] == None):
                 packages[name]["specs"] = []
             if ("mpi" not in config):
-                packages[name]["mpi"] = None 
-            if ("gpu" not in config):
-                packages[name]["gpu"] = None 
-
+                packages[name]["mpi"] = {"spec": None, "gpu": None}
 
         for name, config in packages.items():
             mpi = config["mpi"]
-            if mpi:
+            mpi_spec = mpi["spec"]
+            mpi_gpu = mpi["gpu"]
+            if mpi_spec:
                 try:
-                    mpi_impl, mpi_ver = mpi.strip().split(sep='@', maxsplit=1)
+                    mpi_impl, mpi_ver = mpi_spec.strip().split(sep='@', maxsplit=1)
                 except ValueError:
-                    mpi_impl = mpi.strip()
+                    mpi_impl = mpi_spec.strip()
                     mpi_ver = None
 
                 if mpi_impl in Recipe.valid_mpi_specs:
@@ -199,7 +198,7 @@ class Recipe:
                         version_opt = f"@{default_ver}" if default_ver else ""
 
                     spec = f"{mpi_impl}{version_opt} {options or ''}".strip()
-                    if config["gpu"] and mpi_impl != 'cray-mpich-binary':
+                    if mpi_gpu and mpi_impl != 'cray-mpich-binary':
                         spec = f"{spec} cuda_arch=80"
 
                     packages[name]["specs"].append(spec)

@@ -14,8 +14,9 @@ packages:
       - rocm-cmake@5.2
       - hip@5.2
       - osu-micro-benchmarks@5.9
-      mpi: cray-mpich-binary
-      gpu: rocm
+      mpi:
+        spec: cray-mpich-binary
+        gpu: rocm
     tools:
       compiler:
           toolchain: gcc
@@ -24,5 +25,3 @@ packages:
       specs:
       - cmake
       - python@3.10
-      mpi: false
-      gpu: false

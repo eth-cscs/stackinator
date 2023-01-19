@@ -7,8 +7,9 @@ packages:
       specs:
       - cuda@11.8
       - osu-micro-benchmarks@5.9
-      mpi: cray-mpich-binary
-      gpu: cuda
+      mpi:
+        spec: cray-mpich-binary
+        gpu: cuda
     tools:
       compiler:
           toolchain: gcc
@@ -16,5 +17,3 @@ packages:
       unify: true
       specs:
       - cmake
-      mpi: false
-      gpu: false
