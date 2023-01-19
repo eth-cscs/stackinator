@@ -5,6 +5,7 @@ spack:
   view: false
   concretizer:
     unify: {{ config.unify }}
+    reuse: false
   specs:
 {% for spec in config.specs %}
   - {{ spec }}

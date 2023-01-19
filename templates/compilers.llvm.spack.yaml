@@ -10,4 +10,5 @@ spack:
   view: false
   concretizer:
     unify: when_possible
+    reuse: false
 
