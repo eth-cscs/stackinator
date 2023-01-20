@@ -2,6 +2,10 @@
 
 A tool for building a scientific software stack from a receipe for vClusters on CSCS' Alps infrastructure.
 
+## Bootstrapping
+Use the `bootstrap.sh` script to install the necessary dependencies. 
+The dependencies are going to be installed under the `external` directory on the root directory of the project.
+
 ## Basic usage
 
 The tool generates the make files and spack configurations that build the spack environments that are packaged together in the spack stack.
@@ -9,7 +13,7 @@ It can be thought of as equivalent to calling `cmake` or `configure`, before run
 
 ```bash
 # configure the build
-./sstool -b$BUILD_PATH -r$RECIPE_PATH
+./bin/sstool -b$BUILD_PATH -r$RECIPE_PATH
 
 # build the spack stack
 cd $BUILD_PATH
