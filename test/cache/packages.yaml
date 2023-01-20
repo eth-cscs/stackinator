@@ -6,8 +6,9 @@ packages:
       unify: true
       specs:
       - fmt
-      mpi: cray-mpich-binary
-      gpu: false
+      mpi:
+        spec: cray-mpich-binary
+        gpu: false
     tools:
       compiler:
           toolchain: gcc
@@ -16,5 +17,3 @@ packages:
       specs:
       - cmake
       - python@3.10
-      mpi: false
-      gpu: false

@@ -1,6 +1,9 @@
 # path used to test internally
 work
 
+# path used to boostrap environment
+external
+
 __pycache__
 
 # log files

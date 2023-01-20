@@ -5,6 +5,7 @@ spack:
   view: false
   concretizer:
     unify: {{ config.unify }}
+    reuse: false
   specs:
 {% for spec in config.specs %}
   - {{ spec }}
@@ -12,7 +13,7 @@ spack:
   packages:
     all:
       compiler: [{{ config.compiler.spec }}]
-    {% if config.mpi %}
+    {% if config.mpi.spec %}
     mpi:
-      require: {{ config.mpi }}
+      require: {{ config.mpi.spec }}
     {% endif %}

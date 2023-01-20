@@ -10,6 +10,7 @@ spack:
   view: false
   concretizer:
     unify: when_possible
+    reuse: false
   packages:
     gcc:
       variants: [build_type=Release +strip]

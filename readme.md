@@ -108,8 +108,9 @@ packages:
       specs:
       - hdf5 +mpi
       - fftw +mpi
-      mpi: cray-mpich-binary
-      gpu: false
+      mpi:
+        spec: cray-mpich-binary
+        gpu: false
 ```
 
 An environment labelled `gcc-host` is built using `gcc@11.3` from the `gcc` compiler toolchanin (**note** the compiler spec must mach a compiler from the toolchain that was installed via the `compilers.yaml` file).
@@ -154,8 +155,9 @@ packages:
       - cuda@11.8
       - fftw +mpi
       - hdf5 +mpi
-      mpi: cray-mpich-binary
-      gpu: cuda
+      mpi:
+        spec: cray-mpich-binary
+        gpu: cuda
 ```
 
 The `packages:gcc-nvgpu:gpu` to `cuda` will build the `cray-mpich-binary` with support for GPU-direct.
