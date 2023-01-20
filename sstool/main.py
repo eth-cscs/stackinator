@@ -12,9 +12,6 @@ import sys
 import jinja2
 import yaml
 
-# The path where this tool is installed
-tool_prefix = ''
-
 # The logger, initalised with logging.getLogger
 logger = None
 
@@ -114,14 +111,21 @@ class Recipe:
         path = args.recipe
         if not os.path.isabs(path):
             path = os.path.join(os.path.abspath(os.path.curdir), path)
+
         if not os.path.isdir(path):
             raise FileNotFoundError('The recipe path \'{path}\' does not exist'.format(path=path))
+
         self.path=path
+
+        self.root = os.path.normpath(
+           os.path.join(os.path.abspath(os.path.dirname(__file__)), '..'))
+
 
         compiler_path = os.path.join(path, 'compilers.yaml')
         logger.debug('opening {}'.format(compiler_path))
         if not os.path.isfile(compiler_path):
             raise FileNotFoundError('The recipe path \'{path}\' does not contain compilers.yaml'.format(path=compiler_path))
+
         with open(compiler_path) as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
             self.generate_compiler_specs(raw['compilers'])
@@ -130,6 +134,7 @@ class Recipe:
         logger.debug('opening {}'.format(packages_path))
         if not os.path.isfile(packages_path):
             raise FileNotFoundError('The recipe path \'{path}\' does not contain packages.yaml'.format(path=packages_path))
+
         with open(packages_path) as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
             self.generate_package_specs(raw['packages'])
@@ -138,6 +143,7 @@ class Recipe:
         logger.debug('opening {}'.format(config_path))
         if not os.path.isfile(config_path):
             raise FileNotFoundError('The recipe path \'{path}\' does not contain compilers.yaml'.format(path=config_path))
+
         with open(config_path) as fid:
             self.config = validate_recipe_config(yaml.load(fid, Loader=yaml.Loader))
 
@@ -146,6 +152,7 @@ class Recipe:
         if not os.path.isfile(modules_path):
             modules_path = os.path.join(args.build, 'spack/etc/spack/defaults/modules.yaml')
             logger.debug('no modules.yaml provided - using the {}'.format(modules_path))
+
         self.modules = modules_path
 
         # Select location of the mirrors.yaml file to use.
@@ -155,6 +162,7 @@ class Recipe:
         if mirrors_source == None:
             mirrors_path = os.path.join(self.configs_path, 'mirrors.yaml')
             mirrors_source = mirrors_path if os.path.isfile(mirrors_path) else None
+
         self._mirror = Mirror(config=self.config['mirror'], source=mirrors_source)
 
     @property
@@ -176,6 +184,7 @@ class Recipe:
         for name, config in packages.items():
             if ("specs" not in config) or (config["specs"] == None):
                 packages[name]["specs"] = []
+
             if ("mpi" not in config):
                 packages[name]["mpi"] = {"spec": None, "gpu": None}
 
@@ -198,6 +207,7 @@ class Recipe:
                         version_opt = f"@{default_ver}" if default_ver else ""
 
                     spec = f"{mpi_impl}{version_opt} {options or ''}".strip()
+
                     if mpi_gpu and mpi_impl != 'cray-mpich-binary':
                         spec = f"{spec} cuda_arch=80"
 
@@ -256,8 +266,10 @@ class Recipe:
             for spec in raw["llvm"]["specs"]:
                 if spec.startswith("nvhpc"):
                     llvm["specs"].append(spec + "~mpi~blas~lapack")
+
                 if spec.startswith("llvm"):
                     llvm["specs"].append(spec + " +clang targets=x86 ~gold ^ninja@kitware")
+
             llvm["requires"] = raw["llvm"]["requires"]
             compilers["llvm"] = llvm
 
@@ -269,7 +281,7 @@ class Recipe:
         system = self.config['system']
         return os.path.join(
                 os.path.join(
-                    os.path.join(tool_prefix, 'share'),
+                    os.path.join(self.root, 'share'),
                     'cluster-config'),
                 system)
 
@@ -277,7 +289,7 @@ class Recipe:
     def generate_compilers(self):
         files = {}
 
-        template_path = os.path.join(tool_prefix, 'templates')
+        template_path = os.path.join(self.root, 'templates')
         env = jinja2.Environment(
                 loader = jinja2.FileSystemLoader(template_path),
                 trim_blocks=True, lstrip_blocks=True)
@@ -299,7 +311,7 @@ class Recipe:
     def generate_packages(self):
         files = {}
 
-        template_path = os.path.join(tool_prefix, 'templates')
+        template_path = os.path.join(self.root, 'templates')
         jenv = jinja2.Environment(
                 loader = jinja2.FileSystemLoader(template_path),
                 trim_blocks=True, lstrip_blocks=True)
@@ -326,11 +338,15 @@ class Build:
         path = args.build
         if not os.path.isabs(path):
             path = os.path.join(os.path.abspath(os.path.curdir), path)
+
         if os.path.exists(path):
             if not os.path.isdir(path):
                 raise IOError('build path is not a directory')
 
         self.path = path
+        self.root = os.path.normpath(
+           os.path.join(os.path.abspath(os.path.dirname(__file__)), '..'))
+
 
     def generate(self, recipe):
         # make the paths
@@ -374,7 +390,7 @@ class Build:
             capture.check_returncode()
 
         # load the jinja templating environment
-        template_path = os.path.join(tool_prefix, 'templates')
+        template_path = os.path.join(self.root, 'templates')
         env = jinja2.Environment(
                 loader = jinja2.FileSystemLoader(template_path),
                 trim_blocks=True, lstrip_blocks=True)
@@ -393,7 +409,7 @@ class Build:
             f.write('\n')
             f.close()
 
-        etc_path = os.path.join(tool_prefix, 'etc')
+        etc_path = os.path.join(self.root, 'etc')
         for f in ['Make.inc', 'bwrap-mutable-root.sh']:
             shutil.copy2(os.path.join(etc_path, f), os.path.join(self.path, f))
 
@@ -410,6 +426,7 @@ class Build:
             # configuration
             if f in ['mirrors.yaml']:
                 continue
+
             # construct full file path
             src = os.path.join(system_configs_path, f)
             dst = os.path.join(config_path, f)
@@ -425,10 +442,11 @@ class Build:
         # Step 1: copy the CSCS repo to store_path where, it will be used to
         #         build the stack, and then be part of the upstream provided
         #         to users of the stack.
-        repo_src = os.path.join(tool_prefix, 'repo')
+        repo_src = os.path.join(self.root, 'repo')
         repo_dst = os.path.join(store_path, 'repo')
         if os.path.exists(repo_dst):
             shutil.rmtree(repo_dst)
+
         shutil.copytree(repo_src, repo_dst)
 
         # Step 2: Create a repos.yaml file in build_path/config
@@ -495,10 +513,7 @@ class Build:
             f.write(modules_yaml)
             f.close()
 
-def main(prefix):
-    global tool_prefix
-    tool_prefix = prefix
-
+def main():
     global logfile
     logfile = generate_logfile_name('_config')
 
@@ -526,4 +541,3 @@ def main(prefix):
         logger.exception(e)
         logger.info("see {} for more information".format(logfile))
         return 1
-

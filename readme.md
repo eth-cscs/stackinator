@@ -2,6 +2,10 @@
 
 A tool for building a scientific software stack from a receipe for vClusters on CSCS' Alps infrastructure.
 
+## Bootstrapping
+Use the `bootstrap.sh` script to install the necessary dependencies. 
+The dependencies are going to be installed under the `external` directory on the root directory of the project.
+
 ## Basic usage
 
 The tool generates the make files and spack configurations that build the spack environments that are packaged together in the spack stack.
@@ -9,7 +13,7 @@ It can be thought of as equivalent to calling `cmake` or `configure`, before run
 
 ```bash
 # configure the build
-./sstool -b$BUILD_PATH -r$RECIPE_PATH
+./bin/sstool -b$BUILD_PATH -r$RECIPE_PATH
 
 # build the spack stack
 cd $BUILD_PATH
@@ -72,7 +76,7 @@ The compilers are built in multiple stages:
 1. *bootstrap*: A bootstrap gcc compiler is built using the system compiler (currently gcc 4.7.5).
     * `gcc:specs`: single spec of the form `gcc@version`.
     * The selected version should have full support for the target architecture in order to build optimised gcc toolchains in step 2.
-2. *gcc*: The boostrap compiler is then used to build the gcc version(s) provided by the stack.
+2. *gcc*: The bootstrap compiler is then used to build the gcc version(s) provided by the stack.
     * `gcc:specs`: A list of _at least one_ specs of the form `gcc@version`.
 3. *llvm*: (optional) The nvhpc and/or llvm toolchains are build using one of the gcc toolchains installed in step 2.
     * `llvm:specs`: a list of specs of the form `nvhpc@version` or `llvm@version`.
