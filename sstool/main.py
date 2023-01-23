@@ -43,8 +43,8 @@ def configure_logging():
 
 def log_header(args):
     logger.info('Spack Stack Tool')
-    logger.info('  recipe path: {}'.format(args.recipe))
-    logger.info('  build path : {}'.format(args.build))
+    logger.info(f'  recipe path: {args.recipe}')
+    logger.info(f'  build path : {args.build}')
 
 def make_argparser():
     parser = argparse.ArgumentParser(description='Generate a build configuration for a spack stack from a recipe.')
@@ -62,14 +62,14 @@ def validate_recipe_config(config):
         if 'key' in config['mirror']:
             p = config['mirror']['key']
             if not os.path.isfile(p):
-                raise FileNotFoundError('The key file \'{path}\' does not exist'.format(path=p))
+                raise FileNotFoundError(f"The key file '{p}' does not exist")
     else:
         config['mirror'] = None
     if 'system' in config:
         if config['system'] not in ['hohgant', 'balfrin']:
-            raise FileNotFoundError('The  system \'{name}\' must be one of hohgant or balfrin'.format(name=config['system']))
+            raise FileNotFoundError(f"The system '{config['system']}' must be one of hohgant or balfrin")
     else:
-        raise FileNotFoundError('The  \'{path}\' does not exist'.format(path=p))
+        raise FileNotFoundError("The '{p}' does not exist")
 
     return config
 
@@ -113,7 +113,7 @@ class Recipe:
             path = os.path.join(os.path.abspath(os.path.curdir), path)
 
         if not os.path.isdir(path):
-            raise FileNotFoundError('The recipe path \'{path}\' does not exist'.format(path=path))
+            raise FileNotFoundError(f"The recipe path '{path}' does not exist")
 
         self.path=path
 
@@ -122,36 +122,36 @@ class Recipe:
 
 
         compiler_path = os.path.join(path, 'compilers.yaml')
-        logger.debug('opening {}'.format(compiler_path))
+        logger.debug(f'opening {compiler_path}')
         if not os.path.isfile(compiler_path):
-            raise FileNotFoundError('The recipe path \'{path}\' does not contain compilers.yaml'.format(path=compiler_path))
+            raise FileNotFoundError(f"The recipe path '{compiler_path}' does not contain compilers.yaml")
 
         with open(compiler_path) as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
             self.generate_compiler_specs(raw['compilers'])
 
         packages_path = os.path.join(path, 'packages.yaml')
-        logger.debug('opening {}'.format(packages_path))
+        logger.debug(f'opening {packages_path}')
         if not os.path.isfile(packages_path):
-            raise FileNotFoundError('The recipe path \'{path}\' does not contain packages.yaml'.format(path=packages_path))
+            raise FileNotFoundError("The recipe path '{packages_path}' does not contain packages.yaml")
 
         with open(packages_path) as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
             self.generate_package_specs(raw['packages'])
 
         config_path = os.path.join(path, 'config.yaml')
-        logger.debug('opening {}'.format(config_path))
+        logger.debug(f'opening {config_path}')
         if not os.path.isfile(config_path):
-            raise FileNotFoundError('The recipe path \'{path}\' does not contain compilers.yaml'.format(path=config_path))
+            raise FileNotFoundError(f"The recipe path '{config_path}' does not contain compilers.yaml")
 
         with open(config_path) as fid:
             self.config = validate_recipe_config(yaml.load(fid, Loader=yaml.Loader))
 
         modules_path = os.path.join(path, 'modules.yaml')
-        logger.debug('opening {}'.format(modules_path))
+        logger.debug(f'opening {modules_path}')
         if not os.path.isfile(modules_path):
             modules_path = os.path.join(args.build, 'spack/etc/spack/defaults/modules.yaml')
-            logger.debug('no modules.yaml provided - using the {}'.format(modules_path))
+            logger.debug('no modules.yaml provided - using the {modules_path}')
 
         self.modules = modules_path
 
@@ -362,7 +362,7 @@ class Build:
         spack_path = os.path.join(self.path, 'spack')
 
         # Clone the spack repository if it has not already been checked out
-        logger.info('spack: using {}@{}'.format(spack['commit'], spack['repo']))
+        logger.info(f'spack: using {spack["commit"]}@{spack["repo"]}')
         if not os.path.isdir(os.path.join(spack_path, '.git')):
 
             # clone the repository
@@ -374,7 +374,7 @@ class Build:
             logger.debug(capture.stdout.decode('utf-8'))
 
             if capture.returncode != 0:
-                logger.debug('error cloning the repository {0}'.format(spack['repo']))
+                logger.debug('error cloning the repository {spack["repo"]}')
                 capture.check_returncode()
 
         # Check out the requested branch
@@ -386,7 +386,7 @@ class Build:
         logger.debug(capture.stdout.decode('utf-8'))
 
         if capture.returncode != 0:
-            logger.debug('unable to change to the requested commit {0}'.format(spack['commit']))
+            logger.debug(f'unable to change to the requested commit {spack["commit"]}')
             capture.check_returncode()
 
         # load the jinja templating environment
@@ -523,7 +523,7 @@ def main():
     try:
         parser = make_argparser()
         args = parser.parse_args()
-        logger.debug('Command line arguments: {}'.format(args))
+        logger.debug(f'Command line arguments: {args}')
         log_header(args)
 
         recipe = Recipe(args)
@@ -532,12 +532,12 @@ def main():
         build.generate(recipe)
 
         logger.info('\nConfiguration finished, run the following to build the environment:\n')
-        logger.info('cd {}'.format(build.path))
+        logger.info(f'cd {build.path}')
         logger.info('env --ignore-environment PATH=/usr/bin:/bin:`pwd`/spack/bin make modules -j32')
         logger.info('env --ignore-environment PATH=/usr/bin:/bin:`pwd`/spack/bin make store.squashfs')
 
         return 0
     except Exception as e:
         logger.exception(e)
-        logger.info("see {} for more information".format(logfile))
+        logger.info(f'see {logfile} for more information')
         return 1
