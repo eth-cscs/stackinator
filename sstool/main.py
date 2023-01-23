@@ -102,7 +102,7 @@ class Recipe:
     user_mirror_config = None
     valid_mpi_specs = {
         "cray-mpich-binary":  (None, None),
-        "mpich":  ("4.1rc2", "device=ch4 netmod=ofi +slurm"),
+        "mpich":  ("4.1rc3", "device=ch4 netmod=ofi +slurm"),
         "mvapich2": ("3.0a", "+xpmem fabrics=ch4ofi ch4_max_vcis=4 process_managers=slurm")
     }
 
