@@ -44,6 +44,7 @@ system: hohgant
 spack:
     repo: https://github.com/spack/spack.git
     commit: 6408b51
+modules: True
 ```
 
 * `name`: a plain text name for the environment
@@ -52,6 +53,8 @@ spack:
     * one of `balfrin` or `hohgant`.
     * cluster-specific details such as the version and location of libfabric are used when configuring and building the stack.
 * `spack`: which spack repository to use for installation.
+* `mirrors`: _optional_ configure use of build caches, see [build cache documentation](docs/build-cache.md).
+* `modules`: _optional_ enable/diasble module file generation (default `True`).
 
 ### compilers
 
@@ -224,6 +227,9 @@ spack:
 ### modules
 
 Modules are generated for the installed compilers and packages by spack. The default module generation rules set by the version of spack specified in `config.yaml` will be used if no `modules.yaml` file is provided.
+config['modules'] = True
 
 To set rules for module generation, provide a `module.yaml` file as per the [spack documentation](https://spack.readthedocs.io/en/latest/module_file_support.html).
+
+To disable module generation, set the field `config:modules:False` in `config.yaml`.
 

@@ -70,6 +70,8 @@ def validate_recipe_config(config):
             raise FileNotFoundError(f"The system '{config['system']}' must be one of hohgant or balfrin")
     else:
         raise FileNotFoundError(f"The '{p}' does not exist")
+    if 'modules' not in config:
+        config['modules'] = True
 
     return config
 
@@ -399,7 +401,7 @@ class Build:
         makefile_template = env.get_template('Makefile')
         with open(os.path.join(self.path, 'Makefile'), 'w') as f:
             cache = {'key': recipe.mirror.key, 'enabled': recipe.mirror.source}
-            f.write(makefile_template.render(cache=cache, verbose=False))
+            f.write(makefile_template.render(cache=cache, modules=recipe.config['modules'], verbose=False))
             f.write('\n')
             f.close()
 
