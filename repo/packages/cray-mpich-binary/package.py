@@ -17,6 +17,13 @@ class CrayMpichBinary(Package):
 
     maintainers = ["haampie"]
 
+
+    version("8.1.23-gcc",
+            sha256="2d1dfda811848d278548b0d7735f17341c70380dbf7f91dc680e5afcfb5e0038",
+            url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.23-gcc.tar.gz")
+    version("8.1.23-nvhpc",
+            sha256="1dd9b161c538dbac564ecff6f1552220ba40dcc9436dc855087438f29861eba1",
+            url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.23-nvhpc.tar.gz")
     version("8.1.21.1-gcc",
             sha256="0a6852ebf06afd249285fd09566e8489300cba96ad66e90c40df36b6af9a631e",
             url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.21.1-gcc.tar.gz")
@@ -29,6 +36,7 @@ class CrayMpichBinary(Package):
     version("8.1.18.4-nvhpc",
             sha256="2285433363c75a04ccdf4798be5b0e296e0c9a8fb8fcb38eb0aa4ccf8d1e0843",
             url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.18.4-nvhpc.tar.gz")
+
 
     variant("cuda", default=False)
     variant("rocm", default=False)
@@ -51,6 +59,21 @@ class CrayMpichBinary(Package):
 
     # libfabric.so.1
     depends_on("libfabric@1:", type="link")
+
+    with when("@8.1.23-gcc"):
+        # libgfortran.so.5
+        conflicts("%gcc@:7")
+        for __compiler in spack.compilers.supported_compilers():
+            if __compiler != "gcc":
+                conflicts("%{}".format(__compiler), msg="gcc required")
+
+    with when("@8.1.23-nvhpc"):
+        conflicts("%nvhpc@:20.6")
+        conflicts("+rocm")
+        conflicts("~cuda")
+        for __compiler in spack.compilers.supported_compilers():
+            if __compiler != "nvhpc":
+                conflicts("%{}".format(__compiler), msg="nvhpc required")
 
     with when("@8.1.21.1-gcc"):
         # libgfortran.so.5
