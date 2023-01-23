@@ -69,7 +69,7 @@ def validate_recipe_config(config):
         if config['system'] not in ['hohgant', 'balfrin']:
             raise FileNotFoundError(f"The system '{config['system']}' must be one of hohgant or balfrin")
     else:
-        raise FileNotFoundError("The '{p}' does not exist")
+        raise FileNotFoundError(f"The '{p}' does not exist")
 
     return config
 
@@ -151,7 +151,7 @@ class Recipe:
         logger.debug(f'opening {modules_path}')
         if not os.path.isfile(modules_path):
             modules_path = os.path.join(args.build, 'spack/etc/spack/defaults/modules.yaml')
-            logger.debug('no modules.yaml provided - using the {modules_path}')
+            logger.debug(f'no modules.yaml provided - using the {modules_path}')
 
         self.modules = modules_path
 
@@ -374,7 +374,7 @@ class Build:
             logger.debug(capture.stdout.decode('utf-8'))
 
             if capture.returncode != 0:
-                logger.debug('error cloning the repository {spack["repo"]}')
+                logger.debug(f'error cloning the repository {spack["repo"]}')
                 capture.check_returncode()
 
         # Check out the requested branch
