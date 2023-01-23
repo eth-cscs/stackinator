@@ -6,4 +6,3 @@ sstool_version = ".".join(str(s) for s in sstool_version_info)
 
 __all__ = ["sstool_version_info", "sstool_version"]
 __version__ = sstool_version
-
