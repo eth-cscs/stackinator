@@ -534,8 +534,7 @@ def main():
         logger.info('env --ignore-environment PATH=/usr/bin:/bin:`pwd`'
                     '/spack/bin make modules -j32')
         logger.info('env --ignore-environment PATH=/usr/bin:/bin:`pwd`'
-                    ' /spack/bin make store.squashfs')
-
+                    '/spack/bin make store.squashfs')
         return 0
     except Exception as e:
         logger.exception(e)
