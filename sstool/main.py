@@ -99,7 +99,7 @@ class Mirror:
 class Recipe:
     valid_mpi_specs = {
         "cray-mpich-binary":  (None, None),
-        "mpich":  ("4.1rc3", "device=ch4 netmod=ofi +slurm"),
+        "mpich":  ("4.1rc4", "device=ch4 netmod=ofi +slurm"),
         "mvapich2": (
             "3.0a", 
             "+xpmem fabrics=ch4ofi ch4_max_vcis=4 process_managers=slurm"
@@ -175,8 +175,8 @@ class Recipe:
     def generate_modules(self):
         with self.modules.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            raw['modules']['default']['roots']['tcl'] = pathlib.Path(
-                self.config['store']) / 'modules'
+            raw['modules']['default']['roots']['tcl'] = (
+                pathlib.Path(self.config['store']) / 'modules').as_posix()
             return yaml.dump(raw)
 
     # creates the self.packages field that describes the full specifications
