@@ -364,8 +364,8 @@ class Build:
         spack_path = self.path / 'spack'
 
         # Clone the spack repository if it has not already been checked out
-        logger.info(f'spack: using {spack["commit"]}@{spack["repo"]}')
         if not (spack_path / '.git').is_dir():
+            logger.info(f'spack: clone repository {spack["repo"]}')
 
             # clone the repository
             capture = subprocess.run(
@@ -379,18 +379,20 @@ class Build:
                 logger.debug(f'error cloning the repository {spack["repo"]}')
                 capture.check_returncode()
 
-        # Check out the requested branch
-        capture = subprocess.run(
-            ["git", "-C", spack_path, "checkout", spack['commit']],
-            shell=False,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
-        logger.debug(capture.stdout.decode('utf-8'))
+        # Check out a branch or commit if one was specified
+        if spack['commit']:
+            logger.info(f'spack: checkout branch/commit {spack["commit"]}')
+            capture = subprocess.run(
+                ["git", "-C", spack_path, "checkout", spack['commit']],
+                shell=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT)
+            logger.debug(capture.stdout.decode('utf-8'))
 
-        if capture.returncode != 0:
-            logger.debug(
-                f'unable to change to the requested commit {spack["commit"]}')
-            capture.check_returncode()
+            if capture.returncode != 0:
+                logger.debug(
+                    f'unable to change to the requested commit {spack["commit"]}')
+                capture.check_returncode()
 
         # load the jinja templating environment
         template_path = self.root / 'templates'

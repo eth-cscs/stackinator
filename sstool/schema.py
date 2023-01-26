@@ -23,22 +23,6 @@ def extend_with_default(validator_class):
 
 validator = extend_with_default(jsonschema.Draft7Validator)
 
-# name: cuda-env
-# # default /user-environment
-# store: /user-environment
-# system: hohgant
-# spack:
-#     repo: https://github.com/spack/spack.git
-#     # default: None == no `git checkout` command
-#     commit: 6408b51
-# mirror:
-#     # default None
-#     key: /home/bob/veryprivate.key
-#     # default True
-#     enable: True
-# # default True
-# modules: False
-
 # for config.yaml files
 config_schema = {
     "type" : "object",
@@ -66,7 +50,8 @@ config_schema = {
                     ],
                     "default": None,
                 }
-            }
+            },
+            "additionalProperties": False,
         },
         "mirror" : {
             "type" : "object",
@@ -83,6 +68,7 @@ config_schema = {
                     "default": None,
                 }
             },
+            "additionalProperties": False,
             "default": {"enable": True, "key": None},
         },
         "modules" : {
@@ -95,3 +81,59 @@ config_schema = {
     "required": ["name", "system", "spack"]
 }
 
+# for config.yaml files
+compilers_schema = {
+    "type" : "object",
+    "properties" : {
+        "bootstrap" : {
+            "type": "object",
+            "properties": {
+                "spec": {
+                    "type": "string",
+                },
+            },
+            "additionalProperties": False,
+            "required": ["spec"],
+        },
+        "gcc" : {
+            "type": "object",
+            "properties": {
+                "specs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                    },
+                    "minItems": 1,
+                },
+            },
+            "additionalProperties": False,
+            "required": ["specs"],
+        },
+        "llvm" : {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "requires": "string",
+                        "specs": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                            },
+                            "minItems": 1,
+                        },
+                    },
+                    "additionalProperties": False,
+                    "required": ["requires", "specs"],
+                },
+                {
+                    "type" : "null"
+                },
+            ],
+            "default": None,
+        },
+    },
+    # this restricts to only the fields described above
+    "additionalProperties": False,
+    "required": ["bootstrap", "gcc"]
+}
