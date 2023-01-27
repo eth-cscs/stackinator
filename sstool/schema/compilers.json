@@ -1,6 +1,5 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://raw.githubusercontent.com/eth-cscs/sstool/master/sstool/schema/compilers.json",
     "title": "Schema for Spack Stack compilers.yaml recipe file",
     "type": "object",
     "defs": {
