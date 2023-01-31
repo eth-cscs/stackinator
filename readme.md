@@ -60,18 +60,17 @@ modules: True
 
 Take an  example configuration:
 ```yaml
-compilers:
-  bootstrap:
-    specs:
-    - gcc@11
-  gcc:
-    specs:
-    - gcc@11
-  llvm:
-    requires: gcc@11
-    specs:
-    - nvhpc@21.7
-    - llvm@14
+bootstrap:
+  specs:
+  - gcc@11
+gcc:
+  specs:
+  - gcc@11
+llvm:
+  requires: gcc@11
+  specs:
+  - nvhpc@21.7
+  - llvm@14
 ```
 
 The compilers are built in multiple stages:
