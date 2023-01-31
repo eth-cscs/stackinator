@@ -1,2 +1,4 @@
 PyYAML
 Jinja2
+jsonschema
+pytest

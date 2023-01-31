@@ -1,0 +1,57 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Schema for Spack Stack config.yaml recipe file",
+    "type" : "object",
+    "properties" : {
+        "name" : {
+            "type": "string"
+        },
+        "store" : {
+            "type" : "string",
+            "default" : "/user-environment"
+        },
+        "system" : {
+            "type" : "string"
+        },
+        "spack" : {
+            "type" : "object",
+            "properties" : {
+                "repo": {
+                    "type": "string"
+                },
+                "commit": {
+                    "oneOf": [
+                        {"type" : "string"},
+                        {"type" : "null"}
+                    ],
+                    "default": null
+                }
+            },
+            "additionalProperties": false
+        },
+        "mirror" : {
+            "type" : "object",
+            "properties" : {
+                "enable" : {
+                    "type": "boolean",
+                    "default": true
+                },
+                "key" : {
+                    "oneOf": [
+                        {"type" : "string"},
+                        {"type" : "null"}
+                    ],
+                    "default": null
+                }
+            },
+            "additionalProperties": false,
+            "default": {"enable": true, "key": null}
+        },
+        "modules" : {
+            "type": "boolean",
+            "default": true
+        }
+    },
+    "additionalProperties": false,
+    "required": ["name", "system", "spack"]
+}

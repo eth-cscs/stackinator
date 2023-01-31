@@ -12,6 +12,8 @@ import time
 import jinja2
 import yaml
 
+import sstool.schema
+
 # The logger, initalised with logging.getLogger
 logger = None
 
@@ -56,27 +58,6 @@ def make_argparser():
     parser.add_argument('-r', '--recipe', required=True, type=str)
     parser.add_argument('-d', '--debug', action='store_true')
     return parser
-
-def validate_recipe_config(config):
-    if 'mirror' in config:
-        if 'key' in config['mirror']:
-            p = pathlib.Path(config['mirror']['key'])
-            if not p.is_file():
-                raise FileNotFoundError(f"The key file '{p}' does not exist")
-    else:
-        config['mirror'] = None
-
-    if 'system' in config:
-        if config['system'] not in ['hohgant', 'balfrin']:
-            raise FileNotFoundError(f"The system '{config['system']}' must be "
-                                    f"one of hohgant or balfrin")
-    else:
-        raise FileNotFoundError(f"The '{p}' does not exist")
-
-    if 'modules' not in config:
-        config['modules'] = True
-
-    return config
 
 class Mirror:
     def __init__(self, config, source):
@@ -125,7 +106,12 @@ class Recipe:
 
         with compiler_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            self.generate_compiler_specs(raw['compilers'])
+            if 'compilers' in raw:
+                logger.warning(f"{compiler_path} uses deprecated 'compilers:' "
+                               f"header. This will be an error in future releases.")
+                raw = raw['compilers']
+            sstool.schema.compilers_validator.validate(raw)
+            self.generate_compiler_specs(raw)
 
         packages_path = path / 'packages.yaml'
         logger.debug(f'opening {packages_path}')
@@ -144,8 +130,9 @@ class Recipe:
                                     f"not contain compilers.yaml")
 
         with config_path.open() as fid:
-            self.config = validate_recipe_config(
-                yaml.load(fid, Loader=yaml.Loader))
+            raw = yaml.load(fid, Loader=yaml.Loader)
+            sstool.schema.config_validator.validate(raw)
+            self.config = raw
 
         modules_path = path / 'modules.yaml'
         logger.debug(f'opening {modules_path}')
@@ -227,10 +214,6 @@ class Recipe:
     # creates the self.compilers field that describes the full specifications
     # for all of teh compilers from the raw compilers.yaml input
     def generate_compiler_specs(self, raw):
-        # TODO: error checking
-        #   bootstrap and gcc have been specified
-        #   gcc specs are of the form gcc@version
-        #   llvm specs are of the form {llvm@version, nvhpc@version}
         compilers = {}
 
         bootstrap = {}
@@ -246,7 +229,7 @@ class Recipe:
                 "zlib": "[~shared]"
             }
         }
-        bootstrap_spec = raw["bootstrap"]["specs"][0]
+        bootstrap_spec = raw["bootstrap"]["spec"]
         bootstrap["specs"] = [f"{bootstrap_spec} languages=c,c++",
                               f"squashfs default_compression=zstd"]
         compilers["bootstrap"] = bootstrap
@@ -364,8 +347,8 @@ class Build:
         spack_path = self.path / 'spack'
 
         # Clone the spack repository if it has not already been checked out
-        logger.info(f'spack: using {spack["commit"]}@{spack["repo"]}')
         if not (spack_path / '.git').is_dir():
+            logger.info(f'spack: clone repository {spack["repo"]}')
 
             # clone the repository
             capture = subprocess.run(
@@ -379,18 +362,20 @@ class Build:
                 logger.debug(f'error cloning the repository {spack["repo"]}')
                 capture.check_returncode()
 
-        # Check out the requested branch
-        capture = subprocess.run(
-            ["git", "-C", spack_path, "checkout", spack['commit']],
-            shell=False,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
-        logger.debug(capture.stdout.decode('utf-8'))
+        # Check out a branch or commit if one was specified
+        if spack['commit']:
+            logger.info(f'spack: checkout branch/commit {spack["commit"]}')
+            capture = subprocess.run(
+                ["git", "-C", spack_path, "checkout", spack['commit']],
+                shell=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT)
+            logger.debug(capture.stdout.decode('utf-8'))
 
-        if capture.returncode != 0:
-            logger.debug(
-                f'unable to change to the requested commit {spack["commit"]}')
-            capture.check_returncode()
+            if capture.returncode != 0:
+                logger.debug(
+                    f'unable to change to the requested commit {spack["commit"]}')
+                capture.check_returncode()
 
         # load the jinja templating environment
         template_path = self.root / 'templates'
