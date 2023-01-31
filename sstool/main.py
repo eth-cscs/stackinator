@@ -250,7 +250,7 @@ class Recipe:
         gcc["specs"] = raw["gcc"]["specs"]
         gcc["requires"] = bootstrap_spec
         compilers["gcc"] = gcc
-        if "llvm" in raw:
+        if raw["llvm"] is not None:
             llvm = {}
             llvm["packages"] = False
             llvm["specs"] = []
