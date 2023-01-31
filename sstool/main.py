@@ -106,6 +106,10 @@ class Recipe:
 
         with compiler_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
+            if 'compilers' in raw:
+                logger.warning(f"{compiler_path} uses deprecated 'compilers:' "
+                               f"header. This will be an error in future releases.")
+                raw = raw['compilers']
             sstool.schema.compilers_validator.validate(raw)
             self.generate_compiler_specs(raw)
 
