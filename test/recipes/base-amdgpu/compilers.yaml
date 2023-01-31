@@ -1,7 +1,5 @@
-compilers:
-  bootstrap:
-    specs:
-    - gcc@11
-  gcc:
-    specs:
-    - gcc@11
+bootstrap:
+  spec: gcc@11
+gcc:
+  specs:
+  - gcc@11

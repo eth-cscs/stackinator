@@ -22,8 +22,7 @@ def test_config_yaml(yaml_path):
         assert raw['store'] == '/user-environment'
         assert raw['spack']['commit'] == None
         assert raw['modules'] == True
-        assert raw['mirror']['enable'] == True
-        assert raw['mirror']['key'] == None
+        assert raw['mirror'] == {'enable': True, 'key': None}
 
     with open(yaml_path / 'config.full.yaml') as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
@@ -31,8 +30,7 @@ def test_config_yaml(yaml_path):
         assert raw['store'] == '/alternative-point'
         assert raw['spack']['commit'] == '6408b51'
         assert raw['modules'] == False
-        assert raw['mirror']['key'] == '/home/bob/veryprivate.key'
-        assert raw['mirror']['enable'] == True
+        assert raw['mirror'] == {'enable': True, 'key': '/home/bob/veryprivate.key'}
 
 def test_compilers_yaml(yaml_path):
     # test that the defaults are set as expected

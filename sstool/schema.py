@@ -29,4 +29,6 @@ validator = extend_with_default(jsonschema.Draft7Validator)
 
 # load recipe yaml schema
 config_schema = json.load(open(prefix / 'schema/config.json'))
+config_validator = validator(config_schema)
 compilers_schema = json.load(open(prefix / 'schema/compilers.json'))
+compilers_validator = validator(compilers_schema)

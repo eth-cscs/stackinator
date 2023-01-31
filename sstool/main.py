@@ -12,6 +12,8 @@ import time
 import jinja2
 import yaml
 
+import sstool.schema
+
 # The logger, initalised with logging.getLogger
 logger = None
 
@@ -56,27 +58,6 @@ def make_argparser():
     parser.add_argument('-r', '--recipe', required=True, type=str)
     parser.add_argument('-d', '--debug', action='store_true')
     return parser
-
-def validate_recipe_config(config):
-    if 'mirror' in config:
-        if 'key' in config['mirror']:
-            p = pathlib.Path(config['mirror']['key'])
-            if not p.is_file():
-                raise FileNotFoundError(f"The key file '{p}' does not exist")
-    else:
-        config['mirror'] = None
-
-    if 'system' in config:
-        if config['system'] not in ['hohgant', 'balfrin']:
-            raise FileNotFoundError(f"The system '{config['system']}' must be "
-                                    f"one of hohgant or balfrin")
-    else:
-        raise FileNotFoundError(f"The '{p}' does not exist")
-
-    if 'modules' not in config:
-        config['modules'] = True
-
-    return config
 
 class Mirror:
     def __init__(self, config, source):
@@ -125,7 +106,8 @@ class Recipe:
 
         with compiler_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            self.generate_compiler_specs(raw['compilers'])
+            sstool.schema.compilers_validator.validate(raw)
+            self.generate_compiler_specs(raw)
 
         packages_path = path / 'packages.yaml'
         logger.debug(f'opening {packages_path}')
@@ -144,8 +126,9 @@ class Recipe:
                                     f"not contain compilers.yaml")
 
         with config_path.open() as fid:
-            self.config = validate_recipe_config(
-                yaml.load(fid, Loader=yaml.Loader))
+            raw = yaml.load(fid, Loader=yaml.Loader)
+            sstool.schema.config_validator.validate(raw)
+            self.config = raw
 
         modules_path = path / 'modules.yaml'
         logger.debug(f'opening {modules_path}')
@@ -227,10 +210,6 @@ class Recipe:
     # creates the self.compilers field that describes the full specifications
     # for all of teh compilers from the raw compilers.yaml input
     def generate_compiler_specs(self, raw):
-        # TODO: error checking
-        #   bootstrap and gcc have been specified
-        #   gcc specs are of the form gcc@version
-        #   llvm specs are of the form {llvm@version, nvhpc@version}
         compilers = {}
 
         bootstrap = {}
@@ -246,7 +225,7 @@ class Recipe:
                 "zlib": "[~shared]"
             }
         }
-        bootstrap_spec = raw["bootstrap"]["specs"][0]
+        bootstrap_spec = raw["bootstrap"]["spec"]
         bootstrap["specs"] = [f"{bootstrap_spec} languages=c,c++",
                               f"squashfs default_compression=zstd"]
         compilers["bootstrap"] = bootstrap
