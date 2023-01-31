@@ -1,5 +1,5 @@
 name: cuda-env
-store: /user-environment
+store: /alternative-point
 system: hohgant
 spack:
     repo: https://github.com/spack/spack.git
