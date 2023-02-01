@@ -104,8 +104,8 @@ The packages are configured as disjoint environments, each built with the same c
 packages:
     gcc-host:
       compiler:
-          toolchain: gcc
-          spec: gcc@11.3
+          - toolchain: gcc
+            spec: gcc@11.3
       unify: true
       specs:
       - hdf5 +mpi
@@ -150,8 +150,8 @@ spack:
 packages:
     gcc-nvgpu:
       compiler:
-          toolchain: gcc
-          spec: gcc@11.3
+          - toolchain: gcc
+            spec: gcc@11.3
       unify: true
       specs:
       - cuda@11.8
@@ -181,6 +181,54 @@ spack:
   packages:
     all:
       compiler: [gcc@11.3]
+    mpi:
+      require: cray-mpich-binary
+```
+
+#### example: a nvhpc toolchain with MPI
+
+To build a toolchain with NVIDIA HPC SDK, we provide two compiler toolchains:
+- The `llvm:nvhpc` compiler;
+- A version of gcc from the `gcc` toolchain, in order to build dependencies (like CMake) that can't be built with nvhpc. If a second compiler is not provided, Spack will fall back to the system gcc 4.7.5, and not generate zen2/zen3 optimized code as a result.
+
+```yaml
+# packages.yaml
+packages:
+    prgenv-nvidia:
+      compiler:
+          - toolchain: llvm
+            spec: nvhpc
+          - toolchain: gcc
+            spec: gcc@11.3
+      unify: true
+      specs:
+      - cuda@11.8
+      - fftw%nvhpc +mpi
+      - hdf5%nvhpc +mpi
+      mpi:
+        spec: cray-mpich-binary
+        gpu: cuda
+```
+
+The following `spack.yaml` is generated:
+
+```yaml
+# spack.yaml
+spack:
+  include:
+  - compilers.yaml
+  - config.yaml
+  view: false
+  concretizer:
+    unify: True
+  specs:
+  - cuda@11.8
+  - fftw%nvhpc +mpi
+  - hdf5%nvhpc +mpi
+  - cray-mpich-binary +cuda
+  packages:
+    all:
+      compiler: [nvhpc, gcc@11.3]
     mpi:
       require: cray-mpich-binary
 ```

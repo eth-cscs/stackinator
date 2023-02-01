@@ -310,7 +310,7 @@ class Recipe:
         makefile_template = jenv.get_template('Makefile.packages')
         push_to_cache = self.mirror.source and self.mirror.key
         files['makefile'] = makefile_template.render(
-            compilers=self.compilers, environments=self.packages,
+            environments=self.packages,
             push_to_cache=push_to_cache)
 
         files['config'] = {}
@@ -517,9 +517,7 @@ def main():
                     'the environment:\n')
         logger.info(f'cd {build.path}')
         logger.info('env --ignore-environment PATH=/usr/bin:/bin:`pwd`'
-                    '/spack/bin make modules -j32')
-        logger.info('env --ignore-environment PATH=/usr/bin:/bin:`pwd`'
-                    '/spack/bin make store.squashfs')
+                    '/spack/bin make store.squashfs -j32')
         return 0
     except Exception as e:
         logger.exception(e)
