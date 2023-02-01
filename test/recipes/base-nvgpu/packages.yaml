@@ -1,8 +1,8 @@
 packages:
     gcc-env:
       compiler:
-          toolchain: gcc
-          spec: gcc@11
+          - toolchain: gcc
+            spec: gcc@11
       unify: true
       specs:
       - cuda@11.8
@@ -12,8 +12,8 @@ packages:
         gpu: cuda
     tools:
       compiler:
-          toolchain: gcc
-          spec: gcc@11
+          - toolchain: gcc
+            spec: gcc@11
       unify: true
       specs:
       - cmake

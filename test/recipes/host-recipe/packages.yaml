@@ -1,8 +1,8 @@
 packages:
     gcc-env:
       compiler:
-          toolchain: gcc
-          spec: gcc@11.3.0
+          - toolchain: gcc
+            spec: gcc@11.3.0
       unify: true
       specs:
       - osu-micro-benchmarks@5.9
@@ -12,8 +12,8 @@ packages:
         gpu: false
     tools:
       compiler:
-          toolchain: gcc
-          spec: gcc@11.3.0
+          - toolchain: gcc
+            spec: gcc@11.3.0
       unify: true
       specs:
       - cmake

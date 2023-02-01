@@ -1,3 +1,4 @@
+{% set separator = joiner(', ') %}
 spack:
   include:
   - compilers.yaml
@@ -12,7 +13,7 @@ spack:
 {% endfor %}
   packages:
     all:
-      compiler: [{{ config.compiler.spec }}]
+        compiler: [{% for c in config.compiler %}{{ separator() }}{{ c.spec }}{% endfor %}]
     {% if config.mpi.spec %}
     mpi:
       require: {{ config.mpi.spec }}

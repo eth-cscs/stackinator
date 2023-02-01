@@ -1,8 +1,8 @@
 packages:
     gcc-env:
       compiler:
-          toolchain: gcc
-          spec: gcc@11
+          - toolchain: gcc
+            spec: gcc@11
       unify: true
       specs:
       - hipsolver@5.2
@@ -19,8 +19,8 @@ packages:
         gpu: rocm
     tools:
       compiler:
-          toolchain: gcc
-          spec: gcc@11
+          - toolchain: gcc
+            spec: gcc@11
       unify: true
       specs:
       - cmake

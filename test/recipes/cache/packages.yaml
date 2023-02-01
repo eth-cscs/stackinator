@@ -1,8 +1,8 @@
 packages:
     gcc-env:
       compiler:
-          toolchain: gcc
-          spec: gcc@11
+          - toolchain: gcc
+            spec: gcc@11
       unify: true
       specs:
       - fmt
@@ -11,8 +11,8 @@ packages:
         gpu: false
     tools:
       compiler:
-          toolchain: gcc
-          spec: gcc@11
+          - toolchain: gcc
+            spec: gcc@11
       unify: true
       specs:
       - cmake
