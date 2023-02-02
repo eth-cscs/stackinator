@@ -1,6 +1,9 @@
 {% set separator = joiner(', ') %}
 spack:
   include:
+{% if config.packages %}
+  - packages.yaml
+{% endif %}
   - compilers.yaml
   - config.yaml
   view: false
