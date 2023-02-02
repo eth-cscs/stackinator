@@ -15,7 +15,7 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 {% for env, config in environments.items() %}
 {{ env }}/generated/build_cache: {{ env }}/generated/env
 {% if push_to_cache %}
-	$(SPACK) -e ./{{ env }} buildcache create --rebuild-index --allow-root --only=package -m alpscache $$($(SPACK) -e ./{{ env }} find --format '/$${hash}')
+	$(SPACK) -e ./{{ env }} buildcache create --rebuild-index --allow-root --only=package alpscache $$($(SPACK) -e ./{{ env }} find --format '/$${hash}')
 {% endif %}
 	touch $@
 

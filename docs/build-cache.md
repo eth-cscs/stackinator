@@ -51,15 +51,16 @@ config:
 
 ### Generating the key
 
-To generate the key file, from the spack installation that was used to build the cache use `spack gpg export --private`.
+To generate the key file, from the spack installation that was used to build the cache use `spack gpg export --secret`.
 
 ```bash
 # create a key
-spack gpg create ...
+spack gpg create <name> <e-mail>
 
-# perform actions that push to the 
-spack build-cache create --rebuild-index ...
-spack gpg export --private spack-push-key.gpg
+# export key
+spack gpg export --secret spack-push-key.gpg
 ```
+
+The key needs to be in a location that is accessible during the build process, such as `<build>/tmp` (where `<build>` is the path specified as the `--build` argument of `sstool`). Make sure you have only one key available for signing with `spack gpg list`).
 
 See the [spack documentation](https://spack.readthedocs.io/en/latest/getting_started.html#gpg-signing) for more information about GPG keys.
