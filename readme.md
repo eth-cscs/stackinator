@@ -61,8 +61,7 @@ modules: True
 Take an  example configuration:
 ```yaml
 bootstrap:
-  specs:
-  - gcc@11
+  spec: gcc@11
 gcc:
   specs:
   - gcc@11
