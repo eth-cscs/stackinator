@@ -2,7 +2,7 @@
 
 MAKEFLAGS += --output-sync=recurse
 
-.PHONY: all .locks
+.PHONY: all .locks .packages.yaml
 
 all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 
@@ -10,6 +10,8 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 # Ensure that spack.lock files are never removed as intermediate files
 .locks:{% for env in environments %} {{ env }}/spack.lock{% endfor %}
 
+# Ensure that package yaml files are never removed as intermediate files...
+.packages.yaml:{% for env in environments %} {{ env }}/packages.yaml{% endfor %}
 
 # Push built packages to a binary cache if a key has been provided
 {% for env, config in environments.items() %}
@@ -30,6 +32,16 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 {{ env }}/compilers.yaml:
 	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $({{ env }}_PREFIX))
 
+{% endfor %}
+
+# Configure external system dependencies for each compiler toolchain
+{% for env, config in environments.items() %}
+{% if config.packages %}
+{{ env }}/packages.yaml:
+	$(SPACK) external find --not-buildable --scope=user {% for package in config.packages %} {{package}}{% endfor %}
+
+
+{% endif %}
 {% endfor %}
 
 -include ../Make.inc

@@ -166,20 +166,21 @@ class Recipe:
                 pathlib.Path(self.config['store']) / 'modules').as_posix()
             return yaml.dump(raw)
 
-    # creates the self.packages field that describes the full specifications
-    # for all of the package sets from the raw packages.yaml input
+    # creates the self.environments field that describes the full specifications
+    # for all of the packages sets, grouped in environments, from the raw
+    # packages.yaml input.
     def generate_package_specs(self, raw):
-        packages = raw
+        environments = raw
 
         # check the package descriptions and ammend where features are missing
-        for name, config in packages.items():
+        for name, config in environments.items():
             if ("specs" not in config) or (config["specs"] == None):
-                packages[name]["specs"] = []
+                environments[name]["specs"] = []
 
             if ("mpi" not in config):
-                packages[name]["mpi"] = {"spec": None, "gpu": None}
+                environments[name]["mpi"] = {"spec": None, "gpu": None}
 
-        for name, config in packages.items():
+        for name, config in environments.items():
             mpi = config["mpi"]
             mpi_spec = mpi["spec"]
             mpi_gpu = mpi["gpu"]
@@ -203,12 +204,12 @@ class Recipe:
                     if mpi_gpu and mpi_impl != 'cray-mpich-binary':
                         spec = f"{spec} cuda_arch=80"
 
-                    packages[name]["specs"].append(spec)
+                    environments[name]["specs"].append(spec)
                 else:
                     # TODO: Create a custom exception type
                     raise Exception(f'Unsupported mpi: {mpi_impl}')
 
-        self.packages = packages
+        self.environments = environments
 
 
     # creates the self.compilers field that describes the full specifications
@@ -310,11 +311,11 @@ class Recipe:
         makefile_template = jenv.get_template('Makefile.packages')
         push_to_cache = self.mirror.source and self.mirror.key
         files['makefile'] = makefile_template.render(
-            environments=self.packages,
+            environments=self.environments,
             push_to_cache=push_to_cache)
 
         files['config'] = {}
-        for env, config in self.packages.items():
+        for env, config in self.environments.items():
             spack_yaml_template = jenv.get_template('packages.spack.yaml')
             files['config'][env] = spack_yaml_template.render(config=config)
 
@@ -338,7 +339,7 @@ class Build:
         store_path = self.path / 'store'
         tmp_path = self.path / 'tmp'
 
-        self.path.mkdir(exist_ok=True)
+        self.path.mkdir(exist_ok=True, parents=True)
         store_path.mkdir(exist_ok=True)
         tmp_path.mkdir(exist_ok=True)
 
