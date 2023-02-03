@@ -61,6 +61,6 @@ spack gpg create <name> <e-mail>
 spack gpg export --secret spack-push-key.gpg
 ```
 
-The key needs to be in a location that is accessible during the build process, such as `<build>/tmp` (where `<build>` is the path specified as the `--build` argument of `sstool`). Make sure you have only one key available for signing (with `spack gpg list`).
+The key needs to be in a location that is accessible during the build process, such as `<build>/tmp` (where `<build>` is the path specified as the `--build` argument of `stack-config`). Make sure you have only one key available for signing (with `spack gpg list`).
 
 See the [spack documentation](https://spack.readthedocs.io/en/latest/getting_started.html#gpg-signing) for more information about GPG keys.

@@ -4,7 +4,7 @@ import pathlib
 import pytest
 import yaml
 
-import sstool.schema as schema
+import stackinator.schema as schema
 
 @pytest.fixture
 def test_path():
