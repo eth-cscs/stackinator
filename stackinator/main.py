@@ -12,7 +12,7 @@ import time
 import jinja2
 import yaml
 
-import sstool.schema
+import stackinator.schema
 
 # The logger, initalised with logging.getLogger
 logger = None
@@ -110,7 +110,7 @@ class Recipe:
                 logger.warning(f"{compiler_path} uses deprecated 'compilers:' "
                                f"header. This will be an error in future releases.")
                 raw = raw['compilers']
-            sstool.schema.compilers_validator.validate(raw)
+            stackinator.schema.compilers_validator.validate(raw)
             self.generate_compiler_specs(raw)
 
         packages_path = path / 'packages.yaml'
@@ -131,7 +131,7 @@ class Recipe:
 
         with config_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            sstool.schema.config_validator.validate(raw)
+            stackinator.schema.config_validator.validate(raw)
             self.config = raw
 
         modules_path = path / 'modules.yaml'

@@ -9,7 +9,7 @@ prefix = pathlib.Path(__file__).parent.parent.resolve()
 external = prefix / 'external'
 sys.path = [prefix.as_posix(), external.as_posix()] + sys.path
 
-from sstool.main import main
+from stackinator.main import main
 
 # Once we've set up the system path, run the tool's main method
 if __name__ == "__main__":

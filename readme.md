@@ -13,7 +13,7 @@ It can be thought of as equivalent to calling `cmake` or `configure`, before run
 
 ```bash
 # configure the build
-./bin/sstool -b$BUILD_PATH -r$RECIPE_PATH
+./bin/stack-config -b$BUILD_PATH -r$RECIPE_PATH
 
 # build the spack stack
 cd $BUILD_PATH
