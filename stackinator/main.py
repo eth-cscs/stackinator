@@ -98,6 +98,8 @@ class Recipe:
 
         self.path = path
         self.root = prefix = pathlib.Path(__file__).parent.parent.resolve()
+
+        # required compilers.yaml file
         compiler_path = path / 'compilers.yaml'
         logger.debug(f'opening {compiler_path}')
         if not compiler_path.is_file():
@@ -113,16 +115,18 @@ class Recipe:
             stackinator.schema.compilers_validator.validate(raw)
             self.generate_compiler_specs(raw)
 
-        packages_path = path / 'packages.yaml'
-        logger.debug(f'opening {packages_path}')
-        if not packages_path.is_file():
-            raise FileNotFoundError(f"The recipe path '{packages_path}' does "
-                                    f" not contain packages.yaml")
+        # required environments.yaml file
+        environments_path = path / 'environments.yaml'
+        logger.debug(f'opening {environments_path}')
+        if not environments_path.is_file():
+            raise FileNotFoundError(f"The recipe path '{environments_path}' does "
+                                    f" not contain environments.yaml")
 
-        with packages_path.open() as fid:
+        with environments_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            self.generate_package_specs(raw['packages'])
+            self.generate_environment_specs(raw['environments'])
 
+        # required config.yaml file
         config_path = path / 'config.yaml'
         logger.debug(f'opening {config_path}')
         if not config_path.is_file():
@@ -134,6 +138,7 @@ class Recipe:
             stackinator.schema.config_validator.validate(raw)
             self.config = raw
 
+        # optional modules.yaml file
         modules_path = path / 'modules.yaml'
         logger.debug(f'opening {modules_path}')
         if not modules_path.is_file():
@@ -143,6 +148,14 @@ class Recipe:
                 f'no modules.yaml provided - using the {modules_path}')
 
         self.modules = modules_path
+
+        # optional packages.yaml file
+        packages_path = path / 'packages.yaml'
+        logger.debug(f'opening {packages_path}')
+        self.packages = None
+        if packages_path.is_file():
+            with packages_path.open() as fid:
+                self.packages = yaml.load(fid, Loader=yaml.Loader)
 
         # Select location of the mirrors.yaml file to use.
         # Look first in the recipe path, then in the system configuration path.
@@ -167,12 +180,12 @@ class Recipe:
             return yaml.dump(raw)
 
     # creates the self.environments field that describes the full specifications
-    # for all of the packages sets, grouped in environments, from the raw
-    # packages.yaml input.
-    def generate_package_specs(self, raw):
+    # for all of the environments sets, grouped in environments, from the raw
+    # environments.yaml input.
+    def generate_environment_specs(self, raw):
         environments = raw
 
-        # check the package descriptions and ammend where features are missing
+        # check the environment descriptions and ammend where features are missing
         for name, config in environments.items():
             if ("specs" not in config) or (config["specs"] == None):
                 environments[name]["specs"] = []
@@ -300,7 +313,7 @@ class Recipe:
 
         return files
 
-    def generate_packages(self):
+    def generate_environments(self):
         files = {}
 
         template_path = self.root / 'templates'
@@ -308,7 +321,7 @@ class Recipe:
             loader = jinja2.FileSystemLoader(template_path),
             trim_blocks=True, lstrip_blocks=True)
 
-        makefile_template = jenv.get_template('Makefile.packages')
+        makefile_template = jenv.get_template('Makefile.environments')
         push_to_cache = self.mirror.source and self.mirror.key
         files['makefile'] = makefile_template.render(
             environments=self.environments,
@@ -316,7 +329,7 @@ class Recipe:
 
         files['config'] = {}
         for env, config in self.environments.items():
-            spack_yaml_template = jenv.get_template('packages.spack.yaml')
+            spack_yaml_template = jenv.get_template('environments.spack.yaml')
             files['config'][env] = spack_yaml_template.render(config=config)
 
         return files
@@ -403,8 +416,8 @@ class Build:
         for f in ['Make.inc', 'bwrap-mutable-root.sh']:
             shutil.copy2(etc_path / f, self.path / f)
 
-        # Generate the system configuration: the compilers, packages, mirrors etc
-        # that are defined for the target cluster.
+        # Generate the system configuration: the compilers, environments,
+        # mirrors etc that are defined for the target cluster.
         config_path = self.path / 'config'
         config_path.mkdir(exist_ok=True)
         system_configs_path = pathlib.Path(recipe.configs_path)
@@ -424,11 +437,27 @@ class Build:
             if src.is_file():
                 shutil.copy(src, dst)
 
+        # copy the optional mirrors file
         if recipe.mirror.source:
             dst = config_path / 'mirrors.yaml'
             shutil.copy(recipe.mirror.source, dst)
 
-        # Configure the CSCS custom spack packages.
+        # append recipe packages to packages.yaml
+        if recipe.packages:
+            system_packages = system_configs_path / 'packages.yaml'
+            packages_data = {}
+            if system_packages.is_file():
+                # load system yaml
+                with system_packages.open() as fid:
+                    raw = yaml.load(fid, Loader=yaml.Loader)
+                    packages_data = raw['packages']
+            packages_data.update(recipe.packages['packages'])
+            packages_yaml = yaml.dump({'packages': packages_data})
+            packages_path = config_path / 'packages.yaml'
+            with packages_path.open("w") as fid:
+                fid.write(packages_yaml)
+
+        # Configure the CSCS custom spack environments.
         # Step 1: copy the CSCS repo to store_path where, it will be used to
         #         build the stack, and then be part of the upstream provided
         #         to users of the stack.
@@ -454,24 +483,24 @@ class Build:
         with (compiler_path / 'Makefile').open(mode='w') as f:
             f.write(compilers['makefile'])
 
-        for name, yaml in compilers['config'].items():
+        for name, yml in compilers['config'].items():
             compiler_config_path = compiler_path / name
             compiler_config_path.mkdir(exist_ok=True)
             with (compiler_config_path / 'spack.yaml').open(mode='w') as f:
-                f.write(yaml)
+                f.write(yml)
 
-        # generate the makefile and spack.yaml files that describe the packages
-        packages = recipe.generate_packages()
-        package_path = self.path / 'packages'
-        os.makedirs(package_path, exist_ok=True)
-        with (package_path / 'Makefile').open(mode='w') as f:
-            f.write(packages['makefile'])
+        # generate the makefile and spack.yaml files that describe the environments
+        environments = recipe.generate_environments()
+        environments_path = self.path / 'environments'
+        os.makedirs(environments_path, exist_ok=True)
+        with (environments_path / 'Makefile').open(mode='w') as f:
+            f.write(environments['makefile'])
 
-        for name, yaml in packages['config'].items():
-            pkg_config_path = package_path / name
-            pkg_config_path.mkdir(exist_ok=True)
-            with (pkg_config_path / 'spack.yaml').open(mode='w') as f:
-                f.write(yaml)
+        for name, yml in environments['config'].items():
+            env_config_path = environments_path / name
+            env_config_path.mkdir(exist_ok=True)
+            with (env_config_path / 'spack.yaml').open(mode='w') as f:
+                f.write(yml)
 
         # generate the makefile that generates the configuration for the spack
         # installation

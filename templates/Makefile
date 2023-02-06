@@ -1,8 +1,8 @@
 -include Make.user
 
-.PHONY: compilers packages generate-config clean spack-setup
+.PHONY: compilers environments generate-config clean spack-setup
 
-all: packages
+all: environments
 
 # Keep track of what Spack version was used.
 spack-version:
@@ -47,24 +47,24 @@ compilers: mirror-setup
 generate-config: compilers
 	$(SANDBOX) $(MAKE) -C $@
 
-packages: compilers
+environments: compilers
 	$(SANDBOX) $(MAKE) -C $@
 
-modules: packages generate-config
+modules: environments generate-config
 	$(SANDBOX) $(SPACK) -C $(SOFTWARE_STACK_PROJECT)/modules module tcl refresh --upstream-modules --delete-tree --yes-to-all
 
 # Create a squashfs file from the installed software.
-store.squashfs: packages generate-config {% if modules %} modules {% endif %}
+store.squashfs: environments generate-config {% if modules %} modules {% endif %}
 
 	$(SANDBOX) env -u SOURCE_DATE_EPOCH "$$($(SANDBOX) $(SPACK) -e ./compilers/bootstrap find --format='{prefix}' squashfs | head -n1)/bin/mksquashfs" $(STORE) $@ -all-root -all-time $$(date +%s) -no-recovery -noappend -Xcompression-level 3
 
 # A backup of all the generated files during the build, useful for posterity,
 # excluding the binaries themselves, since they're in the squashfs file
-build.tar.gz: spack-version Make.user Make.inc Makefile | packages
-	tar czf $@ $^ $$(find packages compilers config -maxdepth 2 -name Makefile -o -name '*.yaml')
+build.tar.gz: spack-version Make.user Make.inc Makefile | environments
+	tar czf $@ $^ $$(find environments compilers config -maxdepth 2 -name Makefile -o -name '*.yaml')
 
 # Clean generate files, does *not* remove installed software.
 clean:
-	rm -rf -- $(wildcard */*/spack.lock) $(wildcard */*/.spack-env) $(wildcard */*/Makefile) $(wildcard */*/generated) $(wildcard cache) $(wildcard compilers/*/config.yaml) $(wildcard compilers/*/packages.yaml) $(wildcard compilers/*/compilers.yaml) $(wildcard packages/*/config.yaml) $(wildcard packages/*/packages.yaml) $(wildcard packages/*/compilers.yaml)
+	rm -rf -- $(wildcard */*/spack.lock) $(wildcard */*/.spack-env) $(wildcard */*/Makefile) $(wildcard */*/generated) $(wildcard cache) $(wildcard compilers/*/config.yaml) $(wildcard compilers/*/packages.yaml) $(wildcard compilers/*/compilers.yaml) $(wildcard environments/*/config.yaml) $(wildcard environments/*/packages.yaml) $(wildcard environments/*/compilers.yaml)
 
 include Make.inc
