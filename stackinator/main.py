@@ -184,6 +184,9 @@ class Recipe:
             mpi = config["mpi"]
             mpi_spec = mpi["spec"]
             mpi_gpu = mpi["gpu"]
+            print(mpi)
+            print(mpi_spec)
+            print(mpi_gpu)
             if mpi_spec:
                 try:
                     mpi_impl, mpi_ver = mpi_spec.strip().split(
@@ -201,8 +204,11 @@ class Recipe:
 
                     spec = f"{mpi_impl}{version_opt} {options or ''}".strip()
 
-                    if mpi_gpu and mpi_impl != 'cray-mpich-binary':
-                        spec = f"{spec} cuda_arch=80"
+                    if mpi_gpu:
+                        if mpi_impl != 'cray-mpich-binary':
+                            spec = f"{spec} cuda_arch=80"
+                        else:
+                            spec = f"{spec} +{mpi_gpu}"
 
                     environments[name]["specs"].append(spec)
                 else:
