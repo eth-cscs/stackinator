@@ -184,9 +184,6 @@ class Recipe:
             mpi = config["mpi"]
             mpi_spec = mpi["spec"]
             mpi_gpu = mpi["gpu"]
-            print(mpi)
-            print(mpi_spec)
-            print(mpi_gpu)
             if mpi_spec:
                 try:
                     mpi_impl, mpi_ver = mpi_spec.strip().split(
