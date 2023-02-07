@@ -1,4 +1,4 @@
-packages:
+environments:
     gcc-env:
       compiler:
           - toolchain: gcc

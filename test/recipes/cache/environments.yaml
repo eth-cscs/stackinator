@@ -1,19 +1,19 @@
-packages:
-    mpi:
+environments:
+    gcc-env:
       compiler:
           - toolchain: gcc
-            spec: gcc@12
+            spec: gcc@11
       unify: true
       specs:
-      - cuda@11.8
-      - osu-micro-benchmarks@5.9
+      - fmt
       mpi:
         spec: cray-mpich-binary
-        gpu: cuda
+        gpu: false
     tools:
       compiler:
           - toolchain: gcc
-            spec: gcc@12
+            spec: gcc@11
       unify: true
       specs:
       - cmake
+      - python@3.10
