@@ -32,8 +32,11 @@ A recipe is the input provided to the tool. A recipe is comprised of the followi
 
 * `config.yaml`: common configuration for the stack.
 * `compilers.yaml`: the compilers provided by the stack.
-* `packages.yaml`: the packages and software to be installed..
-* `modules.yaml`: an _optional_ set of module generation rules.
+* `environments.yaml`: environments that contain all the software packages.
+* `modules.yaml`: _optional_ module generation rules
+    * follows the spec for (spack mirror configuration)[https://spack.readthedocs.io/en/latest/mirrors.html]
+* `packages.yaml`: _optional_ package rules.
+    * follows the spec for (spack package configuration)[https://spack.readthedocs.io/en/latest/build_settings.html]
 
 ### config
 
@@ -92,15 +95,15 @@ The first two steps are required, so that the simplest stack will provide at lea
 > * `llvm@14` generates `llvm@14 +clang targets=x86 ~gold ^ninja@kitware`
 > * `gcc@11` generates `gcc@11 build_type=Release +profiled +strip`
 
-### packages
+### environments
 
-The packages are configured as disjoint environments, each built with the same compiler, and configured with a single implementation of MPI.
+The software packages are configured as disjoint environments, each built with the same compiler, and configured with a single implementation of MPI.
 
 #### example: a cpu-only gnu toolchain with MPI
 
 ```
-# packages.yaml
-packages:
+# environments.yaml
+environments:
     gcc-host:
       compiler:
           - toolchain: gcc
@@ -139,14 +142,14 @@ spack:
 
 > **Note**
 >
-> The `cray-mpich-binary` spec is added to the list of generated packages automatically.
-> By setting `packages:mpi` all packages that use the virtual dependency `+mpi` will use the same `cray-mpich-binary` implementation.
+> The `cray-mpich-binary` spec is added to the list of package specs automatically.
+> By setting `environments.ENV.mpi` all packages in the environment `ENV` that use the virtual dependency `+mpi` will use the same `cray-mpich-binary` implementation.
 
 #### example: a gnu toolchain with MPI and NVIDIA GPU support
 
 ```yaml
-# packages.yaml
-packages:
+# environments.yaml
+environments:
     gcc-nvgpu:
       compiler:
           - toolchain: gcc
@@ -161,7 +164,7 @@ packages:
         gpu: cuda
 ```
 
-The `packages:gcc-nvgpu:gpu` to `cuda` will build the `cray-mpich-binary` with support for GPU-direct.
+The `environments:gcc-nvgpu:gpu` to `cuda` will build the `cray-mpich-binary` with support for GPU-direct.
 
 ```yaml
 # spack.yaml
@@ -191,8 +194,8 @@ To build a toolchain with NVIDIA HPC SDK, we provide two compiler toolchains:
 - A version of gcc from the `gcc` toolchain, in order to build dependencies (like CMake) that can't be built with nvhpc. If a second compiler is not provided, Spack will fall back to the system gcc 4.7.5, and not generate zen2/zen3 optimized code as a result.
 
 ```yaml
-# packages.yaml
-packages:
+# environments.yaml
+environments:
     prgenv-nvidia:
       compiler:
           - toolchain: llvm
@@ -235,8 +238,8 @@ spack:
 #### example: a gnu toolchain that provides some common tools
 
 ```yaml
-# packages.yaml
-packages:
+# environments.yaml
+environments:
     tools:
       compiler:
           toolchain: gcc
@@ -279,3 +282,23 @@ To set rules for module generation, provide a `module.yaml` file as per the [spa
 
 To disable module generation, set the field `config:modules:False` in `config.yaml`.
 
+### packages
+
+A spack `packages.yaml` file is provided by the tool for each target cluster. This file sets system dependencies, such as libfabric and slurm, which are expected to be provided by the cluster and not built by Spack. A recipe can provide an `packages.yaml` file, which is merged with the cluster-specific `packages.yaml`.
+
+For example, to enforce every compiler and environment built use the versions of perl and git installed on the system, add a file like the following (with appropriate version numbers and prefixes, of course):
+
+```yaml
+# packages.yaml
+packages:
+  perl:
+    buildable: false
+    externals:
+    - spec: perl@5.36.0
+      prefix: /usr
+  git:
+    buildable: false
+    externals:
+    - spec: git@2.39.1
+      prefix: /usr
+```
