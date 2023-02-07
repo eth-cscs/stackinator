@@ -1,6 +1,6 @@
 # Spack Stack Builder
 
-A tool for building a scientific software stack from a receipe for vClusters on CSCS' Alps infrastructure.
+A tool for building a scientific software stack from a recipe for vClusters on CSCS' Alps infrastructure.
 
 ## Bootstrapping
 Use the `bootstrap.sh` script to install the necessary dependencies. 
@@ -78,7 +78,7 @@ The compilers are built in multiple stages:
     * `gcc:specs`: single spec of the form `gcc@version`.
     * The selected version should have full support for the target architecture in order to build optimised gcc toolchains in step 2.
 2. *gcc*: The bootstrap compiler is then used to build the gcc version(s) provided by the stack.
-    * `gcc:specs`: A list of _at least one_ specs of the form `gcc@version`.
+    * `gcc:specs`: A list of _at least one_ of the specs of the form `gcc@version`.
 3. *llvm*: (optional) The nvhpc and/or llvm toolchains are build using one of the gcc toolchains installed in step 2.
     * `llvm:specs`: a list of specs of the form `nvhpc@version` or `llvm@version`.
     * `llvm:requires`: the version of gcc from step 2 that is used to build the llvm compilers.
@@ -114,7 +114,7 @@ packages:
         gpu: false
 ```
 
-An environment labelled `gcc-host` is built using `gcc@11.3` from the `gcc` compiler toolchanin (**note** the compiler spec must mach a compiler from the toolchain that was installed via the `compilers.yaml` file).
+An environment labelled `gcc-host` is built using `gcc@11.3` from the `gcc` compiler toolchain (**note** the compiler spec must mach a compiler from the toolchain that was installed via the `compilers.yaml` file).
 The tool will generate a `spack.yaml` specification:
 
 ```yaml
@@ -273,9 +273,7 @@ spack:
 ### modules
 
 Modules are generated for the installed compilers and packages by spack. The default module generation rules set by the version of spack specified in `config.yaml` will be used if no `modules.yaml` file is provided.
-config['modules'] = True
 
 To set rules for module generation, provide a `module.yaml` file as per the [spack documentation](https://spack.readthedocs.io/en/latest/module_file_support.html).
 
 To disable module generation, set the field `config:modules:False` in `config.yaml`.
-
