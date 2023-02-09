@@ -1,3 +1,8 @@
+import logging
+
+
+root_logger = logging.getLogger('stackinator')
+
 #: (major, minor, micro, dev release) tuple
 stackinator_version_info = (0, 0, 1, "dev0")
 
