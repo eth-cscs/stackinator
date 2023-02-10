@@ -279,7 +279,7 @@ To disable module generation, set the field `config:modules:False` in `config.ya
 
 ### packages
 
-A spack `packages.yaml` file is provided by the tool for each target cluster. This file sets system dependencies, such as libfabric and slurm, which are expected to be provided by the cluster and not built by Spack. A recipe can provide an `packages.yaml` file, which is merged with the cluster-specific `packages.yaml`.
+A spack `packages.yaml` file is provided by the tool for each target cluster. This file sets system dependencies, such as libfabric and slurm, which are expected to be provided by the cluster and not built by Spack. A recipe can provide a `packages.yaml` file, which is merged with the cluster-specific `packages.yaml`.
 
 For example, to enforce every compiler and environment built use the versions of perl and git installed on the system, add a file like the following (with appropriate version numbers and prefixes, of course):
 

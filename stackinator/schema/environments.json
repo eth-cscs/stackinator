@@ -26,6 +26,11 @@
                      "type": "array",
                      "items": {"type": "string"}
                  },
+                 "variants": {
+                     "type": "array",
+                     "items": {"type": "string"},
+                     "default": []
+                 },
                  "mpi": {
                      "oneOf": [
                          {

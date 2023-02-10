@@ -14,12 +14,16 @@ full-env:
   packages:
   - perl
   - git
+  variants:
+  - +mpi
+  - +cuda
 defaults-env:
   compiler:
   - toolchain: gcc
     spec: gcc@11
   specs:
   - tree
+  # assert variants=[]
   # assert unify=True
   # assert mpi=None
   # assert packages=[]

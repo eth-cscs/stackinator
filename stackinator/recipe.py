@@ -149,36 +149,37 @@ class Recipe:
                 environments[name]["mpi"] = {"spec": None, "gpu": None}
 
         for name, config in environments.items():
-            mpi = config["mpi"]
-            mpi_spec = mpi["spec"]
-            mpi_gpu = mpi["gpu"]
-            if mpi_spec:
-                try:
-                    mpi_impl, mpi_ver = mpi_spec.strip().split(
-                        sep='@', maxsplit=1)
-                except ValueError:
-                    mpi_impl = mpi_spec.strip()
-                    mpi_ver = None
+            if config["mpi"]:
+                mpi = config["mpi"]
+                mpi_spec = mpi["spec"]
+                mpi_gpu = mpi["gpu"]
+                if mpi_spec:
+                    try:
+                        mpi_impl, mpi_ver = mpi_spec.strip().split(
+                            sep='@', maxsplit=1)
+                    except ValueError:
+                        mpi_impl = mpi_spec.strip()
+                        mpi_ver = None
 
-                if mpi_impl in Recipe.valid_mpi_specs:
-                    default_ver, options = Recipe.valid_mpi_specs[mpi_impl]
-                    if mpi_ver:
-                        version_opt = f"@{mpi_ver}" 
-                    else:
-                        version_opt = f"@{default_ver}" if default_ver else ""
-
-                    spec = f"{mpi_impl}{version_opt} {options or ''}".strip()
-
-                    if mpi_gpu:
-                        if mpi_impl != 'cray-mpich-binary':
-                            spec = f"{spec} cuda_arch=80"
+                    if mpi_impl in Recipe.valid_mpi_specs:
+                        default_ver, options = Recipe.valid_mpi_specs[mpi_impl]
+                        if mpi_ver:
+                            version_opt = f"@{mpi_ver}" 
                         else:
-                            spec = f"{spec} +{mpi_gpu}"
+                            version_opt = f"@{default_ver}" if default_ver else ""
 
-                    environments[name]["specs"].append(spec)
-                else:
-                    # TODO: Create a custom exception type
-                    raise Exception(f'Unsupported mpi: {mpi_impl}')
+                        spec = f"{mpi_impl}{version_opt} {options or ''}".strip()
+
+                        if mpi_gpu:
+                            if mpi_impl != 'cray-mpich-binary':
+                                spec = f"{spec} cuda_arch=80"
+                            else:
+                                spec = f"{spec} +{mpi_gpu}"
+
+                        environments[name]["specs"].append(spec)
+                    else:
+                        # TODO: Create a custom exception type
+                        raise Exception(f'Unsupported mpi: {mpi_impl}')
 
         self.environments = environments
 

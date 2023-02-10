@@ -91,6 +91,7 @@ def test_environments_yaml(yaml_path):
         # test defaults were set correctly
         assert env['unify'] == True
         assert env['packages'] == []
+        assert env['variants'] == []
         assert env['mpi'] == None
 
         # the full-env sets all of the fields
@@ -108,6 +109,7 @@ def test_environments_yaml(yaml_path):
         assert env['unify'] == 'when_possible'
         assert env['packages'] == ['perl', 'git']
         assert env['mpi'] == {'spec': 'cray-mpich-binary', 'gpu': 'cuda'}
+        assert env['variants'] == ['+mpi', '+cuda']
 
 def test_recipe_environments_yaml(yaml_path, recipe_paths):
     # validate the environments.yaml in the test recipes
