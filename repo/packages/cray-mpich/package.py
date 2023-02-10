@@ -9,8 +9,9 @@ import spack.compilers
 from spack.package import *
 
 
-class CrayMpichBinary(Package):
+class CrayMpich(Package):
     """Install cray-mpich as a binary package"""
+    """Inteded to override the main cray-mpich"""
 
     homepage = "https://www.hpe.com/us/en/compute/hpc/hpc-software.html"
     url = "https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.18.4-gcc.tar.gz"

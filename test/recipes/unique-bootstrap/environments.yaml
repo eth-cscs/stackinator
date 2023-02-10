@@ -7,7 +7,7 @@ mpi:
   - cuda@11.8
   - osu-micro-benchmarks@5.9
   mpi:
-    spec: cray-mpich-binary
+    spec: cray-mpich
     gpu: cuda
 tools:
   compiler:

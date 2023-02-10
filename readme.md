@@ -112,7 +112,7 @@ gcc-host:
   - hdf5 +mpi
   - fftw +mpi
   mpi:
-    spec: cray-mpich-binary
+    spec: cray-mpich
     gpu: false
 ```
 
@@ -131,18 +131,18 @@ spack:
   specs:
   - fftw +mpi
   - hdf5 +mpi
-  - cray-mpich-binary
+  - cray-mpich
   packages:
     all:
       compiler: [gcc@11.3]
     mpi:
-      require: cray-mpich-binary
+      require: cray-mpich
 ```
 
 > **Note**
 >
-> The `cray-mpich-binary` spec is added to the list of package specs automatically.
-> By setting `environments.ENV.mpi` all packages in the environment `ENV` that use the virtual dependency `+mpi` will use the same `cray-mpich-binary` implementation.
+> The `cray-mpich` spec is added to the list of package specs automatically.
+> By setting `environments.ENV.mpi` all packages in the environment `ENV` that use the virtual dependency `+mpi` will use the same `cray-mpich` implementation.
 
 #### example: a gnu toolchain with MPI and NVIDIA GPU support
 
@@ -158,11 +158,11 @@ gcc-nvgpu:
   - fftw +mpi
   - hdf5 +mpi
   mpi:
-    spec: cray-mpich-binary
+    spec: cray-mpich
     gpu: cuda
 ```
 
-The `environments:gcc-nvgpu:gpu` to `cuda` will build the `cray-mpich-binary` with support for GPU-direct.
+The `environments:gcc-nvgpu:gpu` to `cuda` will build the `cray-mpich` with support for GPU-direct.
 
 ```yaml
 # spack.yaml
@@ -177,12 +177,12 @@ spack:
   - cuda@11.8
   - fftw +mpi
   - hdf5 +mpi
-  - cray-mpich-binary +cuda
+  - cray-mpich +cuda
   packages:
     all:
       compiler: [gcc@11.3]
     mpi:
-      require: cray-mpich-binary
+      require: cray-mpich
 ```
 
 #### example: a nvhpc toolchain with MPI
@@ -205,7 +205,7 @@ prgenv-nvidia:
   - fftw%nvhpc +mpi
   - hdf5%nvhpc +mpi
   mpi:
-    spec: cray-mpich-binary
+    spec: cray-mpich
     gpu: cuda
 ```
 
@@ -224,12 +224,12 @@ spack:
   - cuda@11.8
   - fftw%nvhpc +mpi
   - hdf5%nvhpc +mpi
-  - cray-mpich-binary +cuda
+  - cray-mpich +cuda
   packages:
     all:
       compiler: [nvhpc, gcc@11.3]
     mpi:
-      require: cray-mpich-binary
+      require: cray-mpich
 ```
 
 #### example: a gnu toolchain that provides some common tools

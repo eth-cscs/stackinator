@@ -29,7 +29,7 @@ class Mirror:
 
 class Recipe:
     valid_mpi_specs = {
-        "cray-mpich-binary":  (None, None),
+        "cray-mpich":  (None, None),
         "mpich":  ("4.1", "device=ch4 netmod=ofi +slurm"),
         "mvapich2": (
             "3.0a", 
@@ -171,7 +171,7 @@ class Recipe:
                         spec = f"{mpi_impl}{version_opt} {options or ''}".strip()
 
                         if mpi_gpu:
-                            if mpi_impl != 'cray-mpich-binary':
+                            if mpi_impl != 'cray-mpich':
                                 spec = f"{spec} cuda_arch=80"
                             else:
                                 spec = f"{spec} +{mpi_gpu}"

@@ -14,7 +14,7 @@ gcc-env:
   - hip@5.2
   - osu-micro-benchmarks@5.9
   mpi:
-    spec: cray-mpich-binary
+    spec: cray-mpich
     gpu: rocm
 tools:
   compiler:
