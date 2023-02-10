@@ -1,0 +1,51 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Schema for Spack Stack environments.yaml recipe file",
+    "type": "object",
+    "additionalProperties": false,
+    "patternProperties": {
+         "\\w[\\w-]*": {
+             "type": "object",
+             "required": ["compiler", "specs"],
+             "properties": {
+                 "unify": {
+                     "enum": ["when_possible", true, false],
+                     "default": true
+                 },
+                 "compiler": {
+                     "type": "array",
+                     "items": {
+                         "type": "object",
+                         "properties": {
+                             "toolchain": {"type": "string"},
+                             "spec":      {"type": "string"}
+                         }
+                     }
+                 },
+                 "specs": {
+                     "type": "array",
+                     "items": {"type": "string"}
+                 },
+                 "mpi": {
+                     "oneOf": [
+                         {
+                             "type": "object",
+                             "properties": {
+                                 "spec": {"type": "string"},
+                                 "gpu":  {"enum": ["cuda", "rocm", null, false]}
+                             }
+                         },
+                         {"enum": [null, false]}
+                     ],
+                     "default": null
+                 },
+                 "packages": {
+                     "type": "array",
+                     "items": {"type": "string"},
+                     "default": []
+                 }
+             }
+         }
+     }
+}
+

@@ -14,6 +14,14 @@ def test_path():
 def yaml_path(test_path):
     return test_path / 'yaml'
 
+@pytest.fixture
+def recipes():
+    return ['host-recipe', 'base-amdgpu', 'base-nvgpu', 'cache', 'unique-bootstrap']
+
+@pytest.fixture
+def recipe_paths(test_path, recipes):
+    return [test_path / 'recipes' / r for r in recipes]
+
 def test_config_yaml(yaml_path):
     # test that the defaults are set as expected
     with open(yaml_path / 'config.defaults.yaml') as fid:
@@ -32,7 +40,14 @@ def test_config_yaml(yaml_path):
         assert raw['modules'] == False
         assert raw['mirror'] == {'enable': True, 'key': '/home/bob/veryprivate.key'}
 
-def test_compilers_yaml(yaml_path):
+def test_recipe_config_yaml(yaml_path, recipe_paths):
+    # validate the config.yaml in the test recipes
+    for p in recipe_paths:
+        with open(p / 'config.yaml') as fid:
+            raw = yaml.load(fid, Loader=yaml.Loader)
+            schema.validator(schema.config_schema).validate(raw)
+
+def test_compilers_yaml(yaml_path, recipe_paths):
     # test that the defaults are set as expected
     with open(yaml_path / 'compilers.defaults.yaml') as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
@@ -50,5 +65,58 @@ def test_compilers_yaml(yaml_path):
             'specs': ['llvm@13', 'llvm@11.2', 'nvhpc@22.11'],
             'requires': 'gcc@10.2'
         }
+
+def test_recipe_compilers_yaml(yaml_path, recipe_paths):
+    # validate the compilers.yaml in the test recipes
+    for p in recipe_paths:
+        with open(p / 'compilers.yaml') as fid:
+            raw = yaml.load(fid, Loader=yaml.Loader)
+            schema.validator(schema.compilers_schema).validate(raw)
+
+def test_environments_yaml(yaml_path):
+    with open(yaml_path / 'environments.full.yaml') as fid:
+        raw = yaml.load(fid, Loader=yaml.Loader)
+        schema.validator(schema.environments_schema).validate(raw)
+
+        # the defaults-env does not set fields
+        # test that they have been set to the defaults correctly
+
+        assert 'defaults-env' in raw
+        env = raw['defaults-env']
+
+        # test the required fields were read correctly
+        assert env['compiler'] == [{'toolchain': 'gcc', 'spec': 'gcc@11'}]
+        assert env['specs'] == ['tree']
+
+        # test defaults were set correctly
+        assert env['unify'] == True
+        assert env['packages'] == []
+        assert env['mpi'] == None
+
+        # the full-env sets all of the fields
+        # test that they have been read correctly
+
+        assert 'full-env' in raw
+        env = raw['full-env']
+        assert env['compiler'] == [
+                {'toolchain': 'gcc', 'spec': 'gcc@11'},
+                {'toolchain': 'gcc', 'spec': 'gcc@12'}
+        ]
+        assert env['specs'] == ['osu-micro-benchmarks@5.9','hdf5 +mpi']
+
+        # test defaults were set correctly
+        assert env['unify'] == 'when_possible'
+        assert env['packages'] == ['perl', 'git']
+        assert env['mpi'] == {'spec': 'cray-mpich-binary', 'gpu': 'cuda'}
+
+def test_recipe_environments_yaml(yaml_path, recipe_paths):
+    # validate the environments.yaml in the test recipes
+    for p in recipe_paths:
+        with open(p / 'environments.yaml') as fid:
+            raw = yaml.load(fid, Loader=yaml.Loader)
+            assert 'environments' in raw
+            envs = raw['environments']
+            schema.validator(schema.environments_schema).validate(envs)
+
 
 
