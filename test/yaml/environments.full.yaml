@@ -20,6 +20,6 @@ defaults-env:
     spec: gcc@11
   specs:
   - tree
-  # expect unify=True
-  # expect mpi=None
-  # expect packages=[]
+  # assert unify=True
+  # assert mpi=None
+  # assert packages=[]
