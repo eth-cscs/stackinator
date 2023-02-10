@@ -114,9 +114,7 @@ def test_recipe_environments_yaml(yaml_path, recipe_paths):
     for p in recipe_paths:
         with open(p / 'environments.yaml') as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            assert 'environments' in raw
-            envs = raw['environments']
-            schema.validator(schema.environments_schema).validate(envs)
+            schema.validator(schema.environments_schema).validate(raw)
 
 
 

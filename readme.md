@@ -103,18 +103,17 @@ The software packages are configured as disjoint environments, each built with t
 
 ```
 # environments.yaml
-environments:
-    gcc-host:
-      compiler:
-          - toolchain: gcc
-            spec: gcc@11.3
-      unify: true
-      specs:
-      - hdf5 +mpi
-      - fftw +mpi
-      mpi:
-        spec: cray-mpich-binary
-        gpu: false
+gcc-host:
+  compiler:
+      - toolchain: gcc
+        spec: gcc@11.3
+  unify: true
+  specs:
+  - hdf5 +mpi
+  - fftw +mpi
+  mpi:
+    spec: cray-mpich-binary
+    gpu: false
 ```
 
 An environment labelled `gcc-host` is built using `gcc@11.3` from the `gcc` compiler toolchanin (**note** the compiler spec must mach a compiler from the toolchain that was installed via the `compilers.yaml` file).
@@ -149,19 +148,18 @@ spack:
 
 ```yaml
 # environments.yaml
-environments:
-    gcc-nvgpu:
-      compiler:
-          - toolchain: gcc
-            spec: gcc@11.3
-      unify: true
-      specs:
-      - cuda@11.8
-      - fftw +mpi
-      - hdf5 +mpi
-      mpi:
-        spec: cray-mpich-binary
-        gpu: cuda
+gcc-nvgpu:
+  compiler:
+      - toolchain: gcc
+        spec: gcc@11.3
+  unify: true
+  specs:
+  - cuda@11.8
+  - fftw +mpi
+  - hdf5 +mpi
+  mpi:
+    spec: cray-mpich-binary
+    gpu: cuda
 ```
 
 The `environments:gcc-nvgpu:gpu` to `cuda` will build the `cray-mpich-binary` with support for GPU-direct.
@@ -195,21 +193,20 @@ To build a toolchain with NVIDIA HPC SDK, we provide two compiler toolchains:
 
 ```yaml
 # environments.yaml
-environments:
-    prgenv-nvidia:
-      compiler:
-          - toolchain: llvm
-            spec: nvhpc
-          - toolchain: gcc
-            spec: gcc@11.3
-      unify: true
-      specs:
-      - cuda@11.8
-      - fftw%nvhpc +mpi
-      - hdf5%nvhpc +mpi
-      mpi:
-        spec: cray-mpich-binary
-        gpu: cuda
+prgenv-nvidia:
+  compiler:
+      - toolchain: llvm
+        spec: nvhpc
+      - toolchain: gcc
+        spec: gcc@11.3
+  unify: true
+  specs:
+  - cuda@11.8
+  - fftw%nvhpc +mpi
+  - hdf5%nvhpc +mpi
+  mpi:
+    spec: cray-mpich-binary
+    gpu: cuda
 ```
 
 The following `spack.yaml` is generated:
@@ -239,19 +236,18 @@ spack:
 
 ```yaml
 # environments.yaml
-environments:
-    tools:
-      compiler:
-          toolchain: gcc
-          spec: gcc@11.3
-      unify: true
-      specs:
-      - cmake
-      - python@3.10
-      - tmux
-      - reframe
-      mpi: false
-      gpu: false
+tools:
+  compiler:
+      toolchain: gcc
+      spec: gcc@11.3
+  unify: true
+  specs:
+  - cmake
+  - python@3.10
+  - tmux
+  - reframe
+  mpi: false
+  gpu: false
 ```
 
 ```yaml

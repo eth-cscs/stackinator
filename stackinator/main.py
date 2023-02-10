@@ -124,7 +124,8 @@ class Recipe:
 
         with environments_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            self.generate_environment_specs(raw['environments'])
+            stackinator.schema.environments_validator.validate(raw)
+            self.generate_environment_specs(raw)
 
         # required config.yaml file
         config_path = path / 'config.yaml'

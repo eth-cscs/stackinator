@@ -1,19 +1,18 @@
-environments:
-    gcc-env:
-      compiler:
-          - toolchain: gcc
-            spec: gcc@11
-      unify: true
-      specs:
-      - fmt
-      mpi:
-        spec: cray-mpich-binary
-        gpu: false
-    tools:
-      compiler:
-          - toolchain: gcc
-            spec: gcc@11
-      unify: true
-      specs:
-      - cmake
-      - python@3.10
+gcc-env:
+  compiler:
+      - toolchain: gcc
+        spec: gcc@11
+  unify: true
+  specs:
+  - fmt
+  mpi:
+    spec: cray-mpich-binary
+    gpu: false
+tools:
+  compiler:
+      - toolchain: gcc
+        spec: gcc@11
+  unify: true
+  specs:
+  - cmake
+  - python@3.10
