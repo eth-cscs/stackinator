@@ -49,6 +49,9 @@ class Recipe:
 
         self.path = path
         self.root = prefix = pathlib.Path(__file__).parent.parent.resolve()
+
+
+        # required compiler.yaml file
         compiler_path = path / 'compilers.yaml'
         self._logger.debug(f'opening {compiler_path}')
         if not compiler_path.is_file():
@@ -66,16 +69,19 @@ class Recipe:
             schema.compilers_validator.validate(raw)
             self.generate_compiler_specs(raw)
 
-        packages_path = path / 'packages.yaml'
-        self._logger.debug(f'opening {packages_path}')
-        if not packages_path.is_file():
-            raise FileNotFoundError(f"The recipe path '{packages_path}' does "
-                                    f" not contain packages.yaml")
+        # required environments.yaml file
+        environments_path = path / 'environments.yaml'
+        self._logger.debug(f'opening {environments_path}')
+        if not environments_path.is_file():
+            raise FileNotFoundError(f"The recipe path '{environments_path}' does "
+                                    f" not contain environments.yaml")
 
-        with packages_path.open() as fid:
+        with environments_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            self.generate_package_specs(raw['packages'])
+            schema.environments_validator.validate(raw)
+            self.generate_environment_specs(raw)
 
+        # required config.yaml file
         config_path = path / 'config.yaml'
         self._logger.debug(f'opening {config_path}')
         if not config_path.is_file():
@@ -87,6 +93,7 @@ class Recipe:
             schema.config_validator.validate(raw)
             self.config = raw
 
+        # optional modules.yaml file
         modules_path = path / 'modules.yaml'
         self._logger.debug(f'opening {modules_path}')
         if not modules_path.is_file():
@@ -96,6 +103,14 @@ class Recipe:
                 f'no modules.yaml provided - using the {modules_path}')
 
         self.modules = modules_path
+
+        # optional packages.yaml file
+        packages_path = path / 'packages.yaml'
+        self._logger.debug(f'opening {packages_path}')
+        self.packages = None
+        if packages_path.is_file():
+            with packages_path.open() as fid:
+                self.packages = yaml.load(fid, Loader=yaml.Loader)
 
         # Select location of the mirrors.yaml file to use.
         # Look first in the recipe path, then in the system configuration path.
@@ -120,12 +135,12 @@ class Recipe:
             return yaml.dump(raw)
 
     # creates the self.environments field that describes the full specifications
-    # for all of the packages sets, grouped in environments, from the raw
-    # packages.yaml input.
-    def generate_package_specs(self, raw):
+    # for all of the environments sets, grouped in environments, from the raw
+    # environments.yaml input.
+    def generate_environment_specs(self, raw):
         environments = raw
 
-        # check the package descriptions and ammend where features are missing
+        # check the environment descriptions and ammend where features are missing
         for name, config in environments.items():
             if ("specs" not in config) or (config["specs"] == None):
                 environments[name]["specs"] = []
@@ -134,36 +149,37 @@ class Recipe:
                 environments[name]["mpi"] = {"spec": None, "gpu": None}
 
         for name, config in environments.items():
-            mpi = config["mpi"]
-            mpi_spec = mpi["spec"]
-            mpi_gpu = mpi["gpu"]
-            if mpi_spec:
-                try:
-                    mpi_impl, mpi_ver = mpi_spec.strip().split(
-                        sep='@', maxsplit=1)
-                except ValueError:
-                    mpi_impl = mpi_spec.strip()
-                    mpi_ver = None
+            if config["mpi"]:
+                mpi = config["mpi"]
+                mpi_spec = mpi["spec"]
+                mpi_gpu = mpi["gpu"]
+                if mpi_spec:
+                    try:
+                        mpi_impl, mpi_ver = mpi_spec.strip().split(
+                            sep='@', maxsplit=1)
+                    except ValueError:
+                        mpi_impl = mpi_spec.strip()
+                        mpi_ver = None
 
-                if mpi_impl in Recipe.valid_mpi_specs:
-                    default_ver, options = Recipe.valid_mpi_specs[mpi_impl]
-                    if mpi_ver:
-                        version_opt = f"@{mpi_ver}" 
-                    else:
-                        version_opt = f"@{default_ver}" if default_ver else ""
-
-                    spec = f"{mpi_impl}{version_opt} {options or ''}".strip()
-
-                    if mpi_gpu:
-                        if mpi_impl != 'cray-mpich-binary':
-                            spec = f"{spec} cuda_arch=80"
+                    if mpi_impl in Recipe.valid_mpi_specs:
+                        default_ver, options = Recipe.valid_mpi_specs[mpi_impl]
+                        if mpi_ver:
+                            version_opt = f"@{mpi_ver}" 
                         else:
-                            spec = f"{spec} +{mpi_gpu}"
+                            version_opt = f"@{default_ver}" if default_ver else ""
 
-                    environments[name]["specs"].append(spec)
-                else:
-                    # TODO: Create a custom exception type
-                    raise Exception(f'Unsupported mpi: {mpi_impl}')
+                        spec = f"{mpi_impl}{version_opt} {options or ''}".strip()
+
+                        if mpi_gpu:
+                            if mpi_impl != 'cray-mpich-binary':
+                                spec = f"{spec} cuda_arch=80"
+                            else:
+                                spec = f"{spec} +{mpi_gpu}"
+
+                        environments[name]["specs"].append(spec)
+                    else:
+                        # TODO: Create a custom exception type
+                        raise Exception(f'Unsupported mpi: {mpi_impl}')
 
         self.environments = environments
 
@@ -256,7 +272,7 @@ class Recipe:
 
         return files
 
-    def generate_packages(self):
+    def generate_environments(self):
         files = {}
 
         template_path = self.root / 'templates'
@@ -264,7 +280,7 @@ class Recipe:
             loader = jinja2.FileSystemLoader(template_path),
             trim_blocks=True, lstrip_blocks=True)
 
-        makefile_template = jenv.get_template('Makefile.packages')
+        makefile_template = jenv.get_template('Makefile.environments')
         push_to_cache = self.mirror.source and self.mirror.key
         files['makefile'] = makefile_template.render(
             environments=self.environments,
@@ -272,7 +288,7 @@ class Recipe:
 
         files['config'] = {}
         for env, config in self.environments.items():
-            spack_yaml_template = jenv.get_template('packages.spack.yaml')
+            spack_yaml_template = jenv.get_template('environments.spack.yaml')
             files['config'][env] = spack_yaml_template.render(config=config)
 
         return files

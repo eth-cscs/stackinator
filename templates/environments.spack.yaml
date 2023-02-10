@@ -16,7 +16,13 @@ spack:
 {% endfor %}
   packages:
     all:
-        compiler: [{% for c in config.compiler %}{{ separator() }}{{ c.spec }}{% endfor %}]
+      compiler: [{% for c in config.compiler %}{{ separator() }}{{ c.spec }}{% endfor %}]
+    {% if config.variants %}
+      variants:
+      {% for variant in config.variants %}
+      - {{ variant }}
+      {% endfor %}
+    {% endif %}
     {% if config.mpi.spec %}
     mpi:
       require: {{ config.mpi.spec }}

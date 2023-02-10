@@ -49,7 +49,6 @@ def make_argparser():
     parser.add_argument('-d', '--debug', action='store_true')
     return parser
 
-
 def main():
     logfile = generate_logfile_name('_config')
     configure_logging(logfile)
