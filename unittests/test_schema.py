@@ -117,6 +117,3 @@ def test_recipe_environments_yaml(yaml_path, recipe_paths):
         with open(p / 'environments.yaml') as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
             schema.validator(schema.environments_schema).validate(raw)
-
-
-
