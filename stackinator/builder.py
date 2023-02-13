@@ -56,6 +56,7 @@ class Builder:
                 'args': sys.argv,
                 'python': sys.executable
         }
+        meta['spack'] = recipe.config['spack']
         self.meta = meta
 
         # Clone the spack repository if it has not already been checked out
@@ -226,9 +227,8 @@ class Builder:
         # write the meta data
         meta_path = self.path / 'store/meta'
         meta_path.mkdir(exist_ok=True)
-        meta_json_path = meta_path / 'configure.json'
         # write a json file with basic meta data
-        with (meta_path / 'meta.json').open('w') as f:
+        with (meta_path / 'configure.json').open('w') as f:
             f.write(json.dumps(self.meta, sort_keys=True, indent=2))
             f.write('\n')
         # copy the recipe to a recipe subdirectory of the meta path
