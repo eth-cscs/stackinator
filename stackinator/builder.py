@@ -1,12 +1,18 @@
+from datetime import datetime
+import json
 import logging
 import os
 import pathlib
+import platform
 import shutil
 import subprocess
+import sys
 
 import jinja2
+import yaml
 
 from . import root_logger
+from . import stackinator_version
 
 
 class Builder:
@@ -35,6 +41,27 @@ class Builder:
         # check out the version of spack
         spack = recipe.config['spack']
         spack_path = self.path / 'spack'
+
+        # generate configuration meta data
+        meta = {}
+        meta['time'] = datetime.now().strftime("%Y%m%d %H:%M:%S")
+        host_data = platform.uname()
+        meta['host'] = {
+                'machine': host_data.machine,
+                'node': host_data.node,
+                'processor': host_data.processor,
+                'release': host_data.release,
+                'system': host_data.system,
+                'version': host_data.version
+        }
+        meta['cluster'] = os.getenv('CLUSTER_NAME', default='unknown')
+        meta['stackinator'] = {
+                'version': stackinator_version,
+                'args': sys.argv,
+                'python': sys.executable
+        }
+        meta['spack'] = recipe.config['spack']
+        self.meta = meta
 
         # Clone the spack repository if it has not already been checked out
         if not (spack_path / '.git').is_dir():
@@ -200,3 +227,17 @@ class Builder:
         generate_modules_path.mkdir(exist_ok=True)
         with (generate_modules_path / 'modules.yaml').open('w') as f:
             f.write(modules_yaml)
+
+        # write the meta data
+        meta_path = self.path / 'store/meta'
+        meta_path.mkdir(exist_ok=True)
+        # write a json file with basic meta data
+        with (meta_path / 'configure.json').open('w') as f:
+            f.write(json.dumps(self.meta, sort_keys=True, indent=2))
+            f.write('\n')
+        # copy the recipe to a recipe subdirectory of the meta path
+        meta_recipe_path = meta_path / 'recipe'
+        meta_recipe_path.mkdir(exist_ok=True)
+        if meta_recipe_path.exists():
+            shutil.rmtree(meta_recipe_path)
+        shutil.copytree(recipe.path, meta_recipe_path)

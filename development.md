@@ -15,3 +15,12 @@ follow `PATCH` versions during the initial disruptive development.
 The version is defined in the `VERSION` file in the root of the project,
 and this file should be used as the input for any process that needs
 version information.
+
+## Pull Requests
+
+The PR description should describe the changes being made in the PR, and
+be updated to reflect changes made during the review process.
+
+Use "squash and merge" when merging PRs so that each commit to the `master`
+branch is a tested and approved version of the tool.
+For the commit message, use the text of the PR description.
