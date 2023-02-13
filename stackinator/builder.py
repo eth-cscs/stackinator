@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 import os
 import pathlib
@@ -35,6 +36,20 @@ class Builder:
         # check out the version of spack
         spack = recipe.config['spack']
         spack_path = self.path / 'spack'
+
+        # generate the meta data
+        meta = {}
+        meta['time'] = datetime.now().strftime("%Y%m%d %H:%M:%S")
+        uname_capture = capture = subprocess.run(
+                ["uname", "-a"],
+                shell=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT)
+        meta['host'] = capture.stdout.decode('utf-8')
+        meta['stackinator-version'] = 
+        print('=========')
+        print(meta)
+        print('=========')
 
         # Clone the spack repository if it has not already been checked out
         if not (spack_path / '.git').is_dir():
