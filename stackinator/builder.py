@@ -226,7 +226,7 @@ class Builder:
         # write the meta data
         meta_path = self.path / 'store/meta'
         meta_path.mkdir(exist_ok=True)
-        meta_json_path = meta_path / 'meta.json'
+        meta_json_path = meta_path / 'configure.json'
         # write a json file with basic meta data
         with (meta_path / 'meta.json').open('w') as f:
             f.write(json.dumps(self.meta, sort_keys=True, indent=2))

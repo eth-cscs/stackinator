@@ -16,7 +16,7 @@ The version is defined in the `VERSION` file in the root of the project,
 and this file should be used as the input for any process that needs
 version information.
 
-## PRs Merging
+## Pull Requests
 
 The PR description should describe the changes being made in the PR, and
 be updated to reflect changes made during the review process.
