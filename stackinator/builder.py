@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import pathlib
+import platform
 import shutil
 import subprocess
 import sys
@@ -44,12 +45,15 @@ class Builder:
         # generate configuration meta data
         meta = {}
         meta['time'] = datetime.now().strftime("%Y%m%d %H:%M:%S")
-        uname_capture = capture = subprocess.run(
-                ["uname", "-a"],
-                shell=False,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT)
-        meta['host'] = capture.stdout.decode('utf-8')
+        host_data = platform.uname()
+        meta['host'] = {
+                'machine': host_data.machine,
+                'node': host_data.node,
+                'processor': host_data.processor,
+                'release': host_data.release,
+                'system': host_data.system,
+                'version': host_data.version
+        }
         meta['cluster'] = os.getenv('CLUSTER_NAME', default='unknown')
         meta['stackinator'] = {
                 'version': stackinator_version,
