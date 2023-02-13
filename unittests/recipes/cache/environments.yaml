@@ -6,7 +6,7 @@ gcc-env:
   specs:
   - fmt
   mpi:
-    spec: cray-mpich-binary
+    spec: cray-mpich
     gpu: false
 tools:
   compiler:

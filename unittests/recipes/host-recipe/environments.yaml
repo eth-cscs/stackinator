@@ -7,7 +7,7 @@ gcc-env:
   - osu-micro-benchmarks@5.9
   - hdf5 +mpi
   mpi:
-    spec: cray-mpich-binary
+    spec: cray-mpich
     gpu: false
 tools:
   compiler:
