@@ -7,6 +7,7 @@ import sys
 import time
 
 from . import root_logger
+from . import stackinator_version
 from .builder import Builder
 from .recipe import Recipe
 
@@ -44,6 +45,8 @@ def make_argparser():
         description=('Generate a build configuration for a spack stack from '
                      'a recipe.')
     )
+    parser.add_argument('--version', action='version',
+                        version=f'stackinator version {stackinator_version}')
     parser.add_argument('-b', '--build', required=True, type=str)
     parser.add_argument('-r', '--recipe', required=True, type=str)
     parser.add_argument('-d', '--debug', action='store_true')
