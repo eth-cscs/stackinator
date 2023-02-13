@@ -12,7 +12,7 @@ import jinja2
 import yaml
 
 from . import root_logger
-from . import stackinator_version
+from . import VERSION 
 
 
 class Builder:
@@ -27,7 +27,7 @@ class Builder:
                 raise IOError('build path is not a directory')
 
         self.path = path
-        self.root = prefix = pathlib.Path(__file__).parent.parent.resolve()
+        self.root = prefix = pathlib.Path(__file__).parent.resolve()
 
     def generate(self, recipe):
         # make the paths
@@ -56,7 +56,7 @@ class Builder:
         }
         meta['cluster'] = os.getenv('CLUSTER_NAME', default='unknown')
         meta['stackinator'] = {
-                'version': stackinator_version,
+                'version': VERSION,
                 'args': sys.argv,
                 'python': sys.executable
         }
