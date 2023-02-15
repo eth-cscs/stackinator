@@ -34,7 +34,7 @@ def configure_logging(logfile):
 
 
 def log_header(args):
-    root_logger.info('Spack Stack Tool')
+    root_logger.info('Stackinator')
     root_logger.info(f'  recipe path: {args.recipe}')
     root_logger.info(f'  build path : {args.build}')
 
