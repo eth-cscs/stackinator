@@ -1,4 +1,4 @@
-'compilers:':
+compilers:
 - compiler:
     spec: gcc@7.5.0
     paths:
