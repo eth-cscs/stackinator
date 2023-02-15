@@ -6,8 +6,7 @@ import platform
 import sys
 import time
 
-from . import root_logger
-from . import stackinator_version
+from . import root_logger, VERSION
 from .builder import Builder
 from .recipe import Recipe
 
@@ -46,11 +45,12 @@ def make_argparser():
                      'a recipe.')
     )
     parser.add_argument('--version', action='version',
-                        version=f'stackinator version {stackinator_version}')
+                        version=f'stackinator version {VERSION}')
     parser.add_argument('-b', '--build', required=True, type=str)
     parser.add_argument('-r', '--recipe', required=True, type=str)
     parser.add_argument('-d', '--debug', action='store_true')
     return parser
+
 
 def main():
     logfile = generate_logfile_name('_config')

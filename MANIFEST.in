@@ -1,0 +1,5 @@
+graft stackinator/etc
+graft stackinator/repo
+graft stackinator/schema
+graft stackinator/share
+graft stackinator/templates

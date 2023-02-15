@@ -1,4 +1,4 @@
-# Spack Stack Builder
+# Stackinator
 
 A tool for building a scientific software stack from a recipe for vClusters on CSCS' Alps infrastructure.
 
