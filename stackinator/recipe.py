@@ -48,7 +48,7 @@ class Recipe:
             raise FileNotFoundError(f"The recipe path '{path}' does not exist")
 
         self.path = path
-        self.root = prefix = pathlib.Path(__file__).parent.parent.resolve()
+        self.root = prefix = pathlib.Path(__file__).parent.resolve()
 
 
         # required compiler.yaml file
