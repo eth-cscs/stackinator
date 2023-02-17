@@ -108,7 +108,7 @@ class Recipe:
 
         self.modules = modules_path
         if not self.configs_path.is_dir():
-            raise FileNotFoundError(f"The system {self.config['system']} is not a supported cluster")
+            raise FileNotFoundError(f"The system {self.config['system']!r} is not a supported cluster")
 
         # optional packages.yaml file
         packages_path = path / 'packages.yaml'
