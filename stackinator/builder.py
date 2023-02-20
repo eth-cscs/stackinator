@@ -240,4 +240,4 @@ class Builder:
         meta_recipe_path.mkdir(exist_ok=True)
         if meta_recipe_path.exists():
             shutil.rmtree(meta_recipe_path)
-        shutil.copytree(recipe.path, meta_recipe_path)
+        shutil.copytree(recipe.path, meta_recipe_path, ignore=shutil.ignore_patterns('.git'))
