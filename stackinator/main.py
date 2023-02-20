@@ -5,6 +5,7 @@ import os
 import platform
 import sys
 import time
+import traceback
 
 from . import root_logger, VERSION
 from .builder import Builder
@@ -37,6 +38,7 @@ def log_header(args):
     root_logger.info('Stackinator')
     root_logger.info(f'  recipe path: {args.recipe}')
     root_logger.info(f'  build path : {args.build}')
+    root_logger.info(f'  system     : {args.system}')
 
 
 def make_argparser():
@@ -48,6 +50,7 @@ def make_argparser():
                         version=f'stackinator version {VERSION}')
     parser.add_argument('-b', '--build', required=True, type=str)
     parser.add_argument('-r', '--recipe', required=True, type=str)
+    parser.add_argument('-s', '--system', required=False, type=str)
     parser.add_argument('-d', '--debug', action='store_true')
     return parser
 
@@ -76,6 +79,7 @@ def main():
                     '/spack/bin make store.squashfs -j32')
         return 0
     except Exception as e:
-        root_logger.exception(e)
+        root_logger.debug(traceback.format_exc())
+        root_logger.error(str(e))
         root_logger.info(f'see {logfile} for more information')
         return 1

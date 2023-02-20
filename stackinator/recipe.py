@@ -93,6 +93,10 @@ class Recipe:
             schema.config_validator.validate(raw)
             self.config = raw
 
+        # override the system target
+        if args.system:
+            self.config['system'] = args.system
+
         # optional modules.yaml file
         modules_path = path / 'modules.yaml'
         self._logger.debug(f'opening {modules_path}')
@@ -103,6 +107,8 @@ class Recipe:
                 f'no modules.yaml provided - using the {modules_path}')
 
         self.modules = modules_path
+        if not self.configs_path.is_dir():
+            raise FileNotFoundError(f"The system {self.config['system']!r} is not a supported cluster")
 
         # optional packages.yaml file
         packages_path = path / 'packages.yaml'
