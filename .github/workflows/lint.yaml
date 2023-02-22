@@ -23,3 +23,9 @@ jobs:
     - name: isort
       run: |
         isort .
+    - name: flake8
+      run: |
+        flake8
+    - name: mypy
+      run: |
+        mypy .

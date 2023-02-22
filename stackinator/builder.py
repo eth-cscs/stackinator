@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import pathlib
 import platform
@@ -26,7 +25,7 @@ class Builder:
                 raise IOError("build path is not a directory")
 
         self.path = path
-        self.root = prefix = pathlib.Path(__file__).parent.resolve()
+        self.root = pathlib.Path(__file__).parent.resolve()
 
     def generate(self, recipe):
         # make the paths
