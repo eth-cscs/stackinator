@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import sys
 from datetime import datetime
+from typing import Dict, Sequence, Union
 
 import jinja2
 import yaml
@@ -41,7 +42,8 @@ class Builder:
         spack_path = self.path / "spack"
 
         # generate configuration meta data
-        meta = {}
+        t_meta = Dict[str, Union[str, Dict[str, str], Dict[str, Sequence[str]]]]
+        meta: t_meta = {}
         meta["time"] = datetime.now().strftime("%Y%m%d %H:%M:%S")
         host_data = platform.uname()
         meta["host"] = {
@@ -124,8 +126,8 @@ class Builder:
             f.write("\n")
 
         etc_path = self.root / "etc"
-        for f in ["Make.inc", "bwrap-mutable-root.sh"]:
-            shutil.copy2(etc_path / f, self.path / f)
+        for f_etc in ["Make.inc", "bwrap-mutable-root.sh"]:
+            shutil.copy2(etc_path / f_etc, self.path / f_etc)
 
         # Generate the system configuration: the compilers, environments,
         # mirrors etc. that are defined for the target cluster.
@@ -134,16 +136,16 @@ class Builder:
         system_configs_path = pathlib.Path(recipe.configs_path)
 
         # Copy the yaml files to the spack config path
-        for f in system_configs_path.iterdir():
+        for f_config in system_configs_path.iterdir():
             # skip copying mirrors.yaml - this is done in the next step only if
             # mirrors have been enabled and the recipe did not provide a mirror
             # configuration
-            if f.name in ["mirrors.yaml"]:
+            if f_config.name in ["mirrors.yaml"]:
                 continue
 
             # construct full file path
-            src = system_configs_path / f.name
-            dst = config_path / f.name
+            src = system_configs_path / f_config.name
+            dst = config_path / f_config.name
             # copy only files
             if src.is_file():
                 shutil.copy(src, dst)

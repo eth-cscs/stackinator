@@ -1,4 +1,6 @@
 import pathlib
+import typing
+from typing import Dict, List, Union
 
 import jinja2
 import yaml
@@ -193,10 +195,15 @@ class Recipe:
 
     # creates the self.compilers field that describes the full specifications
     # for all of teh compilers from the raw compilers.yaml input
+    @typing.no_type_check
     def generate_compiler_specs(self, raw):
+        t_bootstrap = Dict[
+            str, Union[Dict[str, Union[List[str], Dict[str, str]]], List[str]]
+        ]
+
         compilers = {}
 
-        bootstrap = {}
+        bootstrap: t_bootstrap = {}
         bootstrap["packages"] = {
             "external": [
                 "perl",
@@ -276,6 +283,7 @@ class Recipe:
 
     # Boolean flag that indicates whether the recipe is configured to use
     # a binary cache.
+    @typing.no_type_check
     def generate_compilers(self):
         files = {}
 
