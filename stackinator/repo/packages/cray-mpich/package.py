@@ -11,6 +11,7 @@ from spack.package import *
 
 class CrayMpich(Package):
     """Install cray-mpich as a binary package"""
+
     """Intended to override the main cray-mpich"""
 
     homepage = "https://www.hpe.com/us/en/compute/hpc/hpc-software.html"
@@ -18,26 +19,36 @@ class CrayMpich(Package):
 
     maintainers = ["haampie"]
 
-
-    version("8.1.23-gcc",
-            sha256="2d1dfda811848d278548b0d7735f17341c70380dbf7f91dc680e5afcfb5e0038",
-            url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.23-gcc.tar.gz")
-    version("8.1.23-nvhpc",
-            sha256="1dd9b161c538dbac564ecff6f1552220ba40dcc9436dc855087438f29861eba1",
-            url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.23-nvhpc.tar.gz")
-    version("8.1.21.1-gcc",
-            sha256="0a6852ebf06afd249285fd09566e8489300cba96ad66e90c40df36b6af9a631e",
-            url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.21.1-gcc.tar.gz")
-    version("8.1.21.1-nvhpc",
-            sha256="791b39f2ecb933060abaa8c8704e71da01c6962c4211cc99d12b9d964e9be4cb",
-            url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.21.1-nvhpc.tar.gz")
-    version("8.1.18.4-gcc",
-            sha256="776c695aeed62b3f64a1bca11b30a2537a907777a8664d2f092e3deac288e4ad",
-            url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.18.4-gcc.tar.gz")
-    version("8.1.18.4-nvhpc",
-            sha256="2285433363c75a04ccdf4798be5b0e296e0c9a8fb8fcb38eb0aa4ccf8d1e0843",
-            url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.18.4-nvhpc.tar.gz")
-
+    version(
+        "8.1.23-gcc",
+        sha256="2d1dfda811848d278548b0d7735f17341c70380dbf7f91dc680e5afcfb5e0038",
+        url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.23-gcc.tar.gz",
+    )
+    version(
+        "8.1.23-nvhpc",
+        sha256="1dd9b161c538dbac564ecff6f1552220ba40dcc9436dc855087438f29861eba1",
+        url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.23-nvhpc.tar.gz",
+    )
+    version(
+        "8.1.21.1-gcc",
+        sha256="0a6852ebf06afd249285fd09566e8489300cba96ad66e90c40df36b6af9a631e",
+        url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.21.1-gcc.tar.gz",
+    )
+    version(
+        "8.1.21.1-nvhpc",
+        sha256="791b39f2ecb933060abaa8c8704e71da01c6962c4211cc99d12b9d964e9be4cb",
+        url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.21.1-nvhpc.tar.gz",
+    )
+    version(
+        "8.1.18.4-gcc",
+        sha256="776c695aeed62b3f64a1bca11b30a2537a907777a8664d2f092e3deac288e4ad",
+        url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.18.4-gcc.tar.gz",
+    )
+    version(
+        "8.1.18.4-nvhpc",
+        sha256="2285433363c75a04ccdf4798be5b0e296e0c9a8fb8fcb38eb0aa4ccf8d1e0843",
+        url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.18.4-nvhpc.tar.gz",
+    )
 
     variant("cuda", default=False)
     variant("rocm", default=False)
@@ -181,4 +192,6 @@ class CrayMpich(Package):
 
         filter_file("@@GTL_LIBRARY@@", gtl_library, self.prefix.bin.mpicc, string=True)
         filter_file("@@GTL_LIBRARY@@", gtl_library, self.prefix.bin.mpicxx, string=True)
-        filter_file("@@GTL_LIBRARY@@", gtl_library, self.prefix.bin.mpifort, string=True)
+        filter_file(
+            "@@GTL_LIBRARY@@", gtl_library, self.prefix.bin.mpifort, string=True
+        )
