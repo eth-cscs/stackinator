@@ -2,6 +2,12 @@
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.mypy]
+files = ["stackinator/", "unittests/"]
+exclude = "stackinator/repo/packages/"
+ignore_missing_imports = true
+check_untyped_defs = true
+
 [tool.isort]
  profile = "black"
  skip = ["external/"]
