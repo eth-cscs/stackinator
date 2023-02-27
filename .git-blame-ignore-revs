@@ -1,0 +1,3 @@
+# .git-blame-ignore-revs
+# Format entire codebase with black and isort
+dbd21f12d58d1511cdcac6eb927f8cd73e371568
