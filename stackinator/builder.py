@@ -25,6 +25,13 @@ class Builder:
             if not path.is_dir():
                 raise IOError("build path is not a directory")
 
+        p = path.parts
+        if len(p)==1:
+            raise IOError("build path can't be root '/'")
+
+        if p[1]=='tmp':
+            raise IOError("build path can't be in '/tmp'")
+
         self.path = path
         self.root = prefix = pathlib.Path(__file__).parent.resolve()
 
