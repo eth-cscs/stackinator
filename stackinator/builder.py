@@ -6,7 +6,6 @@ import shutil
 import subprocess
 import sys
 from datetime import datetime
-from typing import Dict, Sequence, Union
 
 import jinja2
 import yaml
@@ -42,8 +41,7 @@ class Builder:
         spack_path = self.path / "spack"
 
         # generate configuration meta data
-        t_meta = Dict[str, Union[str, Dict[str, str], Dict[str, Sequence[str]]]]
-        meta: t_meta = {}
+        meta = {}
         meta["time"] = datetime.now().strftime("%Y%m%d %H:%M:%S")
         host_data = platform.uname()
         meta["host"] = {
