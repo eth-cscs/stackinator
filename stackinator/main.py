@@ -37,7 +37,8 @@ def log_header(args):
     root_logger.info("Stackinator")
     root_logger.info(f"  recipe path: {args.recipe}")
     root_logger.info(f"  build path : {args.build}")
-    root_logger.info(f"  system     : {args.system}")
+    if args.system is not None:
+        root_logger.info(f"  system     : {args.system}")
 
 
 def make_argparser():
