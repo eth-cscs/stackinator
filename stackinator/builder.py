@@ -203,7 +203,7 @@ class Builder:
             # Copy user-provided recipes into repo
             user_repo_packages = user_repo_path / "packages"
             for user_recipe_dir in user_repo_packages.iterdir():
-                if user_recipe_dir.is_dir():  # FIXME: iterdir() yelds files too
+                if user_recipe_dir.is_dir():  # iterdir() yelds files too
                     shutil.copytree(
                         user_recipe_dir, repo_dst / "packages" / user_recipe_dir.name
                     )
