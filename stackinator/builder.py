@@ -194,11 +194,12 @@ class Builder:
         # Add user-defined repo to internal repo
         user_repo_path = recipe.path / "repo"
         if user_repo_path.exists() and user_repo_path.is_dir():
-            # If user provides repo.yaml, use this instead
-            # Overwrites repos_yaml_template
             user_repo_yaml = user_repo_path / "repo.yaml"
             if user_repo_yaml.exists():
-                shutil.copy(user_repo_yaml, repo_dst / "repo.yaml")
+                self._logger.warning(f"Found 'repo.yaml' file in {user_repo_path}")
+                self._logger.warning(
+                    "'repo.yaml' is ignored, packages are added to the 'alps' repo"
+                )
 
             # Copy user-provided recipes into repo
             user_repo_packages = user_repo_path / "packages"
