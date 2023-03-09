@@ -271,7 +271,7 @@ spack:
 
 ### repo
 
-New or custom versions of a Spack package can be added to the `alps` repo. If a `repo/` folder is provided, `stackinator` will copy all the Spack packages in `repo/packages/` into the `alps` repo (the same repo providing `cray-mpich`). If the user provides a `repo.yaml` file in the `repo/` folder, the file will be ignored (and a warning is emitted).
+New Spack packages or custom versions of a package can be added to the `alps` repo. If a `repo/` folder is provided, `stackinator` will copy all the Spack packages in `repo/packages/` into the `alps` repo (the same repo providing `cray-mpich`). If the user provides a `repo.yaml` file in the `repo/` folder, the file will be ignored (and a warning is emitted).
 
 ### modules
 
