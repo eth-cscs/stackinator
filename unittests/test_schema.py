@@ -20,7 +20,14 @@ def yaml_path(test_path):
 
 @pytest.fixture
 def recipes():
-    return ["host-recipe", "base-amdgpu", "base-nvgpu", "cache", "unique-bootstrap", "with-repo"]
+    return [
+        "host-recipe",
+        "base-amdgpu",
+        "base-nvgpu",
+        "cache",
+        "unique-bootstrap",
+        "with-repo",
+    ]
 
 
 @pytest.fixture
