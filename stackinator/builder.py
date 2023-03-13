@@ -191,6 +191,24 @@ class Builder:
             )
             f.write("\n")
 
+        # Add user-defined repo to internal repo
+        user_repo_path = recipe.path / "repo"
+        if user_repo_path.exists() and user_repo_path.is_dir():
+            user_repo_yaml = user_repo_path / "repo.yaml"
+            if user_repo_yaml.exists():
+                self._logger.warning(f"Found 'repo.yaml' file in {user_repo_path}")
+                self._logger.warning(
+                    "'repo.yaml' is ignored, packages are added to the 'alps' repo"
+                )
+
+            # Copy user-provided recipes into repo
+            user_repo_packages = user_repo_path / "packages"
+            for user_recipe_dir in user_repo_packages.iterdir():
+                if user_recipe_dir.is_dir():  # iterdir() yelds files too
+                    shutil.copytree(
+                        user_recipe_dir, repo_dst / "packages" / user_recipe_dir.name
+                    )
+
         # Generate the makefile and spack.yaml files that describe the compilers
         compilers = recipe.generate_compilers()
         compiler_path = self.path / "compilers"
