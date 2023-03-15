@@ -301,3 +301,19 @@ packages:
     - spec: git@2.39.1
       prefix: /usr
 ```
+
+### Debug tips
+If you have started a stackinator build of your environment and it fails due to a build error in some random package, the squashfs file will not have been created. If this happens, it is possible (assuming files have not been wiped), to create a bash shell that allows you to do some debugging of what might be wrong with the spack build.
+Try the following, with `BUILD_DIR` set to the appropriate location
+```
+BUILD_DIR=/dev/shm/biddisco
+cd $BUILD_DIR
+
+# simulate what the makefile was doing, by mounting the store directory as /user-environment 
+# and giving us a clean shell with the SPACK_SYSTEM_CONFIG_PATH set to the right place
+
+$BUILD_DIR/bwrap-mutable-root.sh --tmpfs ~ --bind $BUILD_DIR/tmp /tmp --bind $BUILD_DIR/store /user-environment env --ignore-environment PATH=/usr/bin:/bin:`pwd`/spack/bin SPACK_SYSTEM_CONFIG_PATH=/user-environment/config /bin/bash --norc --noprofile
+
+# spack find will now show you the installed compilers and packages that were correctly installed
+spack find
+```
