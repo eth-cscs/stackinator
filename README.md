@@ -302,7 +302,8 @@ packages:
       prefix: /usr
 ```
 
-### Debug tips
+## Debug tips
+
 If you have started a stackinator build of your environment and it fails due to a build error in some random package, the squashfs file will not have been created. If this happens, it is possible (assuming files have not been wiped), to create a bash shell that allows you to do some debugging of what might be wrong with the spack build.
 Try the following, with `BUILD_DIR` set to the appropriate location
 ```
