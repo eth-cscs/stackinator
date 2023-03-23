@@ -41,8 +41,8 @@ def test_config_yaml(yaml_path):
         raw = yaml.load(fid, Loader=yaml.Loader)
         schema.validator(schema.config_schema).validate(raw)
         assert raw["store"] == "/user-environment"
-        assert raw["spack"]["commit"] == None
-        assert raw["modules"] == True
+        assert raw["spack"]["commit"] is None
+        assert raw["modules"] == True  # noqa: E712
         assert raw["mirror"] == {"enable": True, "key": None}
 
     with open(yaml_path / "config.full.yaml") as fid:
@@ -50,11 +50,11 @@ def test_config_yaml(yaml_path):
         schema.validator(schema.config_schema).validate(raw)
         assert raw["store"] == "/alternative-point"
         assert raw["spack"]["commit"] == "6408b51"
-        assert raw["modules"] == False
+        assert raw["modules"] == False  # noqa: E712
         assert raw["mirror"] == {"enable": True, "key": "/home/bob/veryprivate.key"}
 
 
-def test_recipe_config_yaml(yaml_path, recipe_paths):
+def test_recipe_config_yaml(recipe_paths):
     # validate the config.yaml in the test recipes
     for p in recipe_paths:
         with open(p / "config.yaml") as fid:
@@ -62,14 +62,14 @@ def test_recipe_config_yaml(yaml_path, recipe_paths):
             schema.validator(schema.config_schema).validate(raw)
 
 
-def test_compilers_yaml(yaml_path, recipe_paths):
+def test_compilers_yaml(yaml_path):
     # test that the defaults are set as expected
     with open(yaml_path / "compilers.defaults.yaml") as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
         schema.validator(schema.compilers_schema).validate(raw)
         assert raw["bootstrap"] == {"spec": "gcc@11"}
         assert raw["gcc"] == {"specs": ["gcc@10.2"]}
-        assert raw["llvm"] == None
+        assert raw["llvm"] is None
 
     with open(yaml_path / "compilers.full.yaml") as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
@@ -82,7 +82,7 @@ def test_compilers_yaml(yaml_path, recipe_paths):
         }
 
 
-def test_recipe_compilers_yaml(yaml_path, recipe_paths):
+def test_recipe_compilers_yaml(recipe_paths):
     # validate the compilers.yaml in the test recipes
     for p in recipe_paths:
         with open(p / "compilers.yaml") as fid:
@@ -106,10 +106,10 @@ def test_environments_yaml(yaml_path):
         assert env["specs"] == ["tree"]
 
         # test defaults were set correctly
-        assert env["unify"] == True
+        assert env["unify"] == True  # noqa: E712
         assert env["packages"] == []
         assert env["variants"] == []
-        assert env["mpi"] == None
+        assert env["mpi"] is None
 
         # the full-env sets all of the fields
         # test that they have been read correctly
@@ -129,7 +129,7 @@ def test_environments_yaml(yaml_path):
         assert env["variants"] == ["+mpi", "+cuda"]
 
 
-def test_recipe_environments_yaml(yaml_path, recipe_paths):
+def test_recipe_environments_yaml(recipe_paths):
     # validate the environments.yaml in the test recipes
     for p in recipe_paths:
         with open(p / "environments.yaml") as fid:

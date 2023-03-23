@@ -2,7 +2,6 @@ import json
 import pathlib
 
 import jsonschema
-import yaml
 
 prefix = pathlib.Path(__file__).parent.resolve()
 
