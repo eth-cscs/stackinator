@@ -20,9 +20,20 @@ class Builder:
         if not path.is_absolute():
             path = pathlib.Path.cwd() / path
 
+        # check that if the path exists that it is not a file
         if path.exists():
             if not path.is_dir():
                 raise IOError("build path is not a directory")
+
+        parts = path.parts
+
+        # the build path can't be root
+        if len(parts)==1:
+            raise IOError("build path can't be root '/'")
+
+        # the build path can't be in /tmp because the build step rebinds /tmp.
+        if parts[1]=="tmp":
+            raise IOError("build path can't be in '/tmp'")
 
         self.path = path
         self.root = pathlib.Path(__file__).parent.resolve()
@@ -189,6 +200,24 @@ class Builder:
                 )
             )
             f.write("\n")
+
+        # Add user-defined repo to internal repo
+        user_repo_path = recipe.path / "repo"
+        if user_repo_path.exists() and user_repo_path.is_dir():
+            user_repo_yaml = user_repo_path / "repo.yaml"
+            if user_repo_yaml.exists():
+                self._logger.warning(f"Found 'repo.yaml' file in {user_repo_path}")
+                self._logger.warning(
+                    "'repo.yaml' is ignored, packages are added to the 'alps' repo"
+                )
+
+            # Copy user-provided recipes into repo
+            user_repo_packages = user_repo_path / "packages"
+            for user_recipe_dir in user_repo_packages.iterdir():
+                if user_recipe_dir.is_dir():  # iterdir() yelds files too
+                    shutil.copytree(
+                        user_recipe_dir, repo_dst / "packages" / user_recipe_dir.name
+                    )
 
         # Generate the makefile and spack.yaml files that describe the compilers
         compilers = recipe.generate_compilers()
