@@ -21,9 +21,20 @@ class Builder:
         if not path.is_absolute():
             path = pathlib.Path.cwd() / path
 
+        # check that if the path exists that it is not a file
         if path.exists():
             if not path.is_dir():
                 raise IOError("build path is not a directory")
+
+        parts = path.parts
+
+        # the build path can't be root
+        if len(parts)==1:
+            raise IOError("build path can't be root '/'")
+
+        # the build path can't be in /tmp because the build step rebinds /tmp.
+        if parts[1]=="tmp":
+            raise IOError("build path can't be in '/tmp'")
 
         self.path = path
         self.root = prefix = pathlib.Path(__file__).parent.resolve()
