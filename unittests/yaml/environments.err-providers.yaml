@@ -17,5 +17,6 @@ full-env:
   variants:
   - +mpi
   - +cuda
+  # expect an error because 'providers' is not defined in schema.
   providers:
     libglx: [opengl]
