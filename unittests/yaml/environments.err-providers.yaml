@@ -1,0 +1,21 @@
+full-env:
+  compiler:
+  - toolchain: gcc
+    spec: gcc@11
+  - toolchain: gcc
+    spec: gcc@12
+  unify: when_possible
+  specs:
+  - osu-micro-benchmarks@5.9
+  - hdf5 +mpi
+  mpi:
+    spec: cray-mpich
+    gpu: cuda
+  packages:
+  - perl
+  - git
+  variants:
+  - +mpi
+  - +cuda
+  providers:
+    libglx: [opengl]

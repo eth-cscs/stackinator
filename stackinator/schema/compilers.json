@@ -2,6 +2,8 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Schema for Spack Stack compilers.yaml recipe file",
     "type": "object",
+    "additionalProperties": false,
+    "required": ["bootstrap", "gcc"],
     "defs": {
         "gcc_version_spec": {
             "type": "string",
@@ -65,8 +67,6 @@
             ],
             "default": null
         }
-    },
-    "additionalProperties": false,
-    "required": ["bootstrap", "gcc"]
+    }
 }
 
