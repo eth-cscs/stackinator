@@ -28,11 +28,11 @@ class Builder:
         parts = path.parts
 
         # the build path can't be root
-        if len(parts)==1:
+        if len(parts) == 1:
             raise IOError("build path can't be root '/'")
 
         # the build path can't be in /tmp because the build step rebinds /tmp.
-        if parts[1]=="tmp":
+        if parts[1] == "tmp":
             raise IOError("build path can't be in '/tmp'")
 
         self.path = path
