@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import pathlib
 import platform
@@ -21,12 +20,23 @@ class Builder:
         if not path.is_absolute():
             path = pathlib.Path.cwd() / path
 
+        # check that if the path exists that it is not a file
         if path.exists():
             if not path.is_dir():
                 raise IOError("build path is not a directory")
 
+        parts = path.parts
+
+        # the build path can't be root
+        if len(parts) == 1:
+            raise IOError("build path can't be root '/'")
+
+        # the build path can't be in /tmp because the build step rebinds /tmp.
+        if parts[1] == "tmp":
+            raise IOError("build path can't be in '/tmp'")
+
         self.path = path
-        self.root = prefix = pathlib.Path(__file__).parent.resolve()
+        self.root = pathlib.Path(__file__).parent.resolve()
 
     def generate(self, recipe):
         # make the paths
@@ -125,8 +135,8 @@ class Builder:
             f.write("\n")
 
         etc_path = self.root / "etc"
-        for f in ["Make.inc", "bwrap-mutable-root.sh"]:
-            shutil.copy2(etc_path / f, self.path / f)
+        for f_etc in ["Make.inc", "bwrap-mutable-root.sh"]:
+            shutil.copy2(etc_path / f_etc, self.path / f_etc)
 
         # Generate the system configuration: the compilers, environments,
         # mirrors etc. that are defined for the target cluster.
@@ -135,16 +145,16 @@ class Builder:
         system_configs_path = pathlib.Path(recipe.configs_path)
 
         # Copy the yaml files to the spack config path
-        for f in system_configs_path.iterdir():
+        for f_config in system_configs_path.iterdir():
             # skip copying mirrors.yaml - this is done in the next step only if
             # mirrors have been enabled and the recipe did not provide a mirror
             # configuration
-            if f.name in ["mirrors.yaml"]:
+            if f_config.name in ["mirrors.yaml"]:
                 continue
 
             # construct full file path
-            src = system_configs_path / f.name
-            dst = config_path / f.name
+            src = system_configs_path / f_config.name
+            dst = config_path / f_config.name
             # copy only files
             if src.is_file():
                 shutil.copy(src, dst)

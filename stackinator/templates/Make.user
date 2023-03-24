@@ -45,7 +45,7 @@ export SPACK_INSTALL_FLAGS := --verbose
 {% endif %}
 
 # Reproducibility
-export LC_ALL := C
+export LC_ALL := en_US.UTF-8
 export TZ := UTC
 
 # I tried UNIX epoch 0 here, but it results in build errors with Python
