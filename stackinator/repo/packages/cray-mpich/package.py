@@ -20,6 +20,16 @@ class CrayMpich(Package):
     maintainers = ["haampie"]
 
     version(
+        "8.1.24-gcc",
+        sha256="3da0e421c3faaadbe18e57dd033b0ec6513e0d9ed7fbfa77f05a02bada4cd483",
+        url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.24-gcc.tar.gz",
+    )
+    version(
+        "8.1.24-nvhpc",
+        sha256="1b507f4e9150cf188a0571aad0d190fc8ee981def1d6198c998673d73828ed6f",
+        url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.24-nvhpc.tar.gz",
+    )
+    version(
         "8.1.23-gcc",
         sha256="2d1dfda811848d278548b0d7735f17341c70380dbf7f91dc680e5afcfb5e0038",
         url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.23-gcc.tar.gz",
@@ -71,6 +81,21 @@ class CrayMpich(Package):
 
     # libfabric.so.1
     depends_on("libfabric@1:", type="link")
+
+    with when("@8.1.24-gcc"):
+        # libgfortran.so.5
+        conflicts("%gcc@:7")
+        for __compiler in spack.compilers.supported_compilers():
+            if __compiler != "gcc":
+                conflicts("%{}".format(__compiler), msg="gcc required")
+
+    with when("@8.1.24-nvhpc"):
+        conflicts("%nvhpc@:20.7")
+        conflicts("+rocm")
+        conflicts("~cuda")
+        for __compiler in spack.compilers.supported_compilers():
+            if __compiler != "nvhpc":
+                conflicts("%{}".format(__compiler), msg="nvhpc required")
 
     with when("@8.1.23-gcc"):
         # libgfortran.so.5
