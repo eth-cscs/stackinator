@@ -2,8 +2,8 @@ packages:
   libfabric:
     buildable: false
     externals:
-    - spec: libfabric@1.15.0.0
-      prefix: /opt/cray/libfabric/1.15.0.0/
+    - spec: libfabric@1.15.2.0
+      prefix: /opt/cray/libfabric/1.15.2.0/
   slurm:
     buildable: false
     externals:

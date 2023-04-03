@@ -272,7 +272,7 @@ class Recipe:
     @property
     def configs_path(self):
         system = self.config["system"]
-        return self.root / "share" / "cluster-config" / system
+        return self.root / "cluster-config" / system
 
     # Boolean flag that indicates whether the recipe is configured to use
     # a binary cache.
