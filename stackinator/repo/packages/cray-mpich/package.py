@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -220,3 +220,41 @@ class CrayMpich(Package):
         filter_file(
             "@@GTL_LIBRARY@@", gtl_library, self.prefix.bin.mpifort, string=True
         )
+ 
+    @property
+    def headers(self):
+        hdrs = find_headers("mpi", self.prefix.include, recursive=True)
+        hdrs += find_headers("cray_version", self.prefix.include, recursive=True) # cray_version.h
+        hdrs += find_headers("pmi", self.prefix.include, recursive=True)
+        hdrs.directories = os.path.dirname(hdrs[0])
+        return hdrs
+
+    @property
+    def libs(self):
+        query_parameters = self.spec.last_query.extra_parameters
+
+        libraries = ["libmpi", "libmpich"]
+
+        if "cxx" in query_parameters:
+            libraries.extend(["libmpicxx", "libmpichcxx"])
+
+        if "f77" in query_parameters:
+            libraries.extend(["libmpifort", "libmpichfort", "libfmpi", "libfmpich"])
+
+        if "f90" in query_parameters:
+            libraries.extend(["libmpif90", "libmpichf90"])
+
+        if "+cuda" in self.spec:
+            libraries.append("libmpi*cuda")
+        
+        if "+rocm" in self.spec:
+            libraries.append("libmpi*hsa")
+
+        libs = []
+        for lib_folder in [self.prefix.lib, self.prefix.lib64]:
+            libs += find_libraries(libraries, root=lib_folder, recursive=True)
+            libs += find_libraries("libpmi", root=lib_folder, recursive=True)
+            libs += find_libraries("libopa", root=lib_folder, recursive=True)
+            libs += find_libraries("libmpl", root=lib_folder, recursive=True)
+
+        return libs
