@@ -235,8 +235,6 @@ class CrayMpich(Package):
 
         libraries = ["libmpi", "libmpich"]
 
-        if "cxx" in query_parameters:
-            libraries.extend(["libmpicxx", "libmpichcxx"])
 
         if "f77" in query_parameters:
             libraries.extend(["libmpifort", "libmpichfort", "libfmpi", "libfmpich"])
