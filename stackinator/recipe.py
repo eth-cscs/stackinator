@@ -1,4 +1,3 @@
-import logging
 import pathlib
 
 import jinja2
@@ -43,11 +42,11 @@ class Recipe:
         if not path.is_absolute():
             path = pathlib.Path.cwd() / path
 
-        if not path.is_dir:
+        if not path.is_dir():
             raise FileNotFoundError(f"The recipe path '{path}' does not exist")
 
         self.path = path
-        self.root = prefix = pathlib.Path(__file__).parent.resolve()
+        self.root = pathlib.Path(__file__).parent.resolve()
 
         # required compiler.yaml file
         compiler_path = path / "compilers.yaml"
@@ -126,7 +125,7 @@ class Recipe:
         # Look first in the recipe path, then in the system configuration path.
         mirrors_path = path / "mirrors.yaml"
         mirrors_source = mirrors_path if mirrors_path.is_file() else None
-        if mirrors_source == None:
+        if mirrors_source is None:
             mirrors_path = self.configs_path / "mirrors.yaml"
             mirrors_source = mirrors_path if mirrors_path.is_file() else None
 
@@ -152,7 +151,7 @@ class Recipe:
 
         # check the environment descriptions and ammend where features are missing
         for name, config in environments.items():
-            if ("specs" not in config) or (config["specs"] == None):
+            if ("specs" not in config) or (config["specs"] is None):
                 environments[name]["specs"] = []
 
             if "mpi" not in config:
@@ -222,7 +221,7 @@ class Recipe:
         bootstrap_spec = raw["bootstrap"]["spec"]
         bootstrap["specs"] = [
             f"{bootstrap_spec} languages=c,c++",
-            f"squashfs default_compression=zstd",
+            "squashfs default_compression=zstd",
         ]
         compilers["bootstrap"] = bootstrap
 
@@ -273,7 +272,7 @@ class Recipe:
     @property
     def configs_path(self):
         system = self.config["system"]
-        return self.root / "share" / "cluster-config" / system
+        return self.root / "cluster-config" / system
 
     # Boolean flag that indicates whether the recipe is configured to use
     # a binary cache.
