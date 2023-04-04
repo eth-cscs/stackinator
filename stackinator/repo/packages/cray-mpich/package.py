@@ -225,7 +225,8 @@ class CrayMpich(Package):
     def headers(self):
         hdrs = find_headers("mpi", self.prefix.include, recursive=True)
         hdrs += find_headers("cray_version", self.prefix.include, recursive=True) # cray_version.h
-        hdrs += find_headers("pmi", self.prefix.include, recursive=True)
+        # cray-mpich depends on cray-pmi
+        hdrs += find_headers("pmi", self.prefix.include, recursive=True) # See cray-pmi package
         hdrs.directories = os.path.dirname(hdrs[0])
         return hdrs
 
@@ -234,9 +235,6 @@ class CrayMpich(Package):
         query_parameters = self.spec.last_query.extra_parameters
 
         libraries = ["libmpi", "libmpich"]
-
-        if "cxx" in query_parameters:
-            libraries.extend(["libmpicxx", "libmpichcxx"])
 
         if "f77" in query_parameters:
             libraries.extend(["libmpifort", "libmpichfort", "libfmpi", "libfmpich"])
@@ -253,6 +251,7 @@ class CrayMpich(Package):
         libs = []
         for lib_folder in [self.prefix.lib, self.prefix.lib64]:
             libs += find_libraries(libraries, root=lib_folder, recursive=True)
+            # cray-mpich depends on cray-pmi
             libs += find_libraries("libpmi", root=lib_folder, recursive=True)
             libs += find_libraries("libopa", root=lib_folder, recursive=True)
             libs += find_libraries("libmpl", root=lib_folder, recursive=True)
