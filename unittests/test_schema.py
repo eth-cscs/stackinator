@@ -132,7 +132,10 @@ def test_environments_yaml(yaml_path):
     # from an example that was silently validated
     with open(yaml_path / "environments.err-providers.yaml") as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
-        with pytest.raises(jsonschema.exceptions.ValidationError):
+        with pytest.raises(
+            jsonschema.exceptions.ValidationError,
+            match=r"Additional properties are not allowed \('providers' was unexpected\)",
+        ):
             schema.validator(schema.environments_schema).validate(raw)
 
 
