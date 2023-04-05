@@ -134,7 +134,7 @@ def test_environments_yaml(yaml_path):
         raw = yaml.load(fid, Loader=yaml.Loader)
         with pytest.raises(
             jsonschema.exceptions.ValidationError,
-            match=r"Additional properties are not allowed \('providers' was unexpected\)",
+            match=r"Additional properties are not allowed \('providers' was unexpected",
         ):
             schema.validator(schema.environments_schema).validate(raw)
 
