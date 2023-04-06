@@ -27,12 +27,7 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 {% for env, config in environments.items() %}
 {{ env }}/generated/view_config: {{ env }}/generated/env
 {% if config.view %}
-	echo ======================================
-	printenv
 	$(SPACK) env activate --sh ./{{ env }} > $(STORE)/env/{{ env }}/activate.sh
-	echo ======================================
-	printenv
-	echo ======================================
 {% endif %}
 	touch $@
 
