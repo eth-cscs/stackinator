@@ -27,3 +27,6 @@ spack:
     mpi:
       require: {{ config.mpi.spec }}
     {% endif %}
+{% if config.view %}
+  view: {{ store }}/env/{{ name }}
+{% endif %}

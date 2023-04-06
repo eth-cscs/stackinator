@@ -48,6 +48,10 @@
                      "type": "array",
                      "items": {"type": "string"},
                      "default": []
+                 },
+                 "view": {
+                     "type": "boolean",
+                     "default": true
                  }
              }
          }

@@ -15,13 +15,30 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 
 # Push built packages to a binary cache if a key has been provided
 {% for env, config in environments.items() %}
-{{ env }}/generated/build_cache: {{ env }}/generated/env
+{{ env }}/generated/build_cache: {{ env }}/generated/view_config
 {% if push_to_cache %}
 	$(SPACK) -e ./{{ env }} buildcache create --rebuild-index --allow-root --only=package -m alpscache $$($(SPACK) -e ./{{ env }} find --format '/$${hash}')
 {% endif %}
 	touch $@
 
 {% endfor %}
+
+# Create environment view where requested
+{% for env, config in environments.items() %}
+{{ env }}/generated/view_config: {{ env }}/generated/env
+{% if config.view %}
+	echo ======================================
+	printenv
+	$(SPACK) env activate --sh ./{{ env }} > $(STORE)/env/{{ env }}/activate.sh
+	echo ======================================
+	printenv
+	echo ======================================
+{% endif %}
+	touch $@
+
+{% endfor %}
+
+
 {% for env in environments %}{{ env }}/config.yaml {% endfor %}: | store
 	$(SPACK) config --scope=user add config:install_tree:root:$(STORE)
 

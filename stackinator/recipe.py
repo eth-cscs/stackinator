@@ -191,6 +191,7 @@ class Recipe:
 
         self.environments = environments
 
+
     # creates the self.compilers field that describes the full specifications
     # for all of teh compilers from the raw compilers.yaml input
     def generate_compiler_specs(self, raw):
@@ -319,6 +320,6 @@ class Recipe:
         files["config"] = {}
         for env, config in self.environments.items():
             spack_yaml_template = jenv.get_template("environments.spack.yaml")
-            files["config"][env] = spack_yaml_template.render(config=config)
+            files["config"][env] = spack_yaml_template.render(config=config, name=env, store=self.config["store"])
 
         return files
