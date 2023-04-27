@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
+import jsonschema
 import pathlib
-
 import pytest
 import yaml
 
@@ -129,6 +129,16 @@ def test_environments_yaml(yaml_path):
         assert env["mpi"] == {"spec": "cray-mpich", "gpu": "cuda"}
         assert env["variants"] == ["+mpi", "+cuda"]
         assert env["view"] == False
+
+    # check that only allowed fields are accepted
+    # from an example that was silently validated
+    with open(yaml_path / "environments.err-providers.yaml") as fid:
+        raw = yaml.load(fid, Loader=yaml.Loader)
+        with pytest.raises(
+            jsonschema.exceptions.ValidationError,
+            match=r"Additional properties are not allowed \('providers' was unexpected",
+        ):
+            schema.validator(schema.environments_schema).validate(raw)
 
 
 def test_recipe_environments_yaml(recipe_paths):
