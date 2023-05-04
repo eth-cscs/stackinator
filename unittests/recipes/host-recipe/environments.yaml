@@ -6,6 +6,7 @@ gcc-env:
   specs:
   - osu-micro-benchmarks@5.9
   - hdf5 +mpi
+  - python@3.10
   mpi:
     spec: cray-mpich
     gpu: false
@@ -16,3 +17,4 @@ tools:
   unify: true
   specs:
   - cmake
+  - python@3.10
