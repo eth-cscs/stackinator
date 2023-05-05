@@ -28,6 +28,7 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 {{ env }}/generated/view_config: {{ env }}/generated/env
 {% if config.view %}
 	$(SPACK) env activate --sh ./{{ env }} > $(STORE)/env/{{ env }}/activate.sh
+	$(SOFTWARE_STACK_PROJECT)/add-compiler-links.py  ./{{ env }}/compilers.yaml $(STORE)/env/{{ env }}/activate.sh $(SOFTWARE_STACK_PROJECT)
 {% endif %}
 	touch $@
 

@@ -135,7 +135,7 @@ class Builder:
             f.write("\n")
 
         etc_path = self.root / "etc"
-        for f_etc in ["Make.inc", "bwrap-mutable-root.sh"]:
+        for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "add-compiler-links.py"]:
             shutil.copy2(etc_path / f_etc, self.path / f_etc)
 
         # Generate the system configuration: the compilers, environments,

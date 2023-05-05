@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+# Hard code the path to the system python3 on HPE Cray EX systems.
+
 import argparse
 import os
 import sys
@@ -39,14 +41,19 @@ def has_prefix(path, prefix):
 parser = argparse.ArgumentParser()
 parser.add_argument("compiler_path", help="Path to the compilers.yaml file")
 parser.add_argument("activate_path", help="Path to the activate script to configure")
+parser.add_argument("build_path", help="Path where the build is performed")
 args = parser.parse_args()
 
 if not os.path.exists(args.compiler_path):
-    print(f"error - file {args.compiler_path} does not exist.")
+    print(f"error - compiler file '{args.compiler_path}' does not exist.")
     exit(2)
 
 if not os.path.exists(args.activate_path):
-    print(f"error - file {args.activate_path} does not exist.")
+    print(f"error - activation file '{args.activate_path}' does not exist.")
+    exit(2)
+
+if not os.path.exists(args.build_path):
+    print(f"error - build path '{args.build_path}' does not exist.")
     exit(2)
 
 compilers = load_compilers_yaml(args.compiler_path)
@@ -80,7 +87,7 @@ with open(args.activate_path) as fid:
 
             # parse PATH to remove references to the build directory
             if export['variable'] == "PATH":
-                paths=[p for p in export['paths'] if not has_prefix(p, '/dev/shm')]
+                paths=[p for p in export['paths'] if not has_prefix(p, args.build_path)]
                 lines.append(f"export PATH={':'.join(paths)};")
 
             # drop the SPACK_ENV variable
