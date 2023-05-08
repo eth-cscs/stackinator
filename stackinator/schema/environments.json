@@ -7,6 +7,7 @@
          "\\w[\\w-]*": {
              "type": "object",
              "required": ["compiler", "specs"],
+             "additionalProperties": false,
              "properties": {
                  "unify": {
                      "enum": ["when_possible", true, false],
@@ -16,6 +17,7 @@
                      "type": "array",
                      "items": {
                          "type": "object",
+                         "additionalProperties": false,
                          "properties": {
                              "toolchain": {"type": "string"},
                              "spec":      {"type": "string"}
@@ -35,6 +37,7 @@
                      "oneOf": [
                          {
                              "type": "object",
+                             "additionalProperties": false,
                              "properties": {
                                  "spec": {"type": "string"},
                                  "gpu":  {"enum": ["cuda", "rocm", null, false]}
