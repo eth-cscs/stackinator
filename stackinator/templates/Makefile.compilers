@@ -18,7 +18,7 @@ all:{% for compiler in compilers %} {{ compiler }}/generated/build_cache{% endfo
 {% for compiler, config in compilers.items() %}
 {{ compiler }}/generated/build_cache: {{ compiler }}/generated/env
 {% if push_to_cache %}
-	$(SPACK) -e ./{{ compiler }} buildcache create --rebuild-index --allow-root --only=package -m alpscache $$($(SPACK) -e ./{{ compiler }} find --format '/$${hash}')
+	$(SPACK) -e ./{{ compiler }} buildcache create --rebuild-index --allow-root --only=package -m alpscache $$($(SPACK) --color=never -e ./{{ compiler }} find --format '/{hash}')
 {% endif %}
 	touch $@
 
@@ -43,11 +43,11 @@ all:{% for compiler in compilers %} {{ compiler }}/generated/build_cache{% endfo
 {% endfor %}
 # Configure dependencies between compilers
 gcc/compilers.yaml: bootstrap/generated/env
-	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK) -e ./bootstrap find --format '{prefix}' {{ compilers.gcc.requires }}))
+	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK) --color=never -e ./bootstrap find --format '{prefix}' {{ compilers.gcc.requires }}))
 
 {% if compilers.llvm %}
 llvm/compilers.yaml: gcc/generated/env
-	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK) -e ./gcc find --format '{prefix}' {{ compilers.llvm.requires }}))
+	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK) --color=never -e ./gcc find --format '{prefix}' {{ compilers.llvm.requires }}))
 {% endif %}
 
 

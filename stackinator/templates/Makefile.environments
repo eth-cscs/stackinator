@@ -17,7 +17,7 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 {% for env, config in environments.items() %}
 {{ env }}/generated/build_cache: {{ env }}/generated/env
 {% if push_to_cache %}
-	$(SPACK) -e ./{{ env }} buildcache create --rebuild-index --allow-root --only=package -m alpscache $$($(SPACK) -e ./{{ env }} find --format '/$${hash}')
+	$(SPACK) -e ./{{ env }} buildcache create --rebuild-index --allow-root --only=package -m alpscache $$($(SPACK) --color=never -e ./{{ env }} find --format '/{hash}')
 {% endif %}
 	touch $@
 
@@ -27,7 +27,7 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 
 # Create the compilers.yaml configuration for each environment
 {% for env, config in environments.items() %}
-{{ env }}_PREFIX = {% for C in config.compiler %} $$($(SPACK) -e ../compilers/{{ C.toolchain }} find --format '{prefix}' {{ C.spec }}){% endfor %}
+{{ env }}_PREFIX = {% for C in config.compiler %} $$($(SPACK) --color=never -e ../compilers/{{ C.toolchain }} find --format '{prefix}' {{ C.spec }}){% endfor %}
 
 {{ env }}/compilers.yaml:
 	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $({{ env }}_PREFIX))
