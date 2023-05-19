@@ -110,7 +110,7 @@ def test_environments_yaml(yaml_path):
         assert env["packages"] == []
         assert env["variants"] == []
         assert env["mpi"] is None
-        assert env["view"] == True
+        assert env["views"] == {}
 
         # the full-env sets all of the fields
         # test that they have been read correctly
@@ -128,7 +128,7 @@ def test_environments_yaml(yaml_path):
         assert env["packages"] == ["perl", "git"]
         assert env["mpi"] == {"spec": "cray-mpich", "gpu": "cuda"}
         assert env["variants"] == ["+mpi", "+cuda"]
-        assert env["view"] == False
+        assert env["views"] == {"default": None}
 
     # check that only allowed fields are accepted
     # from an example that was silently validated

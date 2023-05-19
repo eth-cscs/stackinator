@@ -1,5 +1,6 @@
 import pathlib
 
+import copy
 import jinja2
 import yaml
 
@@ -48,6 +49,27 @@ class Recipe:
         self.path = path
         self.root = pathlib.Path(__file__).parent.resolve()
 
+        # required config.yaml file
+        config_path = path / "config.yaml"
+        self._logger.debug(f"opening {config_path}")
+        if not config_path.is_file():
+            raise FileNotFoundError(
+                f"The recipe does not contain a config.yaml file"
+            )
+
+        with config_path.open() as fid:
+            raw = yaml.load(fid, Loader=yaml.Loader)
+            schema.config_validator.validate(raw)
+            self.config = raw
+
+        # override the system target
+        if args.system:
+            self.config["system"] = args.system
+
+        # override the recipe-defined mount point
+        if args.mount:
+            self.config["store"] = args.mount
+
         # required compiler.yaml file
         compiler_path = path / "compilers.yaml"
         self._logger.debug(f"opening {compiler_path}")
@@ -80,23 +102,6 @@ class Recipe:
             raw = yaml.load(fid, Loader=yaml.Loader)
             schema.environments_validator.validate(raw)
             self.generate_environment_specs(raw)
-
-        # required config.yaml file
-        config_path = path / "config.yaml"
-        self._logger.debug(f"opening {config_path}")
-        if not config_path.is_file():
-            raise FileNotFoundError(
-                f"The recipe path '{config_path}' does " f"not contain compilers.yaml"
-            )
-
-        with config_path.open() as fid:
-            raw = yaml.load(fid, Loader=yaml.Loader)
-            schema.config_validator.validate(raw)
-            self.config = raw
-
-        # override the system target
-        if args.system:
-            self.config["system"] = args.system
 
         # optional modules.yaml file
         modules_path = path / "modules.yaml"
@@ -157,6 +162,7 @@ class Recipe:
             if "mpi" not in config:
                 environments[name]["mpi"] = {"spec": None, "gpu": None}
 
+        # complete configuration of MPI in each environment
         for name, config in environments.items():
             if config["mpi"]:
                 mpi = config["mpi"]
@@ -189,8 +195,50 @@ class Recipe:
                         # TODO: Create a custom exception type
                         raise Exception(f"Unsupported mpi: {mpi_impl}")
 
-        self.environments = environments
+        # An awkward hack to work around spack not supporting creating activation scripts
+        # for each file system view in an environment: it only generates them for the
+        # "default" view.
+        # The workaround is to create multiple versions of the same environment, one for
+        # each view.
+        # TODO: remove when the minimum supported version of Spack supports generation for
+        # more than one view.
+        env_names = set()
+        env_name_map = {}
+        for name, config in environments.items():
+            env_name_map[name] = []
+            for view, vc in config["views"].items():
+                if view in env_names:
+                    raise Exception(f"An environment view with the name '{view}' already exists.")
+                # save a copy of the view configuration
+                env_name_map[name].append((view, vc))
+            # clear the view configuration for the environment, so that it can be set
+            # in the next step.
+            #environments[name]["views"] = {}
 
+        # iterate over each environment:
+        # - creating as many copies as there are environment views.
+        # - configure the environment view for each environment.
+        for name, views in env_name_map.items():
+            numviews = len(env_name_map[name])
+
+            # The configuration of the environment without views
+            base = copy.deepcopy(environments[name])
+
+            environments[name]['view'] = None
+            for i in range(numviews):
+                # pick a name for the environment
+                cname = name if i==0 else name + f"-{i+1}__"
+                if i>0:
+                    environments[cname] = copy.deepcopy(base)
+
+                view_name, view_config = views[i]
+                if view_config is None:
+                    view_config = {"root": self.config["store"] + "/env/" + view_name}
+                else:
+                    view_config["root"] = self.config["store"] + "/env/" + view_name
+                environments[cname]["view"] = {"name": view_name, "config": view_config}
+
+        self.environments = environments
 
     # creates the self.compilers field that describes the full specifications
     # for all of teh compilers from the raw compilers.yaml input
@@ -310,6 +358,7 @@ class Recipe:
             trim_blocks=True,
             lstrip_blocks=True,
         )
+        jenv.filters['py2yaml'] = schema.py2yaml
 
         makefile_template = jenv.get_template("Makefile.environments")
         push_to_cache = self.mirror.source and self.mirror.key

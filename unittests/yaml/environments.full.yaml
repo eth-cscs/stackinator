@@ -17,7 +17,8 @@ full-env:
   variants:
   - +mpi
   - +cuda
-  view: false
+  views:
+    default:
 defaults-env:
   compiler:
   - toolchain: gcc

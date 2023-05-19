@@ -28,5 +28,7 @@ spack:
       require: {{ config.mpi.spec }}
     {% endif %}
 {% if config.view %}
-  view: {{ store }}/env/{{ name }}
+  view:
+    default:
+      {{ config.view.config|py2yaml(6) }}
 {% endif %}
