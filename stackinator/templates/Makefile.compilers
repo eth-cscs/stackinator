@@ -20,7 +20,7 @@ all:{% for compiler in compilers %} {{ compiler }}/generated/build_cache{% endfo
 {{ compiler }}/generated/build_cache: {{ compiler }}/generated/env
 {% if push_to_cache %}
 	$(SPACK) -e ./{{ compiler }} buildcache create --rebuild-index --allow-root --only=package -m alpscache \
-	$$($(SPACK) --color=never -e ./{{ compiler }} find --format '{name};/{hash}' \
+	$$($(SPACK) --color=never -e ./{{ compiler }} find --format '{name};{/hash}' \
 	| grep -v -E '^({% for p in config.exclude_from_cache %}{{ pipejoiner() }}{{ p }}{% endfor %});'\
 	| cut -d ';' -f2)
 {% endif %}
