@@ -1,7 +1,6 @@
 name: cuda-env
 # default /user-environment
 #store: /user-environment
-system: hohgant
 spack:
     repo: https://github.com/spack/spack.git
     # default: None == no `git checkout` command
