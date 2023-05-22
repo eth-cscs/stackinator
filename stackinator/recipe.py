@@ -150,7 +150,7 @@ class Recipe:
         environments = raw
 
         # enumerate large binary packages that should not be pushed to binary caches
-        for name, config in environments.items():
+        for _, config in environments.items():
             config["exclude_from_cache"] = ["cuda"]
 
         # check the environment descriptions and ammend where features are missing
