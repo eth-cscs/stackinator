@@ -40,6 +40,7 @@ class Builder:
 
     @property
     def meta(self):
+        """Meta data about the configuration and build"""
         return self._meta
 
     @meta.setter
@@ -63,7 +64,27 @@ class Builder:
             "python": sys.executable,
         }
         meta["spack"] = recipe.config["spack"]
-        self.meta = meta
+        self._meta = meta
+
+    @property
+    def env_config(self):
+        """The meta data file that describes the environments"""
+        return self._env_config
+
+    @env_config.setter
+    def env_config(self, recipe):
+        '''
+        The output that we want to generate looks like the following,
+        Which should correspond directly to the env_view_meta provided
+        by the recipe.
+        {"env1":
+            {"root": /user-environment/env/env1},
+            {"activate": /user-environment/env/env1/activate.sh},
+            {"description": "hello world"}
+        }
+        '''
+        meta = recipe.env_view_meta
+        self._env_config = json.dumps(self.meta, sort_keys=True, indent=2) + "\n"
 
     def generate(self, recipe):
         # make the paths
@@ -78,8 +99,11 @@ class Builder:
         spack = recipe.config["spack"]
         spack_path = self.path / "spack"
 
-        # set meta data for the project
+        # set general build and configuration meta data for the project
         self.meta = recipe
+
+        # set the environment view meta data
+        self.env_config = recipe
 
         # Clone the spack repository if it has not already been checked out
         if not (spack_path / ".git").is_dir():
@@ -287,6 +311,11 @@ class Builder:
         with (meta_path / "configure.json").open("w") as f:
             f.write(json.dumps(self.meta, sort_keys=True, indent=2))
             f.write("\n")
+
+        # write a json file with the environmen view meta data
+        with (meta_path / "env.json").open("w") as f:
+            f.write(self.config_meta)
+
         # copy the recipe to a recipe subdirectory of the meta path
         meta_recipe_path = meta_path / "recipe"
         meta_recipe_path.mkdir(exist_ok=True)
