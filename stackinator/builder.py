@@ -38,19 +38,12 @@ class Builder:
         self.path = path
         self.root = pathlib.Path(__file__).parent.resolve()
 
-    def generate(self, recipe):
-        # make the paths
-        store_path = self.path / "store"
-        tmp_path = self.path / "tmp"
+    @property
+    def meta(self):
+        return self._meta
 
-        self.path.mkdir(exist_ok=True, parents=True)
-        store_path.mkdir(exist_ok=True)
-        tmp_path.mkdir(exist_ok=True)
-
-        # check out the version of spack
-        spack = recipe.config["spack"]
-        spack_path = self.path / "spack"
-
+    @meta.setter
+    def meta(self, recipe):
         # generate configuration meta data
         meta = {}
         meta["time"] = datetime.now().strftime("%Y%m%d %H:%M:%S")
@@ -71,6 +64,22 @@ class Builder:
         }
         meta["spack"] = recipe.config["spack"]
         self.meta = meta
+
+    def generate(self, recipe):
+        # make the paths
+        store_path = self.path / "store"
+        tmp_path = self.path / "tmp"
+
+        self.path.mkdir(exist_ok=True, parents=True)
+        store_path.mkdir(exist_ok=True)
+        tmp_path.mkdir(exist_ok=True)
+
+        # check out the version of spack
+        spack = recipe.config["spack"]
+        spack_path = self.path / "spack"
+
+        # set meta data for the project
+        self.meta = recipe
 
         # Clone the spack repository if it has not already been checked out
         if not (spack_path / ".git").is_dir():
