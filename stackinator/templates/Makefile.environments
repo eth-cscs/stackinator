@@ -1,3 +1,4 @@
+{% set pipejoiner = joiner('|') %}
 -include ../Make.user
 
 MAKEFLAGS += --output-sync=recurse
@@ -17,7 +18,10 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 {% for env, config in environments.items() %}
 {{ env }}/generated/build_cache: {{ env }}/generated/env
 {% if push_to_cache %}
-	$(SPACK) -e ./{{ env }} buildcache create --rebuild-index --allow-root --only=package -m alpscache $$($(SPACK) --color=never -e ./{{ env }} find --format '/{hash}')
+	$(SPACK) -e ./{{ env }} buildcache create --rebuild-index --allow-root --only=package -m alpscache \
+	$$($(SPACK) --color=never -e ./{{ env }} find --format '{name};{/hash}' \
+	| grep -v -E '^({% for p in config.exclude_from_cache %}{{ pipejoiner() }}{{ p }}{% endfor %});'\
+	| cut -d ';' -f2)
 {% endif %}
 	touch $@
 

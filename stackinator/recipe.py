@@ -146,6 +146,10 @@ class Recipe:
     def generate_environment_specs(self, raw):
         environments = raw
 
+        # enumerate large binary packages that should not be pushed to binary caches
+        for _, config in environments.items():
+            config["exclude_from_cache"] = ["cuda"]
+
         # check the environment descriptions and ammend where features are missing
         for name, config in environments.items():
             if ("specs" not in config) or (config["specs"] is None):
@@ -220,6 +224,7 @@ class Recipe:
             f"{bootstrap_spec} languages=c,c++",
             "squashfs default_compression=zstd",
         ]
+        bootstrap["exclude_from_cache"] = []
         compilers["bootstrap"] = bootstrap
 
         gcc = {}
@@ -246,6 +251,7 @@ class Recipe:
         }
         gcc["specs"] = raw["gcc"]["specs"]
         gcc["requires"] = bootstrap_spec
+        gcc["exclude_from_cache"] = []
         compilers["gcc"] = gcc
         if raw["llvm"] is not None:
             llvm = {}
@@ -261,6 +267,7 @@ class Recipe:
                     )
 
             llvm["requires"] = raw["llvm"]["requires"]
+            llvm["exclude_from_cache"] = ["nvhpc"]
             compilers["llvm"] = llvm
 
         self.compilers = compilers
