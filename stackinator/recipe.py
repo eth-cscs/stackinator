@@ -38,6 +38,11 @@ class Recipe:
     def __init__(self, args):
         self._logger = root_logger
         self._logger.debug("Generating recipe")
+
+        # set the system configuration path
+        self.system_config_path = args.system
+
+        # set the recipe path
         path = pathlib.Path(args.recipe)
         if not path.is_absolute():
             path = pathlib.Path.cwd() / path
@@ -94,15 +99,6 @@ class Recipe:
             schema.config_validator.validate(raw)
             self.config = raw
 
-        # override the system target
-        if args.system:
-            self.config["system"] = args.system
-
-        if not self.configs_path.is_dir():
-            raise FileNotFoundError(
-                f"The system {self.config['system']!r} is not a supported cluster"
-            )
-
         # optional modules.yaml file
         modules_path = path / "modules.yaml"
         self._logger.debug(f"opening {modules_path}")
@@ -127,7 +123,7 @@ class Recipe:
         mirrors_path = path / "mirrors.yaml"
         mirrors_source = mirrors_path if mirrors_path.is_file() else None
         if mirrors_source is None:
-            mirrors_path = self.configs_path / "mirrors.yaml"
+            mirrors_path = self.system_config_path / "mirrors.yaml"
             mirrors_source = mirrors_path if mirrors_path.is_file() else None
 
         self._mirror = Mirror(config=self.config["mirror"], source=mirrors_source)
@@ -271,15 +267,19 @@ class Recipe:
 
     # The path of the default configuration for the target system/cluster
     @property
-    def configs_path(self):
-        system_path = pathlib.Path(self.config["system"])
+    def system_config_path(self):
+        return self._system_path
+
+    @system_config_path.setter
+    def system_config_path(self, path):
+        system_path = pathlib.Path(path)
         if not system_path.is_absolute():
             system_path = pathlib.Path.cwd() / system_path
 
         if not system_path.is_dir():
             raise FileNotFoundError(f"The system configuration path '{system_path}' does not exist")
 
-        return system_path
+        self._system_path = system_path
 
     # Boolean flag that indicates whether the recipe is configured to use
     # a binary cache.

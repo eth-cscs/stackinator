@@ -142,10 +142,10 @@ class Builder:
         # mirrors etc. that are defined for the target cluster.
         config_path = self.path / "config"
         config_path.mkdir(exist_ok=True)
-        system_configs_path = pathlib.Path(recipe.configs_path)
+        system_config_path = pathlib.Path(recipe.system_config_path)
 
         # Copy the yaml files to the spack config path
-        for f_config in system_configs_path.iterdir():
+        for f_config in system_config_path.iterdir():
             # skip copying mirrors.yaml - this is done in the next step only if
             # mirrors have been enabled and the recipe did not provide a mirror
             # configuration
@@ -153,7 +153,7 @@ class Builder:
                 continue
 
             # construct full file path
-            src = system_configs_path / f_config.name
+            src = system_config_path / f_config.name
             dst = config_path / f_config.name
             # copy only files
             if src.is_file():
@@ -166,7 +166,7 @@ class Builder:
 
         # append recipe packages to packages.yaml
         if recipe.packages:
-            system_packages = system_configs_path / "packages.yaml"
+            system_packages = system_config_path / "packages.yaml"
             packages_data = {}
             if system_packages.is_file():
                 # load system yaml
