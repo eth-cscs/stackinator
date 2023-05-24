@@ -151,7 +151,7 @@ class Recipe:
         self._logger.debug(f"opening {config_path}")
         if not config_path.is_file():
             raise FileNotFoundError(
-                f"The recipe path '{config_path}' does " f"not contain compilers.yaml"
+                f"The recipe path '{config_path}' does not contain compilers.yaml"
             )
 
         with config_path.open() as fid:
