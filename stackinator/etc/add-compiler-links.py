@@ -4,7 +4,6 @@
 
 import argparse
 import os
-import sys
 import yaml
 
 # parse compilers.yaml file.

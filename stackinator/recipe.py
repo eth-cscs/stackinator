@@ -234,13 +234,13 @@ class Recipe:
                         # TODO: Create a custom exception type
                         raise Exception(f"Unsupported mpi: {mpi_impl}")
 
-        # An awkward hack to work around spack not supporting creating activation scripts
-        # for each file system view in an environment: it only generates them for the
-        # "default" view.
+        # An awkward hack to work around spack not supporting creating activation
+        # scripts for each file system view in an environment: it only generates them
+        # for the "default" view.
         # The workaround is to create multiple versions of the same environment, one for
         # each view.
-        # TODO: remove when the minimum supported version of Spack supports generation for
-        # more than one view.
+        # TODO: remove when the minimum supported version of Spack supports generation
+        # for more than one view.
         env_names = set()
         env_name_map = {}
         for name, config in environments.items():
