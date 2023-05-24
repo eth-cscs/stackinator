@@ -104,6 +104,6 @@ lines.append(f'export PATH={pathstring}:$PATH;')
 
 # Write a modified version of the activation script.
 with open(args.activate_path, 'w') as fid:
-    for line in lines:
+    fid.writelines(lines)
         fid.write(line+'\n')
 
