@@ -38,7 +38,7 @@ def log_header(args):
     root_logger.info(f"  recipe path: {args.recipe}")
     root_logger.info(f"  build path : {args.build}")
     root_logger.info(f"  system     : {args.system}")
-    mount = args.mount if args.mount is not None else "default"
+    mount = args.mount or "default"
     root_logger.info(f"  mount      : {mount}")
 
 
