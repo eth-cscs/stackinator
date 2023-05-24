@@ -1,10 +1,8 @@
-mirror:
-  enable: true
-  key: /scratch/e1000/bcumming/uenv-cache/push-key.gpg
 name: host-example
+store: /user-environment
 spack:
   commit: releases/v0.20
   repo: https://github.com/spack/spack.git
-store: /user-environment
-system: hohgant
+mirror:
+  enable: false
 

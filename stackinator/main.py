@@ -37,8 +37,7 @@ def log_header(args):
     root_logger.info("Stackinator")
     root_logger.info(f"  recipe path: {args.recipe}")
     root_logger.info(f"  build path : {args.build}")
-    system = args.system if args.system is not None else "default"
-    root_logger.info(f"  system     : {system}")
+    root_logger.info(f"  system     : {args.system}")
     mount = args.mount if args.mount is not None else "default"
     root_logger.info(f"  mount      : {mount}")
 
@@ -54,9 +53,8 @@ def make_argparser():
     )
     parser.add_argument("-b", "--build", required=True, type=str)
     parser.add_argument("-r", "--recipe", required=True, type=str)
+    parser.add_argument("-s", "--system", required=True, type=str)
     parser.add_argument("-d", "--debug", action="store_true")
-
-    parser.add_argument("-s", "--system", required=False, type=str)
     parser.add_argument("-m", "--mount", required=False, type=str)
 
     return parser
