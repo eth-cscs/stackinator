@@ -3,7 +3,7 @@
     "title": "Schema for Spack Stack config.yaml recipe file",
     "type" : "object",
     "additionalProperties": false,
-    "required": ["name", "system", "spack"],
+    "required": ["name", "spack"],
     "properties" : {
         "name" : {
             "type": "string"
@@ -11,9 +11,6 @@
         "store" : {
             "type" : "string",
             "default" : "/user-environment"
-        },
-        "system" : {
-            "type" : "string"
         },
         "spack" : {
             "type" : "object",
