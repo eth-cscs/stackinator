@@ -180,7 +180,11 @@ class Builder:
         for f_config in system_config_path.iterdir():
             # print warning if mirrors.yaml is found
             if f_config.name in ["mirrors.yaml"]:
-                self._logger.warning("mirrors.yaml has been deprecated in recipes.")
+                continue
+                self._logger.warning(
+                        "mirrors.yaml have been deprecated from cluster configurations,"
+                        " use the --cache option on stack-config instead."
+                        " The mirrors.yaml file will be ignored")
                 continue
 
             # construct full file path
@@ -193,7 +197,7 @@ class Builder:
         # generate a mirrors.yaml file if build caches have been configured
         if recipe.mirror:
             dst = config_path / "mirrors.yaml"
-            self._logger.debug(f"generate the {dst}")
+            self._logger.debug(f"generate the build cache mirror: {dst}")
             with dst.open('w') as fid:
                 fid.write(cache.generate_mirrors_yaml(recipe.mirror))
 

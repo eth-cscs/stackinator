@@ -62,12 +62,6 @@ class Recipe:
 
         with compiler_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            if "compilers" in raw:
-                self._logger.warning(
-                    f"{compiler_path} uses deprecated 'compilers:' "
-                    f"header. This will be an error in future releases."
-                )
-                raw = raw["compilers"]
             schema.compilers_validator.validate(raw)
             self.generate_compiler_specs(raw)
 
@@ -103,6 +97,14 @@ class Recipe:
         if packages_path.is_file():
             with packages_path.open() as fid:
                 self.packages = yaml.load(fid, Loader=yaml.Loader)
+
+        # optional mirror configurtion
+        mirrors_path = self.path / "mirrors.yaml"
+        if packages_path.is_file():
+            self._logger.warning(
+                    "mirrors.yaml have been deprecated from recipes, use the"
+                    " --cache option on stack-config instead.")
+                    " The mirrors.yaml file will be ignored")
 
         self.mirror = (args.cache, self.config["store"])
 
