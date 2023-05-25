@@ -61,7 +61,7 @@
                             "properties": {
                                 "link": {
                                     "type": "string",
-                                    "pattern": "(roots|all|run)"
+                                    "enum": ["roots", "all", "run"]
                                 },
                                 "link_type": {"type": "string"},
                                 "select": {
