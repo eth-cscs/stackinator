@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 # Hard code the path to the system python3 on HPE Cray EX systems.
 
