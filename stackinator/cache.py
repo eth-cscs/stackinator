@@ -27,7 +27,6 @@ def configuration_from_file(file, mount):
 
         # Put the build cache in a sub-directory named after the mount point.
         # This avoids relocation issues.
-        print ('helloworld',pathlib.Path(path.as_posix() + mount.as_posix()))
         raw["path"] = pathlib.Path(path.as_posix() + mount.as_posix())
 
         # verify that the key file exists if it was specified
