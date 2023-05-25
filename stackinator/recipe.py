@@ -100,7 +100,7 @@ class Recipe:
 
         # optional mirror configurtion
         mirrors_path = self.path / "mirrors.yaml"
-        if packages_path.is_file():
+        if mirrors_path.is_file():
             self._logger.warning(
                     "mirrors.yaml have been deprecated from recipes, use the"
                     " --cache option on stack-config instead."

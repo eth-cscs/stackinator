@@ -180,7 +180,6 @@ class Builder:
         for f_config in system_config_path.iterdir():
             # print warning if mirrors.yaml is found
             if f_config.name in ["mirrors.yaml"]:
-                continue
                 self._logger.warning(
                         "mirrors.yaml have been deprecated from cluster configurations,"
                         " use the --cache option on stack-config instead."
