@@ -253,26 +253,26 @@ class Builder:
                     )
 
         # Generate the makefile and spack.yaml files that describe the compilers
-        files = recipe.compiler_files
+        compiler_files = recipe.compiler_files
         compiler_path = self.path / "compilers"
         compiler_path.mkdir(exist_ok=True)
         with (compiler_path / "Makefile").open(mode="w") as f:
-            f.write(files["makefile"])
+            f.write(compiler_files["makefile"])
 
-        for name, yml in files["config"].items():
+        for name, yml in compiler_files["config"].items():
             compiler_config_path = compiler_path / name
             compiler_config_path.mkdir(exist_ok=True)
             with (compiler_config_path / "spack.yaml").open(mode="w") as f:
                 f.write(yml)
 
         # generate the makefile and spack.yaml files that describe the environments
-        files = recipe.environment_files
+        environment_files = recipe.environment_files
         environments_path = self.path / "environments"
         os.makedirs(environments_path, exist_ok=True)
         with (environments_path / "Makefile").open(mode="w") as f:
-            f.write(files["makefile"])
+            f.write(environment_files["makefile"])
 
-        for name, yml in files["config"].items():
+        for name, yml in environment_files["config"].items():
             env_config_path = environments_path / name
             env_config_path.mkdir(exist_ok=True)
             with (env_config_path / "spack.yaml").open(mode="w") as f:
