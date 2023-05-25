@@ -16,7 +16,7 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 
 # Push built packages to a binary cache if a key has been provided
 {% for env, config in environments.items() %}
-{{ env }}/generated/build_cache: {{ env }}/generated/env
+{{ env }}/generated/build_cache: {{ env }}/generated/view_config
 {% if push_to_cache %}
 	$(SPACK) -e ./{{ env }} buildcache create --rebuild-index --allow-root --only=package -m alpscache \
 	$$($(SPACK) --color=never -e ./{{ env }} find --format '{name};{/hash}' \
@@ -26,6 +26,19 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 	touch $@
 
 {% endfor %}
+
+# Create environment view where requested
+{% for env, config in environments.items() %}
+{{ env }}/generated/view_config: {{ env }}/generated/env
+{% if config.view %}
+	$(SPACK) env activate --with-view --sh ./{{ env }} > $(STORE)/env/{{ config.view.name }}/activate.sh
+	$(SOFTWARE_STACK_PROJECT)/add-compiler-links.py  ./{{ env }}/compilers.yaml $(STORE)/env/{{ config.view.name }}/activate.sh $(SOFTWARE_STACK_PROJECT)
+{% endif %}
+	touch $@
+
+{% endfor %}
+
+
 {% for env in environments %}{{ env }}/config.yaml {% endfor %}: | store
 	$(SPACK) config --scope=user add config:install_tree:root:$(STORE)
 

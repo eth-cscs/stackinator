@@ -38,6 +38,8 @@ def log_header(args):
     root_logger.info(f"  recipe path: {args.recipe}")
     root_logger.info(f"  build path : {args.build}")
     root_logger.info(f"  system     : {args.system}")
+    mount = args.mount or "default"
+    root_logger.info(f"  mount      : {mount}")
 
 
 def make_argparser():
@@ -53,6 +55,8 @@ def make_argparser():
     parser.add_argument("-r", "--recipe", required=True, type=str)
     parser.add_argument("-s", "--system", required=True, type=str)
     parser.add_argument("-d", "--debug", action="store_true")
+    parser.add_argument("-m", "--mount", required=False, type=str)
+
     return parser
 
 

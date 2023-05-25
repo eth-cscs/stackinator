@@ -38,19 +38,13 @@ class Builder:
         self.path = path
         self.root = pathlib.Path(__file__).parent.resolve()
 
-    def generate(self, recipe):
-        # make the paths
-        store_path = self.path / "store"
-        tmp_path = self.path / "tmp"
+    @property
+    def meta(self):
+        """Meta data about the configuration and build"""
+        return self._meta
 
-        self.path.mkdir(exist_ok=True, parents=True)
-        store_path.mkdir(exist_ok=True)
-        tmp_path.mkdir(exist_ok=True)
-
-        # check out the version of spack
-        spack = recipe.config["spack"]
-        spack_path = self.path / "spack"
-
+    @meta.setter
+    def meta(self, recipe):
         # generate configuration meta data
         meta = {}
         meta["time"] = datetime.now().strftime("%Y%m%d %H:%M:%S")
@@ -70,7 +64,46 @@ class Builder:
             "python": sys.executable,
         }
         meta["spack"] = recipe.config["spack"]
-        self.meta = meta
+        self._meta = meta
+
+    @property
+    def environment_meta(self):
+        """The meta data file that describes the environments"""
+        return self._environment_meta
+
+    @environment_meta.setter
+    def environment_meta(self, recipe):
+        '''
+        The output that we want to generate looks like the following,
+        Which should correspond directly to the environment_view_meta provided
+        by the recipe.
+        {"env1":
+            {"root": /user-environment/env/env1},
+            {"activate": /user-environment/env/env1/activate.sh},
+            {"description": "hello world"}
+        }
+        '''
+        meta = recipe.environment_view_meta
+        self._environment_meta = json.dumps(meta, sort_keys=True, indent=2) + "\n"
+
+    def generate(self, recipe):
+        # make the paths
+        store_path = self.path / "store"
+        tmp_path = self.path / "tmp"
+
+        self.path.mkdir(exist_ok=True, parents=True)
+        store_path.mkdir(exist_ok=True)
+        tmp_path.mkdir(exist_ok=True)
+
+        # check out the version of spack
+        spack = recipe.config["spack"]
+        spack_path = self.path / "spack"
+
+        # set general build and configuration meta data for the project
+        self.meta = recipe
+
+        # set the environment view meta data
+        self.environment_meta = recipe
 
         # Clone the spack repository if it has not already been checked out
         if not (spack_path / ".git").is_dir():
@@ -135,7 +168,7 @@ class Builder:
             f.write("\n")
 
         etc_path = self.root / "etc"
-        for f_etc in ["Make.inc", "bwrap-mutable-root.sh"]:
+        for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "add-compiler-links.py"]:
             shutil.copy2(etc_path / f_etc, self.path / f_etc)
 
         # Generate the system configuration: the compilers, environments,
@@ -220,38 +253,38 @@ class Builder:
                     )
 
         # Generate the makefile and spack.yaml files that describe the compilers
-        compilers = recipe.generate_compilers()
+        compiler_files = recipe.compiler_files
         compiler_path = self.path / "compilers"
         compiler_path.mkdir(exist_ok=True)
         with (compiler_path / "Makefile").open(mode="w") as f:
-            f.write(compilers["makefile"])
+            f.write(compiler_files["makefile"])
 
-        for name, yml in compilers["config"].items():
+        for name, yml in compiler_files["config"].items():
             compiler_config_path = compiler_path / name
             compiler_config_path.mkdir(exist_ok=True)
             with (compiler_config_path / "spack.yaml").open(mode="w") as f:
                 f.write(yml)
 
         # generate the makefile and spack.yaml files that describe the environments
-        environments = recipe.generate_environments()
+        environment_files = recipe.environment_files
         environments_path = self.path / "environments"
         os.makedirs(environments_path, exist_ok=True)
         with (environments_path / "Makefile").open(mode="w") as f:
-            f.write(environments["makefile"])
+            f.write(environment_files["makefile"])
 
-        for name, yml in environments["config"].items():
+        for name, yml in environment_files["config"].items():
             env_config_path = environments_path / name
             env_config_path.mkdir(exist_ok=True)
             with (env_config_path / "spack.yaml").open(mode="w") as f:
                 f.write(yml)
 
         # generate the makefile that generates the configuration for the spack
-        # installation
+        # installation in the generate-config sub-directory of the build path.
         make_config_template = env.get_template("Makefile.generate-config")
         generate_config_path = self.path / "generate-config"
         generate_config_path.mkdir(exist_ok=True)
 
-        # write the Makefile
+        # write generate-config/Makefile
         all_compilers = [x for x in recipe.compilers.keys()]
         release_compilers = [x for x in all_compilers if x != "bootstrap"]
         with (generate_config_path / "Makefile").open("w") as f:
@@ -264,8 +297,8 @@ class Builder:
                 )
             )
 
-        # write the modules.yaml file
-        modules_yaml = recipe.generate_modules()
+        # write modules/modules.yaml
+        modules_yaml = recipe.modules_yaml
         generate_modules_path = self.path / "modules"
         generate_modules_path.mkdir(exist_ok=True)
         with (generate_modules_path / "modules.yaml").open("w") as f:
@@ -278,6 +311,11 @@ class Builder:
         with (meta_path / "configure.json").open("w") as f:
             f.write(json.dumps(self.meta, sort_keys=True, indent=2))
             f.write("\n")
+
+        # write a json file with the environment view meta data
+        with (meta_path / "env.json").open("w") as f:
+            f.write(self.environment_meta)
+
         # copy the recipe to a recipe subdirectory of the meta path
         meta_recipe_path = meta_path / "recipe"
         meta_recipe_path.mkdir(exist_ok=True)
