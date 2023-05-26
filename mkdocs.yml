@@ -1,0 +1,17 @@
+site_name: The Stackinator
+theme:
+  name: material
+  features:
+    - content.code.copy
+  palette:
+    primary: deep orange
+    accent: deep orange
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+repo_url: https://github.com/eth-cscs/stackinator
