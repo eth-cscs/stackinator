@@ -1,8 +1,12 @@
 site_name: The Stackinator
+nave:
+  - Home: index.md
+  - Tutorial: tutorial.md
 theme:
   name: material
   features:
     - content.code.copy
+    - navigation.tabs
   palette:
     primary: deep orange
     accent: deep orange

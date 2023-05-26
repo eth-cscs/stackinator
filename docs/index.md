@@ -1,7 +1,5 @@
 # Stackinator
 
-hello world.
-
 A tool for building a scientific software stack from a recipe on HPE Cray EX systems.
 
 It is used to build software vClusters on Alps infrastructure at CSCS.
@@ -20,7 +18,7 @@ cd stackinator
 
 The `bootstraph.sh` script will install the necessary dependencies, so that stackinator can be run as a standalone application.
 
-Once installed, add the `bin` sub-directory it to your path:
+Once installed, add the `bin` sub-directory to your path:
 
 ```bash
 export PATH="<stackinator-install-path>/bin:$PATH"
@@ -35,13 +33,13 @@ pip install stackinator
 ```
 
 !!! warning
-    The PyPi package is only updated for releases, so you will likely be missing the latest and greatest features. Let us know if you need more regular PyPi updates.
+    The PyPi package is only updated for releases, so you will likely be missing the latest and greatest features.
+    Let us know if you need more regular PyPi updates.
 
 ## Quick Start
 
 Stackinator generates the make files and spack configurations that build the spack environments that are packaged together in the spack stack.
 It can be thought of as equivalent to calling `cmake` or `configure`, before running make to run the configured build.
-
 
 ```bash
 # configure the build
@@ -67,17 +65,6 @@ ls /user-environment
 ```
 
 TODO: Describe the above
-
-``` py
-import arbor
-
-print(arbor.version)
-for i in range(42):
-  x = 2*i
-```
-
-hello world.
-
 
 ## Configuring a stack
 
