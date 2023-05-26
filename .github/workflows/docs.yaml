@@ -23,14 +23,7 @@ jobs:
             mkdocs-material-
       - run: pip install --upgrade pip
       - run: |
-          pip install \
-            "cairosvg>=2.5" \
-            "mkdocs-material" \
-            "mkdocs-git-committers-plugin-2>=1.1.1" \
-            "mkdocs-git-revision-date-localized-plugin>=1.0" \
-            "mkdocs-minify-plugin>=0.3" \
-            "mkdocs-rss-plugin>=1.2" \
-            "mkdocs-redirects>=1.0" \
-            "pillow<10"
-      - run: mkdocs gh-deploy --theme material --force
+          pip install mkdocs-material
+      - run: rm -rf site
+      - run: mkdocs gh-deploy --force
       - run: mkdocs --version
