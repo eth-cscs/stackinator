@@ -32,5 +32,5 @@ jobs:
             "mkdocs-rss-plugin>=1.2" \
             "mkdocs-redirects>=1.0" \
             "pillow<10"
-      - run: mkdocs gh-deploy --force
+      - run: mkdocs gh-deploy --theme material --force
       - run: mkdocs --version

@@ -1,4 +1,4 @@
-# Stackinator
+# Stackinator PWD
 
 A tool for building a scientific software stack from a recipe on HPE Cray EX systems.
 
