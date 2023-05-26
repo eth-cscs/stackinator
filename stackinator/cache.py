@@ -1,5 +1,6 @@
 import pathlib
 
+import os
 import yaml
 
 from . import schema
@@ -13,7 +14,7 @@ def configuration_from_file(file, mount):
         schema.cache_validator.validate(raw)
 
         # verify that the root path exists
-        path = pathlib.Path(raw["root"])
+        path = pathlib.Path(os.path.expandvars(raw["root"]))
         if not path.is_absolute():
             raise FileNotFoundError(
                     f"The build cache path '{path}' is not absolute"
@@ -32,7 +33,7 @@ def configuration_from_file(file, mount):
         # verify that the key file exists if it was specified
         key = raw["key"]
         if key is not None:
-            key = pathlib.Path(key)
+            key = pathlib.Path(os.path.expandvars(key))
             if not key.is_absolute():
                 raise FileNotFoundError(
                         f"The build cache key '{key}' is not absolute"
