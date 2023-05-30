@@ -7,9 +7,9 @@ A recipe is comprised of the following yaml files in a directory:
 * `compilers.yaml`: the compilers provided by the stack.
 * `environments.yaml`: environments that contain all the software packages.
 * `modules.yaml`: _optional_ module generation rules
-    * follows the spec for (spack mirror configuration)[https://spack.readthedocs.io/en/latest/mirrors.html]
-* `packages.yaml`: _optional_ package rules.
-    * follows the spec for (spack package configuration)[https://spack.readthedocs.io/en/latest/build_settings.html]
+    * follows the spec for [spack module configuration](https://spack.readthedocs.io/en/latest/module_file_support.html)
+* `packages.yaml`: _optional_ define external packages
+    * follows the spec for [spack package configuration](https://spack.readthedocs.io/en/latest/build_settings.html)
 * `repo`: _optional_ custom spack package definitions.
 
 ## Configuration
@@ -26,7 +26,6 @@ modules: true
 * `name`: a plain text name for the environment
 * `store`: the location where the environment will be mounted.
 * `spack`: which spack repository to use for installation.
-* `mirrors`: _optional_ configure use of build caches, see [build cache documentation](docs/build-cache.md).
 * `modules`: _optional_ enable/diasble module file generation (default `true`).
 
 ## Compilers

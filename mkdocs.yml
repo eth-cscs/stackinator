@@ -1,10 +1,13 @@
-site_name: The Stackinator
+site_name: Stackinator
 nav:
   - Home: index.md
-  - Tutorial: tutorial.md
   - 'User Guide':
     - 'Recipes': recipes.md
     - 'Build Caches': build-caches.md
+    - 'Cluster Configuration': cluster-config.md
+    - 'Installing Stacks': installing.md
+    - 'Interfaces': interfaces.md
+  - Tutorial: tutorial.md
 theme:
   name: material
   features:
@@ -23,4 +26,6 @@ markdown_extensions:
       pygments_lang_class: true
   - toc:
       permalink: true
+extra_css:
+  - stylesheets/extra.css
 repo_url: https://github.com/eth-cscs/stackinator

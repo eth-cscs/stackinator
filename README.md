@@ -43,11 +43,10 @@ A recipe is the input provided to the tool. A recipe is comprised of the followi
 ```yaml
 name: nvgpu-basic
 store: /user-environment
-system: hohgant
 spack:
     repo: https://github.com/spack/spack.git
-    commit: 6408b51
-modules: True
+    commit: releases/v0.20
+modules: false
 ```
 
 * `name`: a plain text name for the environment
@@ -57,7 +56,7 @@ modules: True
     * cluster-specific details such as the version and location of libfabric are used when configuring and building the stack.
 * `spack`: which spack repository to use for installation.
 * `mirrors`: _optional_ configure use of build caches, see [build cache documentation](docs/build-cache.md).
-* `modules`: _optional_ enable/diasble module file generation (default `True`).
+* `modules`: _optional_ enable/diasble module file generation (default `true`).
 
 ### compilers
 
