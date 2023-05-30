@@ -1,7 +1,10 @@
 site_name: The Stackinator
-nave:
+nav:
   - Home: index.md
   - Tutorial: tutorial.md
+  - 'User Guide':
+    - 'Recipes': recipes.md
+    - 'Build Caches': build-caches.md
 theme:
   name: material
   features:
@@ -18,4 +21,6 @@ markdown_extensions:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
+  - toc:
+      permalink: true
 repo_url: https://github.com/eth-cscs/stackinator
