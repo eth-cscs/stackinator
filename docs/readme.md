@@ -11,8 +11,5 @@ pip install mkdocs-material
 Then in the root of this project, build the docs and view them with your favourite browser:
 ```bash
 mkdocs build
-
-# the docs are generated in the store path
 firefox site/index.html
 ```
-

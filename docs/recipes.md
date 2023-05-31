@@ -118,16 +118,43 @@ The example below uses the `nvhpc` compilers with gcc@11.3.
 !!! warning
     As a rule, use a single compiler wherever possible - keep it simple!
 
-    We don't test or support using two versions of gcc in the same toolchain - and we fear the day that somebody demonstrats to us that there are valid use cases for it.
+    We don't test or support using two versions of gcc in the same toolchain.
 
-### mpi
+### MPI
 
-Cray-mpich can optionally be used in an environment
+Stackinator can configure cray-mpich (CUDA, ROCM, or non-GPU aware) on a per-environment basis, by setting the `mpi` field in an environment.
 
-both gcc and nvhpc
-        "8.1.25-gcc",
-        "8.1.25-nvhpc",
+!!! note
+    Future versions of Stackinator will support OpenMPI, MPICH and MVAPICH when (and if) they develop robust support for HPE SlingShot 11 interconnect.
 
+By default, MPI will not be configured in an environment:
+```yaml title="environments.yaml: no MPI"
+serial-env:
+  mpi: null
+```
+
+To configure MPI without GPU support, set the `spec` field with an optional version:
+```yaml title="environments.yaml: MPI without GPU support"
+host-env:
+  mpi:
+    spec: cray-mpich@8.1.23
+```
+
+GPU-aware MPI can be configured by setting the optional `gpu` field to specify whether to support `cuda` or `rocm` GPUs:
+```yaml title="environments.yaml: GPU aware MPI"
+cuda-env:
+  mpi:
+    spec: cray-mpich
+    gpu: cuda
+  # ...
+rocm-env:
+  mpi:
+    spec: cray-mpich
+    gpu: rocm
+  # ...
+```
+
+As new versions of cray-mpich are released with CPE, they are added to Stackinator.
 The following versions of cray-mpich are currently provided:
 
 |   cray-mpich  |   CPE     |   notes                  |
@@ -138,13 +165,15 @@ The following versions of cray-mpich are currently provided:
 |  8.1.21.1     | 22.11     | released 2022-10-25  |
 |  8.1.18.4     | 22.08     | released 2022-07-21  |
 
-!!! note
-    Future versions of Stackinator will support OpenMPI, MPICH and MVAPICH when (and if) they develop robust support for HPE SlingShot 11 interconnect.
+!!! alps
+    All versions of cray-mpich in the table have been validated on Alps vClusters with Slingshot 11 and libfabric 1.15.2.
 
 !!! note
     The `cray-mpich` spec is added to the list of package specs automatically, and all packages that use the virtual dependency `+mpi` will use this `cray-mpich`.
 
 ### specs
+
+!!! warning "todo"
 
 ### packages
 
@@ -200,6 +229,12 @@ cuda-env:
 
 ### views
 
+!!! warning "todo"
+
+### a full example
+
+!!! warning "todo"
+
 ```yaml title="environments.yaml for simple PrgEnv-gnu setup"
 gcc-host:
   compiler:
@@ -213,16 +248,6 @@ gcc-host:
     spec: cray-mpich
     gpu: false
 ```
-
-!!! warning "todo"
-    Documentation for the following:
-
-    * overview
-    * specs
-    * compilers
-    * packages
-    * variants
-    * views
 
 ## Modules
 
