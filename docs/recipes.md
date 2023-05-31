@@ -66,6 +66,164 @@ The first two steps are required, so that the simplest stack will provide at lea
 
 ## Environments
 
+The software packages to install using the compiler toolchains are configured as disjoint environments, each built with the same compiler, and configured with an optional implementation of MPI.
+These are specified in the `environments.yaml` file.
+
+```yaml title="environments.yaml high level overview"
+env1:
+  # the compiler toolchain(s) to use
+  compiler:
+      - toolchain: gcc
+        spec: gcc@11.3
+  # the optional MPI
+  mpi:
+    spec: cray-mpich
+    gpu: true
+  # whether to unify concretisation (true/false/when_possible)
+  unify: true
+  # list of software packages and their specs
+  specs:
+  - cuda11.8
+  - hdf5 +mpi
+  - fftw +mpi
+  variants:
+  - arch
+```
+
+### compilers
+
+The `compiler` field describes a list compilers to use to build the software stack.
+Each compiler toolchain is specified using toolchain and spec
+
+```yaml title="compile all packages with gcc@11.3"
+  compiler
+  - toolchain: gcc
+    spec: gcc@11.3
+```
+
+Sometimes two compiler toolchains are required, for example when using the `nvhpc` compilers, there are often dependencies that can't be built using the NVIDIA, or are better being built with GCC (for example `cmake`, `perl` and `netcdf-c`).
+The example below uses the `nvhpc` compilers with gcc@11.3.
+
+```yaml title="compile all packages with gcc@11.3"
+  compiler
+  - toolchain: llvm
+    spec: nvhpc@22.7
+  - toolchain: gcc
+    spec: gcc@11.3
+```
+
+!!! note
+    If more than one version of gcc has been installed, use the same version that was used to install `nvhpc`.
+
+!!! warning
+    As a rule, use a single compiler wherever possible - keep it simple!
+
+    We don't test or support using two versions of gcc in the same toolchain - and we fear the day that somebody demonstrats to us that there are valid use cases for it.
+
+### mpi
+
+Cray-mpich can optionally be used in an environment
+
+both gcc and nvhpc
+        "8.1.25-gcc",
+        "8.1.25-nvhpc",
+
+The following versions of cray-mpich are currently provided:
+
+|   cray-mpich  |   CPE     |   notes                  |
+| :------------ | :-------- | :----------------------- |
+|  8.1.25       | 23.03     | released 2023-02-26 **default** |
+|  8.1.24       | 23.02     | released 2023-01-19  |
+|  8.1.23       | 22.12     | released 2022-11-29  |
+|  8.1.21.1     | 22.11     | released 2022-10-25  |
+|  8.1.18.4     | 22.08     | released 2022-07-21  |
+
+!!! note
+    Future versions of Stackinator will support OpenMPI, MPICH and MVAPICH when (and if) they develop robust support for HPE SlingShot 11 interconnect.
+
+!!! note
+    The `cray-mpich` spec is added to the list of package specs automatically, and all packages that use the virtual dependency `+mpi` will use this `cray-mpich`.
+
+### specs
+
+### packages
+
+To specify external packages that should be used instead of building them, use the `packages` field.
+For example, if the `perl`, `python@3` and `git` packages are build dependencies of an environment and the versions that are available in the base CrayOS installation are sufficient, the following spec would be specified:
+
+```yaml title="environments.yaml: specif"
+my-env:
+  packages:
+  - perl
+  - git
+```
+
+!!! note
+    If a package is not found, it will be built by Spack.
+
+!!! note
+    External packages specified in this manner will only be used when concretising this environment, and will not affect downstream users.
+
+??? note "expand if you are curious how Stackinator configures Spack for packages"
+    The following Spack call is used to generate `packages.yaml` in the Spack environment that 
+
+    ```bash title="Makefile target that "
+    packages.yaml:
+        spack external find --not-buildable --scope=user perl git
+    ```
+
+### variants
+
+To specify variants that should be applied to all package specs in the environment by default (unless overridden explicitly in a package spec), use the `variants` field.
+For example, to concretise all specs in an environment that support MPI or CUDA and target A100 GPUs, the following `variants` could be set:
+
+```yaml title="environments.yaml: variants for MPI and CUDA on A100"
+cuda-env:
+  variants:
+    - +mpi
+    - +cuda
+    - cuda_arch=80
+```
+
+??? note "expand if you are curious how Stackinator configures Spack for variants"
+    The above will add the following to the generated `spack.yaml` file used internally by Spack.
+
+    ```yaml title="spack.yaml: packages spec generated for variants"
+    spack:
+      packages:
+        all:
+          variants:
+          - +mpi
+          - +cuda
+          - cuda_arch=80
+    ```
+
+### views
+
+```yaml title="environments.yaml for simple PrgEnv-gnu setup"
+gcc-host:
+  compiler:
+      - toolchain: gcc
+        spec: gcc@11.3
+  unify: true
+  specs:
+  - hdf5 +mpi
+  - fftw +mpi
+  mpi:
+    spec: cray-mpich
+    gpu: false
+```
+
+!!! warning "todo"
+    Documentation for the following:
+
+    * overview
+    * specs
+    * compilers
+    * packages
+    * variants
+    * views
+
 ## Modules
 
 Modules are generated for the installed compilers and packages by spack. The default module generation rules set by the version of spack specified in `config.yaml` will be used if no `modules.yaml` file is provided.

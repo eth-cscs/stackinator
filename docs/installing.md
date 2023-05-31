@@ -18,8 +18,8 @@ The software is built using rpaths hard-coded to the installation path, which si
     For deployment on Alps, stacks should use the standard `/user-environment` mount point.
 
 !!! warning
-    Environments built for one mount point should not be mount at a different location.
-    It might work sometimes, but you'll almost certainly regret it.
+    Environments built for one mount point should not be mounted at a different location.
+    If a new mount point is desired, rebuild the stack for the new mount point.
 
 ## Installing the software
 
@@ -30,11 +30,15 @@ build_path
 └─ store.squashfs
 ```
 
+### Shared file system installation
+
 The `store` sub-directory contains the full software stack installation tree.
 
 !!! note
     The "simplest" method for installing the software stack, that does not require installing additional tools to use the stack, is to copy the contents of `store` to the installation path.
 
+
+### SquashFS installation
 
 The `store.squashfs` file is a compressed [SquashFS](https://tldp.org/HOWTO/SquashFS-HOWTO/whatis.html) image of the contents of the `store` path.
 This can be mounted at runtime using [`squashfs-mount`](https://github.com/eth-cscs/squashfs-mount) or [Slurm plugins](https://github.com/eth-cscs/slurm-uenv-mount/), or mounted by a system-administrator using [`mount`](https://man7.org/linux/man-pages/man2/mount.2.html), in order the to take advantage of the benefits of SquashFS over shared file systems.

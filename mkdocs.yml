@@ -2,12 +2,14 @@ site_name: Stackinator
 nav:
   - Home: index.md
   - 'User Guide':
-    - 'Recipes': recipes.md
-    - 'Build Caches': build-caches.md
-    - 'Cluster Configuration': cluster-config.md
+    - 'Configuring Stacks': configuring.md
+    - 'Building Stacks': building.md
     - 'Installing Stacks': installing.md
+    - 'Recipes': recipes.md
+    - 'Cluster Configuration': cluster-config.md
     - 'Interfaces': interfaces.md
-  - Tutorial: tutorial.md
+    - 'Build Caches': build-caches.md
+# - Tutorial: tutorial.md
 theme:
   name: material
   features:
@@ -24,6 +26,7 @@ markdown_extensions:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
+  - tables
   - toc:
       permalink: true
 extra_css:
