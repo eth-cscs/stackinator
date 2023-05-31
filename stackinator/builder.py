@@ -10,8 +10,7 @@ from datetime import datetime
 import jinja2
 import yaml
 
-from . import VERSION, root_logger
-
+from . import VERSION, root_logger, cache
 
 class Builder:
     def __init__(self, args):
@@ -149,11 +148,11 @@ class Builder:
 
         # generate top level makefiles
         makefile_template = env.get_template("Makefile")
+
         with (self.path / "Makefile").open("w") as f:
-            cache = {"key": recipe.mirror.key, "enabled": recipe.mirror.source}
             f.write(
                 makefile_template.render(
-                    cache=cache, modules=recipe.config["modules"], verbose=False
+                    cache=recipe.mirror, modules=recipe.config["modules"], verbose=False
                 )
             )
             f.write("\n")
@@ -171,19 +170,20 @@ class Builder:
         for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "add-compiler-links.py"]:
             shutil.copy2(etc_path / f_etc, self.path / f_etc)
 
-        # Generate the system configuration: the compilers, environments,
-        # mirrors etc. that are defined for the target cluster.
+        # Generate the system configuration: the compilers, environments, etc.
+        # that are defined for the target cluster.
         config_path = self.path / "config"
         config_path.mkdir(exist_ok=True)
         system_config_path = pathlib.Path(recipe.system_config_path)
 
         # Copy the yaml files to the spack config path
         for f_config in system_config_path.iterdir():
-            # skip copying mirrors.yaml - this is done in the next step only if
-            # mirrors have been enabled and the recipe did not provide a mirror
-            # configuration
+            # print warning if mirrors.yaml is found
             if f_config.name in ["mirrors.yaml"]:
-                continue
+                self._logger.error(
+                        "mirrors.yaml have been removed from cluster configurations,"
+                        " use the --cache option on stack-config instead.")
+                raise RuntimeError("Unsupported mirrors.yaml file in cluster configuration.")
 
             # construct full file path
             src = system_config_path / f_config.name
@@ -192,10 +192,12 @@ class Builder:
             if src.is_file():
                 shutil.copy(src, dst)
 
-        # copy the optional mirrors.yaml file
-        if recipe.mirror.source:
+        # generate a mirrors.yaml file if build caches have been configured
+        if recipe.mirror:
             dst = config_path / "mirrors.yaml"
-            shutil.copy(recipe.mirror.source, dst)
+            self._logger.debug(f"generate the build cache mirror: {dst}")
+            with dst.open('w') as fid:
+                fid.write(cache.generate_mirrors_yaml(recipe.mirror))
 
         # append recipe packages to packages.yaml
         if recipe.packages:
