@@ -102,9 +102,9 @@ class Recipe:
         mirrors_path = self.path / "mirrors.yaml"
         if mirrors_path.is_file():
             self._logger.warning(
-                    "mirrors.yaml have been deprecated from recipes, use the"
-                    " --cache option on stack-config instead."
-                    " The mirrors.yaml file will be ignored")
+                    "mirrors.yaml have been removed from recipes,"
+                    " use the --cache option on stack-config instead.")
+            raise Exception(f"Unsupported mirrors.yaml file in recipe.")
 
         self.mirror = (args.cache, self.config["store"])
 
