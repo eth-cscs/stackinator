@@ -104,7 +104,7 @@ class Recipe:
             self._logger.warning(
                     "mirrors.yaml have been removed from recipes,"
                     " use the --cache option on stack-config instead.")
-            raise Exception("Unsupported mirrors.yaml file in recipe.")
+            raise RuntimeError("Unsupported mirrors.yaml file in recipe.")
 
         self.mirror = (args.cache, self.config["store"])
 
