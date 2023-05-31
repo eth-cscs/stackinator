@@ -16,9 +16,18 @@ class CrayMpich(Package):
 
     homepage = "https://www.hpe.com/us/en/compute/hpc/hpc-software.html"
     url = "https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.18.4-gcc.tar.gz"
-
     maintainers = ["haampie"]
 
+    version(
+        "8.1.25-gcc",
+        sha256="95a8a161dc9704ea7b971dc8c1b7ec4d63de57e2f6932f0aa3d1ff1d73899765",
+        url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.25-gcc.tar.gz",
+    )
+    version(
+        "8.1.25-nvhpc",
+        sha256="7a89a3f5d35538a4f7984c1403ca888e1b018485597318eaefa4639341e1eb27",
+        url="https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.25-nvhpc.tar.gz",
+    )
     version(
         "8.1.24-gcc",
         sha256="3da0e421c3faaadbe18e57dd033b0ec6513e0d9ed7fbfa77f05a02bada4cd483",
@@ -81,6 +90,22 @@ class CrayMpich(Package):
 
     # libfabric.so.1
     depends_on("libfabric@1:", type="link")
+
+    with when("@8.1.25-gcc"):
+        # libgfortran.so.5
+        conflicts("%gcc@:7")
+        for __compiler in spack.compilers.supported_compilers():
+            if __compiler != "gcc":
+                conflicts("%{}".format(__compiler), msg="gcc required")
+
+    with when("@8.1.25-nvhpc"):
+        conflicts("%nvhpc@:20.7")
+        conflicts("+rocm")
+        conflicts("~cuda")
+        for __compiler in spack.compilers.supported_compilers():
+            if __compiler != "nvhpc":
+                conflicts("%{}".format(__compiler), msg="nvhpc required")
+
 
     with when("@8.1.24-gcc"):
         # libgfortran.so.5
@@ -220,7 +245,7 @@ class CrayMpich(Package):
         filter_file(
             "@@GTL_LIBRARY@@", gtl_library, self.prefix.bin.mpifort, string=True
         )
- 
+
     @property
     def headers(self):
         hdrs = find_headers("mpi", self.prefix.include, recursive=True)
@@ -244,7 +269,7 @@ class CrayMpich(Package):
 
         if "+cuda" in self.spec:
             libraries.append("libmpi*cuda")
-        
+
         if "+rocm" in self.spec:
             libraries.append("libmpi*hsa")
 
