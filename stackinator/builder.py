@@ -183,7 +183,7 @@ class Builder:
                 self._logger.error(
                         "mirrors.yaml have been removed from cluster configurations,"
                         " use the --cache option on stack-config instead.")
-                raise Exception(f"Unsupported mirrors.yaml file in cluster configuration.")
+                raise Exception("Unsupported mirrors.yaml file in cluster configuration.")
 
             # construct full file path
             src = system_config_path / f_config.name
