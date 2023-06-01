@@ -108,6 +108,16 @@ class Recipe:
 
         self.mirror = (args.cache, self.config["store"])
 
+    # Returns:
+    #   Path: of the recipe meta path if it exists
+    #   None: if there is no user-provided meta path in the recipe
+    @property
+    def user_meta(self):
+        meta_path = self.path / 'meta'
+        if meta_path.exists() and meta_path.is_dir():
+            return meta_path
+        return None
+
     # Returns a dictionary with the following fields
     #
     # root: /path/to/cache
