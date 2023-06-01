@@ -73,5 +73,4 @@ module avail
 
 ## Environment Views
 
-!!! warning
-    todo
+!!! warning "todo"

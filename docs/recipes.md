@@ -11,6 +11,7 @@ A recipe is comprised of the following yaml files in a directory:
 * `packages.yaml`: _optional_ define external packages
     * follows the spec for [spack package configuration](https://spack.readthedocs.io/en/latest/build_settings.html)
 * `repo`: _optional_ custom spack package definitions.
+* `meta`: _optional_ additional meta data to copy to the meta data of the stack.
 
 ## Configuration
 
@@ -69,26 +70,25 @@ The first two steps are required, so that the simplest stack will provide at lea
 The software packages to install using the compiler toolchains are configured as disjoint environments, each built with the same compiler, and configured with an optional implementation of MPI.
 These are specified in the `environments.yaml` file.
 
+For example, consider a workflow that has to build more multiple applications - some which require Fortran+OpenACC and others that are CPU only C code that can be built with GCC.
+To provide a single Spack stack that meets the workflow's needs, we would create two environments, one for each of the `nvhpc` and `gcc` compiler toolchains:
+
 ```yaml title="environments.yaml high level overview"
-env1:
-  # the compiler toolchain(s) to use
-  compiler:
-      - toolchain: gcc
-        spec: gcc@11.3
-  # the optional MPI
-  mpi:
-    spec: cray-mpich
-    gpu: true
-  # whether to unify concretisation (true/false/when_possible)
-  unify: true
-  # list of software packages and their specs
-  specs:
-  - cuda11.8
-  - hdf5 +mpi
-  - fftw +mpi
-  variants:
-  - arch
+# A GCC-based programming environment
+prgenv-gnu:
+  compiler: # ... compiler toolchain
+  mpi:      # ... mpi configuration
+  unify:    # ... configure Spack concretizer
+  specs:    # ... list of packages to install
+  variants: # ... variants to apply to packages (e.g. +mpi)
+  packages: # ... list of external packages to use
+  views:    # ... environment views to provide to users
+# An NVIDIA programming environment
+prgenv-nvgpu:
+  # ... same structure as prgenv-gnu
 ```
+
+In the following sections, we will explore each of the environment configuration fields in detail.
 
 ### compilers
 
@@ -127,10 +127,11 @@ Stackinator can configure cray-mpich (CUDA, ROCM, or non-GPU aware) on a per-env
 !!! note
     Future versions of Stackinator will support OpenMPI, MPICH and MVAPICH when (and if) they develop robust support for HPE SlingShot 11 interconnect.
 
-By default, MPI will not be configured in an environment:
+If the `mpi` field is not set, or is set to `null`, MPI will not be configured in an environment:
 ```yaml title="environments.yaml: no MPI"
 serial-env:
   mpi: null
+  # ...
 ```
 
 To configure MPI without GPU support, set the `spec` field with an optional version:
@@ -138,6 +139,7 @@ To configure MPI without GPU support, set the `spec` field with an optional vers
 host-env:
   mpi:
     spec: cray-mpich@8.1.23
+  # ...
 ```
 
 GPU-aware MPI can be configured by setting the optional `gpu` field to specify whether to support `cuda` or `rocm` GPUs:
@@ -194,9 +196,9 @@ my-env:
     External packages specified in this manner will only be used when concretising this environment, and will not affect downstream users.
 
 ??? note "expand if you are curious how Stackinator configures Spack for packages"
-    The following Spack call is used to generate `packages.yaml` in the Spack environment that 
+    The following Spack call is used to generate `packages.yaml` in the Spack environment that Stackinator generates in the build path to concretise and build the packages in the example above:
 
-    ```bash title="Makefile target that "
+    ```bash title="Makefile target for external packages in an environment"
     packages.yaml:
         spack external find --not-buildable --scope=user perl git
     ```
@@ -279,3 +281,11 @@ The `alps` repository is installed alongside the packages, and is automatically 
 !!! warning
     Unlike Spack package repositories, any `repos.yaml` file in the `repo` path will be ignored and a warning will be issued.
     This is because the provided packages are added to the `alps` namespace.
+
+## Meta-Data
+
+Stackinator generates meta-data about the stack to the `meta` path of the installation path.
+Recipe can install arbitrary meta data by providing a `meta` path in the recipe, the contents of which will be copied to the `meta/extra` path in the installation path.
+
+!!! alps
+    This is used to provide additional information required by ReFrame as part of the CI/CD pipeline for software stacks on Alps, defined in the [GitHub eth-cscs/alps-spack-stacks](https://github.com/eth-cscs/alps-spack-stacks) repository.
