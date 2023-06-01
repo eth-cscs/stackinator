@@ -109,13 +109,13 @@ class Recipe:
         self.mirror = (args.cache, self.config["store"])
 
     # Returns:
-    #   Path: of the recipe meta path if it exists
-    #   None: if there is no user-provided meta path in the recipe
+    #   Path: of the recipe extra path if it exists
+    #   None: if there is no user-provided extra path in the recipe
     @property
-    def user_meta(self):
-        meta_path = self.path / 'extra'
-        if meta_path.exists() and meta_path.is_dir():
-            return meta_path
+    def user_extra(self):
+        extra_path = self.path / 'extra'
+        if extra_path.exists() and extra_path.is_dir():
+            return extra_path
         return None
 
     # Returns a dictionary with the following fields
@@ -137,9 +137,8 @@ class Recipe:
 
         file, mount = configuration
 
-        mirror_config_path = pathlib.Path(file)
-
-        if mirror_config_path is not None:
+        if file is not None:
+            mirror_config_path = pathlib.Path(file)
             if not mirror_config_path.is_file():
                 raise FileNotFoundError(f"The cache configuration '{file}' is not a file")
 

@@ -332,7 +332,7 @@ class Builder:
         meta_extra_path.mkdir(exist_ok=True)
         if meta_extra_path.exists():
             shutil.rmtree(meta_extra_path)
-        if recipe.user_meta is not None:
+        if recipe.user_extra is not None:
             self._logger.debug(f"copying extra recipe meta data to {meta_extra_path}")
-            shutil.copytree(recipe.user_meta, meta_extra_path)
+            shutil.copytree(recipe.user_extra, meta_extra_path)
 
