@@ -113,7 +113,7 @@ class Recipe:
     #   None: if there is no user-provided meta path in the recipe
     @property
     def user_meta(self):
-        meta_path = self.path / 'meta'
+        meta_path = self.path / 'extra'
         if meta_path.exists() and meta_path.is_dir():
             return meta_path
         return None
