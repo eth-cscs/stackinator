@@ -326,3 +326,13 @@ class Builder:
         shutil.copytree(
             recipe.path, meta_recipe_path, ignore=shutil.ignore_patterns(".git")
         )
+
+        # create the meta/extra path and copy recipe meta data if it exists
+        meta_extra_path = meta_path / "extra"
+        meta_extra_path.mkdir(exist_ok=True)
+        if meta_extra_path.exists():
+            shutil.rmtree(meta_extra_path)
+        if recipe.user_extra is not None:
+            self._logger.debug(f"copying extra recipe meta data to {meta_extra_path}")
+            shutil.copytree(recipe.user_extra, meta_extra_path)
+
