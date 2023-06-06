@@ -175,14 +175,48 @@ The following versions of cray-mpich are currently provided:
 
 ### Specs
 
-!!! warning "todo"
+The list of software packages to install is configured in the `spec:` field of an environment. The specs follow the [standard Spack practice](https://spack.readthedocs.io/en/latest/environments.html#spec-concretization).
+
+The `unify:` field controls the Spack concretiser, and can be set to three values `true`, `false` or `when_possible`.
+The 
+
+```yaml
+cuda-env:
+  specs:
+  - cmake
+  - hdf5
+  - python@3.10
+  unify: true
+```
+
+To install more than one version of the same package, or to concretise some more challenging combinations of packages, you might have to relax the concretiser to `when_possible` or `false`.
+For example, this environment provides `hdf5` both with and without MPI support:
+
+```yaml
+cuda-env:
+  specs:
+  - cmake
+  - hdf5~mpi
+  - hdf5+mpi
+  - python@3.10
+  unify: when_possible
+```
+
+!!! note
+    Use `unify:true` when possible, then `unify:when_possible`, and finally `unify:false`.
+
+!!! warning
+    Don't provide a spec for MPI or Compilers, which are configured in the [`mpi:`](recipes.md#mpi) and [`compilers`](recipes.compilers) fields respecively.
+
+!!! warning
+    Stackinator does not support "spec matrices", and likely won't, because they use multiple compiler toolchains in a manner that is contrary to the Stackinator "keep it simple" principle.
 
 ### Packages
 
 To specify external packages that should be used instead of building them, use the `packages` field.
 For example, if the `perl`, `python@3` and `git` packages are build dependencies of an environment and the versions that are available in the base CrayOS installation are sufficient, the following spec would be specified:
 
-```yaml title="environments.yaml: specif"
+```yaml title="environments.yaml: specifying external packages"
 my-env:
   packages:
   - perl
@@ -233,30 +267,24 @@ cuda-env:
 
 File system views are an optional way to provide the software from an environment in a directory structure similar to `/usr/local`, based on Spack's [filesystem views](https://spack.readthedocs.io/en/latest/environments.html#filesystem-views).
 
-Each environment can provide more than one view, for
+Each environment can provide more than one view, and the structure of the YAML is the same as used by the version of Spack used to build the Spack stack.
+For example, the `views` description:
 
 ```yaml
 cuda-env:
   views:
+    default:
+    no-python:
+      exclude:
+        - 'python'
 ```
 
-### A full example
+will configure two views:
 
-!!! warning "todo"
+* `default`: a view of all the software in the environment using the default settings of Spack.
+* `no-python`: everything in the default view, except any versions of `python`.
 
-```yaml title="environments.yaml for simple PrgEnv-gnu setup"
-gcc-host:
-  compiler:
-      - toolchain: gcc
-        spec: gcc@11.3
-  unify: true
-  specs:
-  - hdf5 +mpi
-  - fftw +mpi
-  mpi:
-    spec: cray-mpich
-    gpu: false
-```
+See the [interfaces documentation](interfaces.md#environment-views) for more information about how the environment views are provided to users of a stack.
 
 ## Modules
 

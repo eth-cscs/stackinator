@@ -73,4 +73,33 @@ module avail
 
 ## Environment Views
 
-!!! warning "todo"
+File system views are an optional way to provide the software from an environment in a directory structure similar to `/usr/local`, based on Spack's [filesystem views](https://spack.readthedocs.io/en/latest/environments.html#filesystem-views).
+See the [recipe documentation](recipes.md#views) for details on how to configure views.
+
+The views are created in the `env` path of the installation.
+As an example, given two views named `default` and `no-python` for an stack installed in the standard `/user-environment` location, then two directory trees named after the views are generated in `/user-environment/env`:
+
+```
+/user-environment
+└─ env
+   ├─ default
+   │  ├─ bin
+   │  ├─ lib
+   │  ├─ ...
+   │  └─ activate.sh
+   └─ no-python
+      ├─ bin
+      ├─ lib
+      ├─ ...
+      └─ activate.sh
+```
+
+The `activate.sh` script in each view can be used to load the view by setting environment variables like `PATH`, `LD_LIBRARY_PATH`, `CPATH` etc.
+
+```bash
+source /user-environment/env/no-python/activate.sh
+```
+
+!!! note
+    Meta data about the environment views provided by a Spack stack is provided in the file `meta/env.json`.
+
