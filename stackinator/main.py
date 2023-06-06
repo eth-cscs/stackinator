@@ -40,6 +40,7 @@ def log_header(args):
     root_logger.info(f"  system     : {args.system}")
     mount = args.mount or "default"
     root_logger.info(f"  mount      : {mount}")
+    root_logger.info(f"  build cache: {args.cache}")
 
 
 def make_argparser():
@@ -56,6 +57,7 @@ def make_argparser():
     parser.add_argument("-s", "--system", required=True, type=str)
     parser.add_argument("-d", "--debug", action="store_true")
     parser.add_argument("-m", "--mount", required=False, type=str)
+    parser.add_argument("-c", "--cache", required=False, type=str)
 
     return parser
 
