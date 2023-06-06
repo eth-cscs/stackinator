@@ -90,7 +90,7 @@ prgenv-nvgpu:
 
 In the following sections, we will explore each of the environment configuration fields in detail.
 
-### compilers
+### Compilers
 
 The `compiler` field describes a list compilers to use to build the software stack.
 Each compiler toolchain is specified using toolchain and spec
@@ -173,11 +173,11 @@ The following versions of cray-mpich are currently provided:
 !!! note
     The `cray-mpich` spec is added to the list of package specs automatically, and all packages that use the virtual dependency `+mpi` will use this `cray-mpich`.
 
-### specs
+### Specs
 
 !!! warning "todo"
 
-### packages
+### Packages
 
 To specify external packages that should be used instead of building them, use the `packages` field.
 For example, if the `perl`, `python@3` and `git` packages are build dependencies of an environment and the versions that are available in the base CrayOS installation are sufficient, the following spec would be specified:
@@ -203,7 +203,7 @@ my-env:
         spack external find --not-buildable --scope=user perl git
     ```
 
-### variants
+### Variants
 
 To specify variants that should be applied to all package specs in the environment by default (unless overridden explicitly in a package spec), use the `variants` field.
 For example, to concretise all specs in an environment that support MPI or CUDA and target A100 GPUs, the following `variants` could be set:
@@ -229,11 +229,18 @@ cuda-env:
           - cuda_arch=80
     ```
 
-### views
+### Views
 
-!!! warning "todo"
+File system views are an optional way to provide the software from an environment in a directory structure similar to `/usr/local`, based on Spack's [filesystem views](https://spack.readthedocs.io/en/latest/environments.html#filesystem-views).
 
-### a full example
+Each environment can provide more than one view, for
+
+```yaml
+cuda-env:
+  views:
+```
+
+### A full example
 
 !!! warning "todo"
 
