@@ -66,19 +66,25 @@ See the [spack documentation](https://spack.readthedocs.io/en/latest/getting_sta
 
 The key needs to be in a location that is accessible during the build process, and secure.
 To keep your PGP key secret, you can generate it then move it to a path with appropriate permissions.
-In the example below, we create a path `~/.keys` for storing the key:
+In the example below, we create a path `.keys` for storing the key:
 ```bash
 # create  .keys path is visible only to you
-mkdir $HOME/.keys
-chmod 700 $HOME/.keys
+mkdir $SCRATCH/.keys
+chmod 700 $SCRATCH/.keys
 
 # generate the key
 spack gpg create <name> <e-mail>
-spack gpg export --secret $HOME/.keys/spack-push-key.gpg
+spack gpg export --secret $SCRATCH/.keys/spack-push-key.gpg
+chmod 600 $SCRATCH/.keys/spack-push-key.gpg
 ```
 
 The cache-configuration would look like the following, where we assume that the cache is in `$SCRATCH/uenv-cache`:
 ```yaml
 root: $SCRATCH/uenv-cache
-key: $HOME/.keys/spack-push-key.gpg
+key: $SCRATCH/.keys/spack-push-key.gpg
 ```
+!!! warning
+    Don't blindly copy this documentation's advice on security settings.
+
+!!! failure "Don't use `$HOME`"
+    Don't put the keys in `$HOME`, because the build process remounts `~` as a tmpfs, and you will get error messages that Spack can't read the key.
