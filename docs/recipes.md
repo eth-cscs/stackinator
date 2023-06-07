@@ -70,7 +70,7 @@ The first two steps are required, so that the simplest stack will provide at lea
 The software packages to install using the compiler toolchains are configured as disjoint environments, each built with the same compiler, and configured with an optional implementation of MPI.
 These are specified in the `environments.yaml` file.
 
-For example, consider a workflow that has to build more multiple applications - some which require Fortran+OpenACC and others that are CPU only C code that can be built with GCC.
+For example, consider a workflow that has to build more multiple applications - some of which require Fortran+OpenACC and others that are CPU only C code that can be built with GCC.
 To provide a single Spack stack that meets the workflow's needs, we would create two environments, one for each of the `nvhpc` and `gcc` compiler toolchains:
 
 ```yaml title="environments.yaml high level overview"
