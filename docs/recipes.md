@@ -319,8 +319,8 @@ The `alps` repository is installed alongside the packages, and is automatically 
 
 ## Meta-Data
 
-Stackinator generates meta-data about the stack to the `meta` path of the installation path.
-Recipe can install arbitrary meta data by providing a `meta` path in the recipe, the contents of which will be copied to the `meta/extra` path in the installation path.
+Stackinator generates meta-data about the stack to the `extra` path of the installation path.
+A recipe can install arbitrary meta data by providing a `extra` path, the contents of which will be copied to the `meta/extra` path in the installation path.
 
 !!! alps
     This is used to provide additional information required by ReFrame as part of the CI/CD pipeline for software stacks on Alps, defined in the [GitHub eth-cscs/alps-spack-stacks](https://github.com/eth-cscs/alps-spack-stacks) repository.
