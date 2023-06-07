@@ -11,7 +11,7 @@ A recipe is comprised of the following yaml files in a directory:
 * `packages.yaml`: _optional_ define external packages
     * follows the spec for [spack package configuration](https://spack.readthedocs.io/en/latest/build_settings.html)
 * `repo`: _optional_ custom spack package definitions.
-* `meta`: _optional_ additional meta data to copy to the meta data of the stack.
+* `extra`: _optional_ additional meta data to copy to the meta data of the stack.
 
 ## Configuration
 

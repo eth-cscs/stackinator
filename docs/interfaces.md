@@ -31,7 +31,7 @@ Notes on the configuration files:
       system:
         install_tree: /user-environment
     ```
-* `compilers.yaml`: includes all compilers that were installed in the `gcc:` and `llvm:` sections of the `compilers.yaml` recipe file. Note, the `bootstrap` compiler is not included.
+* `compilers.yaml`: includes all compilers that were installed in the `gcc:` and `llvm:` sections of the `compilers.yaml` recipe file. Note that the `bootstrap` compiler is not included.
 * `packages.yaml`: refers to the external packages that were used to configure the recipe: both the defaults in the cluster configuration, and any additional packages that were set in the recipe.
 * `repos.yaml`: points to the custom Spack repository:
     ```yaml

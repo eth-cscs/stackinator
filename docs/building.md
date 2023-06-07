@@ -15,7 +15,7 @@ cd $BUILD_PATH
 env --ignore-environment ... make -j64
 ```
 
-The call to `make` is wrapped with with `env --ignore-env` to ensure that 
+The call to `make` is wrapped with with `env --ignore-env` to unset all environment variables, to improve reproducability of builds.
 
 Build times for stacks typically vary between 30 minutes to 3 hours, depending on the specific packages that have to be built.
 Using [build caches](build-caches.md) and building in shared memory (see below) are the most effective methods to speed up builds.
