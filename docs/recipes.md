@@ -290,7 +290,7 @@ See the [interfaces documentation](interfaces.md#environment-views) for more inf
 
 Modules are generated for the installed compilers and packages by spack. The default module generation rules set by the version of spack specified in `config.yaml` will be used if no `modules.yaml` file is provided.
 
-To set rules for module generation, provide a `module.yaml` file as per the [spack documentation](https://spack.readthedocs.io/en/latest/module_file_support.html).
+To set rules for module generation, provide a `modules.yaml` file as per the [spack documentation](https://spack.readthedocs.io/en/latest/module_file_support.html).
 
 To disable module generation, set the field `config:modules:False` in `config.yaml`.
 
