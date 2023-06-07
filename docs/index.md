@@ -16,7 +16,7 @@ cd stackinator
 ./bootstrap.sh
 ```
 
-The `bootstraph.sh` script will install the necessary dependencies, so that stackinator can be run as a standalone application.
+The `bootstrap.sh` script will install the necessary dependencies, so that Stackinator can be run as a standalone application.
 
 Once installed, add the `bin` sub-directory to your path:
 
