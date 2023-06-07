@@ -26,7 +26,7 @@ export PATH="<stackinator-install-path>/bin:$PATH"
 
 ### Using Pip
 
-Stackinator is available on pip:
+Stackinator is available on PyPi:
 
 ```
 pip install stackinator
