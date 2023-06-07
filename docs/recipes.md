@@ -31,7 +31,7 @@ modules: true
 
 ## Compilers
 
-Take an  example configuration:
+Take an example configuration:
 ```yaml title="compilers.yaml"
 bootstrap:
   spec: gcc@11
