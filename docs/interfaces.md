@@ -57,7 +57,7 @@ If the stack recipe provided additional custom packages, these will also be in s
 
 Module files can be provided as an optional interface, for users that and use-cases that prefer or require them.
 
-If modules are available, the generated module files are in the `modules` sub-directory of the installation path, and end users can view them with `module use`:
+If modules are available, the generated module files are in the `modules` sub-directory of the installation path, and end users can make them available via `module use`:
 
 ```bash
 # make the modules available
