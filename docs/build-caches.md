@@ -41,7 +41,7 @@ To create a build cache we need two things:
 
 1. An empty directory where the cache will be populated by Spack.
 2. A private PGP key
-    *  Only required for Stackinator to push packages to the cache when it builds it builds a package that was not in the cache.
+    *  Only required for Stackinator to push packages to the cache when it builds a package that was not in the cache.
 
 Creating the cache directory is easy! For example, to create a cache on your scratch storage:
 ```bash
