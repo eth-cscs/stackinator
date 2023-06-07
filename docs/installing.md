@@ -23,7 +23,7 @@ The software is built using rpaths hard-coded to the installation path, which si
 
 ## Installing the software
 
-Running gmake to build the environment generates two versions of the software stack in the build path:
+Running `make` to build the environment generates two versions of the software stack in the build path:
 ```
 build_path
 ├─ store
