@@ -87,22 +87,21 @@ with open(args.activate_path) as fid:
             # parse PATH to remove references to the build directory
             if export["variable"] == "PATH":
                 paths=[p for p in export["paths"] if not has_prefix(p, args.build_path)]
-                lines.append(f"export PATH={':'.join(paths)};")
+                lines.append(f"export PATH={':'.join(paths)};\n")
 
             # drop the SPACK_ENV variable
             elif export["variable"] == "SPACK_ENV":
                 pass
 
             else:
-                lines.append(line.strip())
+                lines.append(line.strip()+"\n")
         else:
-            lines.append(line.strip())
+            lines.append(line.strip()+"\n")
 
 # Prepend the compiler paths to PATH
-lines.append("# compiler paths added by stackinator")
-lines.append(f"export PATH={pathstring}:$PATH;")
+lines.append("# compiler paths added by stackinator\n")
+lines.append(f"export PATH={pathstring}:$PATH;\n")
 
 # Write a modified version of the activation script.
 with open(args.activate_path, 'w') as fid:
     fid.writelines(lines)
-
