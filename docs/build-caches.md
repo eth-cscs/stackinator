@@ -6,7 +6,7 @@ This is the difference between half an hour or 3 minutes to build a typical imag
 
 ## Using Build caches
 
-To use build cache, create a simple YAML file:
+To use a build cache, create a simple YAML file:
 
 ```yaml title='cache-config.yaml'
 root: $SCRATCH/uenv-cache
