@@ -52,7 +52,7 @@ The compilers are built in multiple stages:
     * The selected version should have full support for the target architecture in order to build optimised gcc toolchains in step 2.
 2. *gcc*: The bootstrap compiler is then used to build the gcc version(s) provided by the stack.
     * `gcc:specs`: A list of _at least one_ of the specs of the form `gcc@version`.
-3. *llvm*: (optional) The nvhpc and/or llvm toolchains are build using one of the gcc toolchains installed in step 2.
+3. *llvm*: (optional) The nvhpc and/or llvm toolchains are built using one of the gcc toolchains installed in step 2.
     * `llvm:specs`: a list of specs of the form `nvhpc@version` or `llvm@version`.
     * `llvm:requires`: the version of gcc from step 2 that is used to build the llvm compilers.
 
