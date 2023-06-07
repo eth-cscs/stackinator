@@ -41,4 +41,4 @@ The `store` sub-directory contains the full software stack installation tree.
 ### SquashFS installation
 
 The `store.squashfs` file is a compressed [SquashFS](https://tldp.org/HOWTO/SquashFS-HOWTO/whatis.html) image of the contents of the `store` path.
-This can be mounted at runtime using [`squashfs-mount`](https://github.com/eth-cscs/squashfs-mount) or [Slurm plugins](https://github.com/eth-cscs/slurm-uenv-mount/), or mounted by a system-administrator using [`mount`](https://man7.org/linux/man-pages/man2/mount.2.html), in order the to take advantage of the benefits of SquashFS over shared file systems.
+This can be mounted at runtime using [`squashfs-mount`](https://github.com/eth-cscs/squashfs-mount) or the [Slurm plugin](https://github.com/eth-cscs/slurm-uenv-mount/), or mounted by a system-administrator using [`mount`](https://man7.org/linux/man-pages/man2/mount.2.html), in order the to take advantage of the benefits of SquashFS over shared file systems.
