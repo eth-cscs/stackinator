@@ -12,7 +12,7 @@ stack-config --build $BUILD_PATH ...
 
 # perform the build
 cd $BUILD_PATH
-env --ignore-environment ... make -j64
+env --ignore-environment PATH=/usr/bin:/bin:`pwd`/spack/bin make modules store.squashfs -j32
 ```
 
 The call to `make` is wrapped with with `env --ignore-env` to unset all environment variables, to improve reproducability of builds.
