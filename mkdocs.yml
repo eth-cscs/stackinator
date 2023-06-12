@@ -1,0 +1,34 @@
+site_name: Stackinator
+nav:
+  - Home: index.md
+  - 'User Guide':
+    - 'Configuring Stacks': configuring.md
+    - 'Building Stacks': building.md
+    - 'Installing Stacks': installing.md
+    - 'Recipes': recipes.md
+    - 'Cluster Configuration': cluster-config.md
+    - 'Interfaces': interfaces.md
+    - 'Build Caches': build-caches.md
+# - Tutorial: tutorial.md
+theme:
+  name: material
+  features:
+    - content.code.copy
+    - navigation.tabs
+  palette:
+    primary: deep orange
+    accent: deep orange
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - tables
+  - toc:
+      permalink: true
+extra_css:
+  - stylesheets/extra.css
+repo_url: https://github.com/eth-cscs/stackinator
