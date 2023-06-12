@@ -22,12 +22,14 @@ spack:
     repo: https://github.com/spack/spack.git
     commit: releases/v0.20
 modules: true
+description: "HPC development tools for building MPI applications with the GNU compiler toolchain"
 ```
 
 * `name`: a plain text name for the environment
 * `store`: the location where the environment will be mounted.
 * `spack`: which spack repository to use for installation.
 * `modules`: _optional_ enable/diasble module file generation (default `true`).
+* `description`: _optional_ a string that describes the environment.
 
 ## Compilers
 

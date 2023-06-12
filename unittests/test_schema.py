@@ -44,6 +44,7 @@ def test_config_yaml(yaml_path):
         assert raw["spack"]["commit"] is None
         assert raw["modules"] == True  # noqa: E712
         assert raw["mirror"] == {"enable": True, "key": None}
+        assert raw["description"] == None
 
     with open(yaml_path / "config.full.yaml") as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
@@ -52,7 +53,7 @@ def test_config_yaml(yaml_path):
         assert raw["spack"]["commit"] == "6408b51"
         assert raw["modules"] == False  # noqa: E712
         assert raw["mirror"] == {"enable": True, "key": "/home/bob/veryprivate.key"}
-
+        assert raw["description"] == "a really useful environment"
 
 def test_recipe_config_yaml(recipe_paths):
     # validate the config.yaml in the test recipes

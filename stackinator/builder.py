@@ -38,12 +38,12 @@ class Builder:
         self.root = pathlib.Path(__file__).parent.resolve()
 
     @property
-    def meta(self):
+    def configuration_meta(self):
         """Meta data about the configuration and build"""
-        return self._meta
+        return self._configuration_meta
 
-    @meta.setter
-    def meta(self, recipe):
+    @configuration_meta.setter
+    def configuration_meta(self, recipe):
         # generate configuration meta data
         meta = {}
         meta["time"] = datetime.now().strftime("%Y%m%d %H:%M:%S")
@@ -63,7 +63,7 @@ class Builder:
             "python": sys.executable,
         }
         meta["spack"] = recipe.config["spack"]
-        self._meta = meta
+        self._configuration_meta = meta
 
     @property
     def environment_meta(self):
@@ -76,14 +76,37 @@ class Builder:
         The output that we want to generate looks like the following,
         Which should correspond directly to the environment_view_meta provided
         by the recipe.
-        {"env1":
-            {"root": /user-environment/env/env1},
-            {"activate": /user-environment/env/env1/activate.sh},
-            {"description": "hello world"}
+
+        {
+          name: "prgenv-gnu",
+          description: "useful programming tools",
+          modules: {
+              "root": /user-environment/modules,
+          },
+          views: {
+            "default": {
+              "root": /user-environment/env/default,
+              "activate": /user-environment/env/default/activate.sh,
+              "description": "your standard development environment: compilers, MPI, python, cmake."
+            },
+            "tools": {
+              "root": /user-environment/env/tools,
+              "activate": /user-environment/env/tools/activate.sh,
+              "description": "handy tools"
+            }
+          }
         }
         '''
-        meta = recipe.environment_view_meta
-        self._environment_meta = json.dumps(meta, sort_keys=True, indent=2) + "\n"
+        conf = recipe.config
+        meta = {}
+        meta["name"] = conf["name"]
+        meta["description"] = conf["description"]
+        meta["views"] = recipe.environment_view_meta
+        modules = None
+        if conf["modules"]:
+            modules = {"root": conf["store"] + "/modules"}
+        meta["modules"] = modules
+        self._environment_meta = meta
 
     def generate(self, recipe):
         # make the paths
@@ -99,7 +122,7 @@ class Builder:
         spack_path = self.path / "spack"
 
         # set general build and configuration meta data for the project
-        self.meta = recipe
+        self.configuration_meta = recipe
 
         # set the environment view meta data
         self.environment_meta = recipe
@@ -311,12 +334,13 @@ class Builder:
         meta_path.mkdir(exist_ok=True)
         # write a json file with basic meta data
         with (meta_path / "configure.json").open("w") as f:
-            f.write(json.dumps(self.meta, sort_keys=True, indent=2))
+            f.write(json.dumps(self.configuration_meta, sort_keys=True, indent=2))
             f.write("\n")
 
         # write a json file with the environment view meta data
         with (meta_path / "env.json").open("w") as f:
-            f.write(self.environment_meta)
+            f.write(json.dumps(self.environment_meta, sort_keys=True, indent=2))
+            f.write("\n")
 
         # copy the recipe to a recipe subdirectory of the meta path
         meta_recipe_path = meta_path / "recipe"
