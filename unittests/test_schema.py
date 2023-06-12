@@ -44,7 +44,7 @@ def test_config_yaml(yaml_path):
         assert raw["spack"]["commit"] is None
         assert raw["modules"] == True  # noqa: E712
         assert raw["mirror"] == {"enable": True, "key": None}
-        assert raw["description"] == None
+        assert raw["description"] is None
 
     with open(yaml_path / "config.full.yaml") as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
