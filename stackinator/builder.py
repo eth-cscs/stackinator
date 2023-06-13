@@ -87,7 +87,7 @@ class Builder:
             "default": {
               "root": /user-environment/env/default,
               "activate": /user-environment/env/default/activate.sh,
-              "description": "your standard development environment: compilers, MPI, python, cmake."
+              "description": "simple devolpment env: compilers, MPI, python, cmake."
             },
             "tools": {
               "root": /user-environment/env/tools,
