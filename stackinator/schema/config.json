@@ -49,6 +49,13 @@
         "modules" : {
             "type": "boolean",
             "default": true
+        },
+        "description" : {
+            "oneOf": [
+                {"type" : "string"},
+                {"type" : "null"}
+            ],
+            "default": null
         }
     }
 }
