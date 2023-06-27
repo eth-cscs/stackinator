@@ -9,6 +9,7 @@ nav:
     - 'Cluster Configuration': cluster-config.md
     - 'Interfaces': interfaces.md
     - 'Build Caches': build-caches.md
+  - 'Development': development.md
 # - Tutorial: tutorial.md
 theme:
   name: material

@@ -360,3 +360,14 @@ class Builder:
             self._logger.debug(f"copying extra recipe meta data to {meta_extra_path}")
             shutil.copytree(recipe.user_extra, meta_extra_path)
 
+        # create debug helper script
+        debug_script_path = self.path / "stack-debug.sh"
+        debug_script_template = env.get_template("stack-debug.sh")
+        with debug_script_path.open("w") as f:
+            f.write(
+                debug_script_template.render(
+                    mount_path=recipe.config["store"], build_path=str(self.path), verbose=False
+                )
+            )
+            f.write("\n")
+
