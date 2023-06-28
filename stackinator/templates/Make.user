@@ -11,6 +11,9 @@ SPACK := spack
 # The Spack installation root.
 STORE := {{ store }}
 
+{% if unshare %}
+SANDBOX :=
+{% else %}
 # When already building inside a sandbox, use `SANDBOX :=` (empty string)
 # Without a sandbox, make sure to hide sensitive data such as ~/.ssh through bubblewrap.
 # Also bind the directories `./tmp -> /tmp` and `./store -> $(STORE)`, so that
@@ -22,16 +25,20 @@ SANDBOX := $(SOFTWARE_STACK_PROJECT)/bwrap-mutable-root.sh $\
 	--tmpfs ~ $\
 	--bind $(SOFTWARE_STACK_PROJECT)/tmp /tmp $\
 	--bind $(SOFTWARE_STACK_PROJECT)/store $(STORE)
+{% endif %}
 
 # Makes sure that make -Orecurse continues to print in color.
 export SPACK_COLOR := always
 
+{% if unshare %}
+export SPACK_USER_CONFIG_PATH := /fake-home
+{% else %}
 # Do not use user config, cause more often than not you pick up the wrong
 # config files in ~/.spack. Note that our recommended bwrap setup already puts
 # a tmpfs in the home folder, but when bwrap isn't used, this also helps a bit
 # with reproducibility.
 export SPACK_USER_CONFIG_PATH := /dev/null
-
+{% endif %}
 # Set up the system config scope that has the system packages we don't want
 # build, for example slurm, pmix, etc. Also should have the system compiler.
 export SPACK_SYSTEM_CONFIG_PATH := $(SOFTWARE_STACK_PROJECT)/config

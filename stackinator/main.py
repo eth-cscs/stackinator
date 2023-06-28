@@ -35,13 +35,14 @@ def configure_logging(logfile):
 
 def log_header(args):
     root_logger.info("Stackinator")
-    root_logger.info(f"  recipe path: {args.recipe}")
-    root_logger.info(f"  build path : {args.build}")
-    root_logger.info(f"  system     : {args.system}")
+    root_logger.info(f"  recipe path:  {args.recipe}")
+    root_logger.info(f"  build path :  {args.build}")
+    root_logger.info(f"  system     :  {args.system}")
     mount = args.mount or "default"
-    root_logger.info(f"  mount      : {mount}")
-    root_logger.info(f"  build cache: {args.cache}")
-
+    root_logger.info(f"  mount      :  {mount}")
+    root_logger.info(f"  build cache:  {args.cache}")
+    sandbox = "unshare" if args.unshare else "bubblewrap"
+    root_logger.info(f"  sandbox tool: {sandbox}")
 
 def make_argparser():
     parser = argparse.ArgumentParser(
@@ -58,6 +59,7 @@ def make_argparser():
     parser.add_argument("-d", "--debug", action="store_true")
     parser.add_argument("-m", "--mount", required=False, type=str)
     parser.add_argument("-c", "--cache", required=False, type=str)
+    parser.add_argument("--unshare", action="store_true")
 
     return parser
 
@@ -81,10 +83,14 @@ def main():
             "\nConfiguration finished, run the following to build the " "environment:\n"
         )
         root_logger.info(f"cd {builder.path}")
-        root_logger.info(
-            "env --ignore-environment PATH=/usr/bin:/bin:`pwd`"
-            "/spack/bin make store.squashfs -j32"
-        )
+        if (not builder.unshare):
+           msg=("env --ignore-environment PATH=/usr/bin:/bin:`pwd`"
+               "/spack/bin make store.squashfs -j32")
+        else:
+           msg=(f"unshare -U -m -r ./newroot.sh "
+                 "env --ignore-environment PATH=/usr/bin:/bin:`pwd`"
+                 "/spack/bin make store.squashfs -j32")
+        root_logger.info(msg)
         return 0
     except Exception as e:
         root_logger.debug(traceback.format_exc())

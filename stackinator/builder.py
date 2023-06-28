@@ -34,7 +34,14 @@ class Builder:
         if parts[1] == "tmp":
             raise IOError("build path can't be in '/tmp'")
 
+        unshare = args.unshare
+
+        # unshare newroot default
+        newroot = pathlib.Path("/tmp/%s.newroot" % os.environ['USER'])
+
+        self.newroot = newroot
         self.path = path
+        self.unshare = unshare
         self.root = pathlib.Path(__file__).parent.resolve()
 
     @property
@@ -184,10 +191,23 @@ class Builder:
         with (self.path / "Make.user").open("w") as f:
             f.write(
                 make_user_template.render(
-                    build_path=self.path, store=recipe.config["store"], verbose=False
+                    build_path=self.path, store=recipe.config["store"],
+                    unshare=self.unshare, verbose=False
                 )
             )
             f.write("\n")
+
+        # Render variables for the unshare(1) newroot.sh workflow.
+        unshare_user_template = env.get_template("unshare-newroot.sh")
+        with (self.path / "newroot.sh").open("w") as f:
+            f.write(
+                unshare_user_template.render(
+                    build_path=self.path, store=recipe.config["store"],
+                    newroot=self.newroot, unshare=self.unshare, verbose=False
+                )
+            )
+            f.write("\n")
+        os.chmod(self.path / "newroot.sh", 0o755)
 
         etc_path = self.root / "etc"
         for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "add-compiler-links.py"]:
