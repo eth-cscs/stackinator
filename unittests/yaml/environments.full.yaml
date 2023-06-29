@@ -17,6 +17,8 @@ full-env:
   variants:
   - +mpi
   - +cuda
+  views:
+    default:
 defaults-env:
   compiler:
   - toolchain: gcc
@@ -27,3 +29,4 @@ defaults-env:
   # assert unify=True
   # assert mpi=None
   # assert packages=[]
+  # assert view=True

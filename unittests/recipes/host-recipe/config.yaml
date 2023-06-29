@@ -1,6 +1,8 @@
 name: host-example
-store: '/user-environment'
-system: 'hohgant'
+store: /user-environment
 spack:
-    repo: https://github.com/spack/spack.git
-    commit: 6408b51
+  commit: releases/v0.20
+  repo: https://github.com/spack/spack.git
+mirror:
+  enable: false
+

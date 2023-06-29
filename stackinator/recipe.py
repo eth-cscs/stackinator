@@ -1,5 +1,6 @@
 import pathlib
 
+import copy
 import jinja2
 import yaml
 
@@ -35,21 +36,44 @@ class Recipe:
         ),
     }
 
-    def __init__(self, args):
-        self._logger = root_logger
-        self._logger.debug("Generating recipe")
-        path = pathlib.Path(args.recipe)
+    @property
+    def path(self):
+        """ the path of the recipe """
+        return self._path
+
+    @path.setter
+    def path(self, recipe_path):
+        path = pathlib.Path(recipe_path)
         if not path.is_absolute():
             path = pathlib.Path.cwd() / path
 
         if not path.is_dir():
             raise FileNotFoundError(f"The recipe path '{path}' does not exist")
 
-        self.path = path
-        self.root = pathlib.Path(__file__).parent.resolve()
+        self._path = path
+
+
+    def __init__(self, args):
+        self._logger = root_logger
+        self._logger.debug("Generating recipe")
+
+        # set the system configuration path
+        self.system_config_path = args.system
+
+        # set the recipe-defined mount point
+        if args.mount:
+            self.config["store"] = args.mount
+
+        # set the recipe path
+        self.path = args.recipe
+
+        self.template_path = pathlib.Path(__file__).parent.resolve() / "templates"
+
+        # required config.yaml file
+        self.config = self.path / "config.yaml"
 
         # required compiler.yaml file
-        compiler_path = path / "compilers.yaml"
+        compiler_path = self.path / "compilers.yaml"
         self._logger.debug(f"opening {compiler_path}")
         if not compiler_path.is_file():
             raise FileNotFoundError(
@@ -68,7 +92,7 @@ class Recipe:
             self.generate_compiler_specs(raw)
 
         # required environments.yaml file
-        environments_path = path / "environments.yaml"
+        environments_path = self.path / "environments.yaml"
         self._logger.debug(f"opening {environments_path}")
         if not environments_path.is_file():
             raise FileNotFoundError(
@@ -81,25 +105,8 @@ class Recipe:
             schema.environments_validator.validate(raw)
             self.generate_environment_specs(raw)
 
-        # required config.yaml file
-        config_path = path / "config.yaml"
-        self._logger.debug(f"opening {config_path}")
-        if not config_path.is_file():
-            raise FileNotFoundError(
-                f"The recipe path '{config_path}' does " f"not contain compilers.yaml"
-            )
-
-        with config_path.open() as fid:
-            raw = yaml.load(fid, Loader=yaml.Loader)
-            schema.config_validator.validate(raw)
-            self.config = raw
-
-        # override the system target
-        if args.system:
-            self.config["system"] = args.system
-
         # optional modules.yaml file
-        modules_path = path / "modules.yaml"
+        modules_path = self.path / "modules.yaml"
         self._logger.debug(f"opening {modules_path}")
         if not modules_path.is_file():
             modules_path = (
@@ -108,13 +115,9 @@ class Recipe:
             self._logger.debug(f"no modules.yaml provided - using the {modules_path}")
 
         self.modules = modules_path
-        if not self.configs_path.is_dir():
-            raise FileNotFoundError(
-                f"The system {self.config['system']!r} is not a supported cluster"
-            )
 
         # optional packages.yaml file
-        packages_path = path / "packages.yaml"
+        packages_path = self.path / "packages.yaml"
         self._logger.debug(f"opening {packages_path}")
         self.packages = None
         if packages_path.is_file():
@@ -123,19 +126,56 @@ class Recipe:
 
         # Select location of the mirrors.yaml file to use.
         # Look first in the recipe path, then in the system configuration path.
-        mirrors_path = path / "mirrors.yaml"
+        mirrors_path = self.path / "mirrors.yaml"
         mirrors_source = mirrors_path if mirrors_path.is_file() else None
         if mirrors_source is None:
-            mirrors_path = self.configs_path / "mirrors.yaml"
+            mirrors_path = self.system_config_path / "mirrors.yaml"
             mirrors_source = mirrors_path if mirrors_path.is_file() else None
 
-        self._mirror = Mirror(config=self.config["mirror"], source=mirrors_source)
+        self.mirror = mirrors_source
 
     @property
     def mirror(self):
         return self._mirror
 
-    def generate_modules(self):
+    @mirror.setter
+    def mirror(self, source):
+        self._mirror = Mirror(config=self.config["mirror"], source=source)
+
+    @property
+    def config(self):
+        return self._config
+
+    @config.setter
+    def config(self, config_path):
+        self._logger.debug(f"opening {config_path}")
+        if not config_path.is_file():
+            raise FileNotFoundError(
+                f"The recipe path '{config_path}' does not contain compilers.yaml"
+            )
+
+        with config_path.open() as fid:
+            raw = yaml.load(fid, Loader=yaml.Loader)
+            schema.config_validator.validate(raw)
+            self._config = raw
+
+    @property
+    def environment_view_meta(self):
+        # generate the view meta data that is presented in the squashfs image meta data
+        view_meta = {}
+        for _, env in self.environments.items():
+            view = env["view"]
+            if view is not None:
+                view_meta[view["name"]] = {
+                    "root": view["config"]["root"],
+                    "activate": view["config"]["root"] + "/activate.sh",
+                    "description": "" # leave the description empty for now
+                }
+
+        return view_meta
+
+    @property
+    def modules_yaml(self):
         with self.modules.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
             raw["modules"]["default"]["roots"]["tcl"] = (
@@ -149,6 +189,10 @@ class Recipe:
     def generate_environment_specs(self, raw):
         environments = raw
 
+        # enumerate large binary packages that should not be pushed to binary caches
+        for _, config in environments.items():
+            config["exclude_from_cache"] = ["cuda"]
+
         # check the environment descriptions and ammend where features are missing
         for name, config in environments.items():
             if ("specs" not in config) or (config["specs"] is None):
@@ -157,6 +201,7 @@ class Recipe:
             if "mpi" not in config:
                 environments[name]["mpi"] = {"spec": None, "gpu": None}
 
+        # complete configuration of MPI in each environment
         for name, config in environments.items():
             if config["mpi"]:
                 mpi = config["mpi"]
@@ -188,6 +233,46 @@ class Recipe:
                     else:
                         # TODO: Create a custom exception type
                         raise Exception(f"Unsupported mpi: {mpi_impl}")
+
+        # An awkward hack to work around spack not supporting creating activation
+        # scripts for each file system view in an environment: it only generates them
+        # for the "default" view.
+        # The workaround is to create multiple versions of the same environment, one for
+        # each view.
+        # TODO: remove when the minimum supported version of Spack supports generation
+        # for more than one view.
+        env_names = set()
+        env_name_map = {}
+        for name, config in environments.items():
+            env_name_map[name] = []
+            for view, vc in config["views"].items():
+                if view in env_names:
+                    raise Exception(f"An environment view with the name '{view}' already exists.")
+                # save a copy of the view configuration
+                env_name_map[name].append((view, vc))
+
+        # Iterate over each environment:
+        # - creating copies of the env so that there is one copy per view.
+        # - configure each view
+        for name, views in env_name_map.items():
+            numviews = len(env_name_map[name])
+
+            # The configuration of the environment without views
+            base = copy.deepcopy(environments[name])
+
+            environments[name]['view'] = None
+            for i in range(numviews):
+                # pick a name for the environment
+                cname = name if i==0 else name + f"-{i+1}__"
+                if i>0:
+                    environments[cname] = copy.deepcopy(base)
+
+                view_name, view_config = views[i]
+                if view_config is None:
+                    view_config = {"root": self.config["store"] + "/env/" + view_name}
+                else:
+                    view_config["root"] = self.config["store"] + "/env/" + view_name
+                environments[cname]["view"] = {"name": view_name, "config": view_config}
 
         self.environments = environments
 
@@ -223,6 +308,7 @@ class Recipe:
             f"{bootstrap_spec} languages=c,c++",
             "squashfs default_compression=zstd",
         ]
+        bootstrap["exclude_from_cache"] = []
         compilers["bootstrap"] = bootstrap
 
         gcc = {}
@@ -249,6 +335,7 @@ class Recipe:
         }
         gcc["specs"] = raw["gcc"]["specs"]
         gcc["requires"] = bootstrap_spec
+        gcc["exclude_from_cache"] = []
         compilers["gcc"] = gcc
         if raw["llvm"] is not None:
             llvm = {}
@@ -264,24 +351,33 @@ class Recipe:
                     )
 
             llvm["requires"] = raw["llvm"]["requires"]
+            llvm["exclude_from_cache"] = ["nvhpc"]
             compilers["llvm"] = llvm
 
         self.compilers = compilers
 
     # The path of the default configuration for the target system/cluster
     @property
-    def configs_path(self):
-        system = self.config["system"]
-        return self.root / "cluster-config" / system
+    def system_config_path(self):
+        return self._system_path
 
-    # Boolean flag that indicates whether the recipe is configured to use
-    # a binary cache.
-    def generate_compilers(self):
+    @system_config_path.setter
+    def system_config_path(self, path):
+        system_path = pathlib.Path(path)
+        if not system_path.is_absolute():
+            system_path = pathlib.Path.cwd() / system_path
+
+        if not system_path.is_dir():
+            raise FileNotFoundError(f"The system configuration path '{system_path}' does not exist")
+
+        self._system_path = system_path
+
+    @property
+    def compiler_files(self):
         files = {}
 
-        template_path = self.root / "templates"
         env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(template_path),
+            loader=jinja2.FileSystemLoader(self.template_path),
             trim_blocks=True,
             lstrip_blocks=True,
         )
@@ -300,15 +396,16 @@ class Recipe:
 
         return files
 
-    def generate_environments(self):
+    @property
+    def environment_files(self):
         files = {}
 
-        template_path = self.root / "templates"
         jenv = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(template_path),
+            loader=jinja2.FileSystemLoader(self.template_path),
             trim_blocks=True,
             lstrip_blocks=True,
         )
+        jenv.filters['py2yaml'] = schema.py2yaml
 
         makefile_template = jenv.get_template("Makefile.environments")
         push_to_cache = self.mirror.source and self.mirror.key
@@ -319,6 +416,6 @@ class Recipe:
         files["config"] = {}
         for env, config in self.environments.items():
             spack_yaml_template = jenv.get_template("environments.spack.yaml")
-            files["config"][env] = spack_yaml_template.render(config=config)
+            files["config"][env] = spack_yaml_template.render(config=config, name=env, store=self.config["store"])
 
         return files
