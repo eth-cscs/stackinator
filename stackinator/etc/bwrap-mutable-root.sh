@@ -7,4 +7,5 @@ for d in /*; do
         args+=("--dev-bind" "$d" "$d")
     fi
 done
-bwrap "${args[@]}" "$@"
+PS1="\[\e[36;1m\]build-env >>> \[\e[0m\]" bwrap "${args[@]}" "$@"
+

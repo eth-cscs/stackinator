@@ -1,5 +1,6 @@
 name: host-example
 store: /user-environment
+description: "An example gcc configuration for CPU-only development"
 spack:
   commit: releases/v0.20
   repo: https://github.com/spack/spack.git
