@@ -40,7 +40,7 @@ def configuration_from_file(file, mount):
                 )
             if not key.is_file():
                 raise FileNotFoundError(
-                        f"The build cache key '{path}' does not exist"
+                        f"The build cache key '{key}' does not exist"
                 )
             raw["key"] = key
 
