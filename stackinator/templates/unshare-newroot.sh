@@ -69,12 +69,19 @@ newroot_init () {
     mount --rbind --make-private /tmp /tmp
 
     # Recursively bind mount host / top-level, i.e., depth 1, files to the
-    # corresponding points created by mk_mount_p. Exclude '/' itself to avoid
-    # losing write permissions to newroot.
-    find / -maxdepth 1 -not -wholename '/' | while read f; do mount_ "$f"; done
+    # corresponding points created by mk_mount_p. Exclude both '/' itself and
+    # {{ store }} to avoid losing write permissions to newroot at build time.
+    find / -maxdepth 1 \
+           ! -wholename '/' -and ! -wholename '{{ store }}' \
+               | while read f; do mount_ "$f"; done
 
     # Create the store mount point, e.g., /user-environment
     mkdir -p "${newroot}/${store_path}"
+
+    # Create the build directory's store path. This is done later in Make.inc;
+    # however we need it now to bind it to the store mount point.
+    mkdir -p "${newroot}/${build_path}/store"
+    mount -B --make-private "${newroot}/${build_path}/store" "${newroot}/${store_path}"
 
     # Create a TMPFS 'fake' home directory that Spack can write to. This file
     # is intentionally lost to the ether, to avoid re-using any
