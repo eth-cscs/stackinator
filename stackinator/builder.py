@@ -10,7 +10,7 @@ from datetime import datetime
 import jinja2
 import yaml
 
-from . import VERSION, root_logger, cache
+from . import VERSION, cache, root_logger
 
 
 class Builder:

@@ -1,6 +1,6 @@
+import os
 import pathlib
 
-import os
 import yaml
 
 from . import schema

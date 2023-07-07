@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 
-import jsonschema
 import pathlib
+
+import jsonschema
 import pytest
 import yaml
 

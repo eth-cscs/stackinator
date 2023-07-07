@@ -1,10 +1,10 @@
+import copy
 import pathlib
 
-import copy
 import jinja2
 import yaml
 
-from . import root_logger, schema, cache
+from . import cache, root_logger, schema
 
 
 class Recipe:
