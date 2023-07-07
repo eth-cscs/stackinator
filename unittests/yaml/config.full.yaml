@@ -7,3 +7,4 @@ mirror:
     key: /home/bob/veryprivate.key
     enable: True
 modules: False
+description: "a really useful environment"

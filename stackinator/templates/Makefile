@@ -33,7 +33,7 @@ spack-setup: spack-version
 	printf "yup\n"
 
 mirror-setup: spack-setup
-	{% if cache.enabled %}
+	{% if cache %}
 	$(SANDBOX) $(SPACK) buildcache keys --install --trust
 	{% if cache.key %}
 	$(SANDBOX) $(SPACK) gpg trust {{ cache.key }}
