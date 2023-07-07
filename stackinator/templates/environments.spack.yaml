@@ -6,7 +6,6 @@ spack:
 {% endif %}
   - compilers.yaml
   - config.yaml
-  view: false
   concretizer:
     unify: {{ config.unify }}
     reuse: false
@@ -27,3 +26,10 @@ spack:
     mpi:
       require: {{ config.mpi.spec }}
     {% endif %}
+{% if config.view %}
+  view:
+    default:
+      {{ config.view.config|py2yaml(6) }}
+{% else %}
+  view: false
+{% endif %}

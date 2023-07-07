@@ -51,6 +51,36 @@
                      "type": "array",
                      "items": {"type": "string"},
                      "default": []
+                 },
+                 "views": {
+                    "type": "object",
+                    "default": {},
+                    "patternProperties": {
+                        "\\w+": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "link": {
+                                    "type": "string",
+                                    "enum": ["roots", "all", "run"]
+                                },
+                                "link_type": {"type": "string"},
+                                "select": {
+                                    "type": "array",
+                                    "items": {"type": "string"}
+                                },
+                                "exclude": {
+                                    "type": "array",
+                                    "items": {"type": "string"}
+                                },
+                                "projections": {
+                                    "type": "object",
+                                    "patternProperties": {
+                                        "all|\\w[\\w-]*": {"type": "string"}
+                                    }
+                                }
+                            }
+                        }
+                    }
                  }
              }
          }

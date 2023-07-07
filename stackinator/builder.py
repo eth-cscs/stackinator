@@ -10,8 +10,7 @@ from datetime import datetime
 import jinja2
 import yaml
 
-from . import VERSION, root_logger
-
+from . import VERSION, root_logger, cache
 
 class Builder:
     def __init__(self, args):
@@ -38,19 +37,13 @@ class Builder:
         self.path = path
         self.root = pathlib.Path(__file__).parent.resolve()
 
-    def generate(self, recipe):
-        # make the paths
-        store_path = self.path / "store"
-        tmp_path = self.path / "tmp"
+    @property
+    def configuration_meta(self):
+        """Meta data about the configuration and build"""
+        return self._configuration_meta
 
-        self.path.mkdir(exist_ok=True, parents=True)
-        store_path.mkdir(exist_ok=True)
-        tmp_path.mkdir(exist_ok=True)
-
-        # check out the version of spack
-        spack = recipe.config["spack"]
-        spack_path = self.path / "spack"
-
+    @configuration_meta.setter
+    def configuration_meta(self, recipe):
         # generate configuration meta data
         meta = {}
         meta["time"] = datetime.now().strftime("%Y%m%d %H:%M:%S")
@@ -70,7 +63,69 @@ class Builder:
             "python": sys.executable,
         }
         meta["spack"] = recipe.config["spack"]
-        self.meta = meta
+        self._configuration_meta = meta
+
+    @property
+    def environment_meta(self):
+        """The meta data file that describes the environments"""
+        return self._environment_meta
+
+    @environment_meta.setter
+    def environment_meta(self, recipe):
+        '''
+        The output that we want to generate looks like the following,
+        Which should correspond directly to the environment_view_meta provided
+        by the recipe.
+
+        {
+          name: "prgenv-gnu",
+          description: "useful programming tools",
+          modules: {
+              "root": /user-environment/modules,
+          },
+          views: {
+            "default": {
+              "root": /user-environment/env/default,
+              "activate": /user-environment/env/default/activate.sh,
+              "description": "simple devolpment env: compilers, MPI, python, cmake."
+            },
+            "tools": {
+              "root": /user-environment/env/tools,
+              "activate": /user-environment/env/tools/activate.sh,
+              "description": "handy tools"
+            }
+          }
+        }
+        '''
+        conf = recipe.config
+        meta = {}
+        meta["name"] = conf["name"]
+        meta["description"] = conf["description"]
+        meta["views"] = recipe.environment_view_meta
+        modules = None
+        if conf["modules"]:
+            modules = {"root": conf["store"] + "/modules"}
+        meta["modules"] = modules
+        self._environment_meta = meta
+
+    def generate(self, recipe):
+        # make the paths
+        store_path = self.path / "store"
+        tmp_path = self.path / "tmp"
+
+        self.path.mkdir(exist_ok=True, parents=True)
+        store_path.mkdir(exist_ok=True)
+        tmp_path.mkdir(exist_ok=True)
+
+        # check out the version of spack
+        spack = recipe.config["spack"]
+        spack_path = self.path / "spack"
+
+        # set general build and configuration meta data for the project
+        self.configuration_meta = recipe
+
+        # set the environment view meta data
+        self.environment_meta = recipe
 
         # Clone the spack repository if it has not already been checked out
         if not (spack_path / ".git").is_dir():
@@ -116,11 +171,11 @@ class Builder:
 
         # generate top level makefiles
         makefile_template = env.get_template("Makefile")
+
         with (self.path / "Makefile").open("w") as f:
-            cache = {"key": recipe.mirror.key, "enabled": recipe.mirror.source}
             f.write(
                 makefile_template.render(
-                    cache=cache, modules=recipe.config["modules"], verbose=False
+                    cache=recipe.mirror, modules=recipe.config["modules"], verbose=False
                 )
             )
             f.write("\n")
@@ -135,38 +190,41 @@ class Builder:
             f.write("\n")
 
         etc_path = self.root / "etc"
-        for f_etc in ["Make.inc", "bwrap-mutable-root.sh"]:
+        for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "add-compiler-links.py"]:
             shutil.copy2(etc_path / f_etc, self.path / f_etc)
 
-        # Generate the system configuration: the compilers, environments,
-        # mirrors etc. that are defined for the target cluster.
+        # Generate the system configuration: the compilers, environments, etc.
+        # that are defined for the target cluster.
         config_path = self.path / "config"
         config_path.mkdir(exist_ok=True)
-        system_configs_path = pathlib.Path(recipe.configs_path)
+        system_config_path = pathlib.Path(recipe.system_config_path)
 
         # Copy the yaml files to the spack config path
-        for f_config in system_configs_path.iterdir():
-            # skip copying mirrors.yaml - this is done in the next step only if
-            # mirrors have been enabled and the recipe did not provide a mirror
-            # configuration
+        for f_config in system_config_path.iterdir():
+            # print warning if mirrors.yaml is found
             if f_config.name in ["mirrors.yaml"]:
-                continue
+                self._logger.error(
+                        "mirrors.yaml have been removed from cluster configurations,"
+                        " use the --cache option on stack-config instead.")
+                raise RuntimeError("Unsupported mirrors.yaml file in cluster configuration.")
 
             # construct full file path
-            src = system_configs_path / f_config.name
+            src = system_config_path / f_config.name
             dst = config_path / f_config.name
             # copy only files
             if src.is_file():
                 shutil.copy(src, dst)
 
-        # copy the optional mirrors.yaml file
-        if recipe.mirror.source:
+        # generate a mirrors.yaml file if build caches have been configured
+        if recipe.mirror:
             dst = config_path / "mirrors.yaml"
-            shutil.copy(recipe.mirror.source, dst)
+            self._logger.debug(f"generate the build cache mirror: {dst}")
+            with dst.open('w') as fid:
+                fid.write(cache.generate_mirrors_yaml(recipe.mirror))
 
         # append recipe packages to packages.yaml
         if recipe.packages:
-            system_packages = system_configs_path / "packages.yaml"
+            system_packages = system_config_path / "packages.yaml"
             packages_data = {}
             if system_packages.is_file():
                 # load system yaml
@@ -220,38 +278,38 @@ class Builder:
                     )
 
         # Generate the makefile and spack.yaml files that describe the compilers
-        compilers = recipe.generate_compilers()
+        compiler_files = recipe.compiler_files
         compiler_path = self.path / "compilers"
         compiler_path.mkdir(exist_ok=True)
         with (compiler_path / "Makefile").open(mode="w") as f:
-            f.write(compilers["makefile"])
+            f.write(compiler_files["makefile"])
 
-        for name, yml in compilers["config"].items():
+        for name, yml in compiler_files["config"].items():
             compiler_config_path = compiler_path / name
             compiler_config_path.mkdir(exist_ok=True)
             with (compiler_config_path / "spack.yaml").open(mode="w") as f:
                 f.write(yml)
 
         # generate the makefile and spack.yaml files that describe the environments
-        environments = recipe.generate_environments()
+        environment_files = recipe.environment_files
         environments_path = self.path / "environments"
         os.makedirs(environments_path, exist_ok=True)
         with (environments_path / "Makefile").open(mode="w") as f:
-            f.write(environments["makefile"])
+            f.write(environment_files["makefile"])
 
-        for name, yml in environments["config"].items():
+        for name, yml in environment_files["config"].items():
             env_config_path = environments_path / name
             env_config_path.mkdir(exist_ok=True)
             with (env_config_path / "spack.yaml").open(mode="w") as f:
                 f.write(yml)
 
         # generate the makefile that generates the configuration for the spack
-        # installation
+        # installation in the generate-config sub-directory of the build path.
         make_config_template = env.get_template("Makefile.generate-config")
         generate_config_path = self.path / "generate-config"
         generate_config_path.mkdir(exist_ok=True)
 
-        # write the Makefile
+        # write generate-config/Makefile
         all_compilers = [x for x in recipe.compilers.keys()]
         release_compilers = [x for x in all_compilers if x != "bootstrap"]
         with (generate_config_path / "Makefile").open("w") as f:
@@ -264,8 +322,8 @@ class Builder:
                 )
             )
 
-        # write the modules.yaml file
-        modules_yaml = recipe.generate_modules()
+        # write modules/modules.yaml
+        modules_yaml = recipe.modules_yaml
         generate_modules_path = self.path / "modules"
         generate_modules_path.mkdir(exist_ok=True)
         with (generate_modules_path / "modules.yaml").open("w") as f:
@@ -276,8 +334,14 @@ class Builder:
         meta_path.mkdir(exist_ok=True)
         # write a json file with basic meta data
         with (meta_path / "configure.json").open("w") as f:
-            f.write(json.dumps(self.meta, sort_keys=True, indent=2))
+            f.write(json.dumps(self.configuration_meta, sort_keys=True, indent=2))
             f.write("\n")
+
+        # write a json file with the environment view meta data
+        with (meta_path / "env.json").open("w") as f:
+            f.write(json.dumps(self.environment_meta, sort_keys=True, indent=2))
+            f.write("\n")
+
         # copy the recipe to a recipe subdirectory of the meta path
         meta_recipe_path = meta_path / "recipe"
         meta_recipe_path.mkdir(exist_ok=True)
@@ -286,3 +350,24 @@ class Builder:
         shutil.copytree(
             recipe.path, meta_recipe_path, ignore=shutil.ignore_patterns(".git")
         )
+
+        # create the meta/extra path and copy recipe meta data if it exists
+        meta_extra_path = meta_path / "extra"
+        meta_extra_path.mkdir(exist_ok=True)
+        if meta_extra_path.exists():
+            shutil.rmtree(meta_extra_path)
+        if recipe.user_extra is not None:
+            self._logger.debug(f"copying extra recipe meta data to {meta_extra_path}")
+            shutil.copytree(recipe.user_extra, meta_extra_path)
+
+        # create debug helper script
+        debug_script_path = self.path / "stack-debug.sh"
+        debug_script_template = env.get_template("stack-debug.sh")
+        with debug_script_path.open("w") as f:
+            f.write(
+                debug_script_template.render(
+                    mount_path=recipe.config["store"], build_path=str(self.path), verbose=False
+                )
+            )
+            f.write("\n")
+
