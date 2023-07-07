@@ -31,10 +31,11 @@ def extend_with_default(validator_class):
         {"properties": set_defaults},
     )
 
+
 def py2yaml(data, indent):
     dump = yaml.dump(data)
-    lines = [ln for ln in dump.split("\n") if ln!=""]
-    res = ("\n"+" "*indent).join(lines)
+    lines = [ln for ln in dump.split("\n") if ln != ""]
+    res = ("\n" + " " * indent).join(lines)
     return res
 
 

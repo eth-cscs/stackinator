@@ -5,6 +5,7 @@ import yaml
 
 from . import schema
 
+
 def configuration_from_file(file, mount):
     with file.open() as fid:
         # load the raw yaml input
@@ -16,13 +17,9 @@ def configuration_from_file(file, mount):
         # verify that the root path exists
         path = pathlib.Path(os.path.expandvars(raw["root"]))
         if not path.is_absolute():
-            raise FileNotFoundError(
-                    f"The build cache path '{path}' is not absolute"
-            )
+            raise FileNotFoundError(f"The build cache path '{path}' is not absolute")
         if not path.is_dir():
-            raise FileNotFoundError(
-                    f"The build cache path '{path}' does not exist"
-            )
+            raise FileNotFoundError(f"The build cache path '{path}' does not exist")
 
         raw["root"] = path
 
@@ -35,36 +32,33 @@ def configuration_from_file(file, mount):
         if key is not None:
             key = pathlib.Path(os.path.expandvars(key))
             if not key.is_absolute():
-                raise FileNotFoundError(
-                        f"The build cache key '{key}' is not absolute"
-                )
+                raise FileNotFoundError(f"The build cache key '{key}' is not absolute")
             if not key.is_file():
-                raise FileNotFoundError(
-                        f"The build cache key '{key}' does not exist"
-                )
+                raise FileNotFoundError(f"The build cache key '{key}' does not exist")
             raw["key"] = key
 
         return raw
 
+
 def generate_mirrors_yaml(config):
-    path = config['path'].as_posix()
+    path = config["path"].as_posix()
     mirrors = {
-        'mirrors': {
-            'alpscache': {
-                'fetch': {
-                    'url': f"file://{path}",
-                    'access_pair': [None, None],
-                    'access_token': None,
-                    'profile': None,
-                    'endpoint_url': None,
+        "mirrors": {
+            "alpscache": {
+                "fetch": {
+                    "url": f"file://{path}",
+                    "access_pair": [None, None],
+                    "access_token": None,
+                    "profile": None,
+                    "endpoint_url": None,
                 },
-                'push': {
-                    'url': f"file://{path}",
-                    'access_pair': [None, None],
-                    'access_token': None,
-                    'profile': None,
-                    'endpoint_url': None,
-                }
+                "push": {
+                    "url": f"file://{path}",
+                    "access_pair": [None, None],
+                    "access_token": None,
+                    "profile": None,
+                    "endpoint_url": None,
+                },
             }
         }
     }

@@ -6,6 +6,7 @@ import yaml
 
 from . import root_logger, schema, cache
 
+
 class Recipe:
     valid_mpi_specs = {
         "cray-mpich": (None, None),
@@ -18,7 +19,7 @@ class Recipe:
 
     @property
     def path(self):
-        """ the path of the recipe """
+        """the path of the recipe"""
         return self._path
 
     @path.setter
@@ -31,7 +32,6 @@ class Recipe:
             raise FileNotFoundError(f"The recipe path '{path}' does not exist")
 
         self._path = path
-
 
     def __init__(self, args):
         self._logger = root_logger
@@ -102,8 +102,9 @@ class Recipe:
         mirrors_path = self.path / "mirrors.yaml"
         if mirrors_path.is_file():
             self._logger.warning(
-                    "mirrors.yaml have been removed from recipes,"
-                    " use the --cache option on stack-config instead.")
+                "mirrors.yaml have been removed from recipes,"
+                " use the --cache option on stack-config instead."
+            )
             raise RuntimeError("Unsupported mirrors.yaml file in recipe.")
 
         self.mirror = (args.cache, self.config["store"])
@@ -113,7 +114,7 @@ class Recipe:
     #   None: if there is no user-provided extra path in the recipe
     @property
     def user_extra(self):
-        extra_path = self.path / 'extra'
+        extra_path = self.path / "extra"
         if extra_path.exists() and extra_path.is_dir():
             return extra_path
         return None
@@ -140,9 +141,13 @@ class Recipe:
         if file is not None:
             mirror_config_path = pathlib.Path(file)
             if not mirror_config_path.is_file():
-                raise FileNotFoundError(f"The cache configuration '{file}' is not a file")
+                raise FileNotFoundError(
+                    f"The cache configuration '{file}' is not a file"
+                )
 
-            self._mirror = cache.configuration_from_file(mirror_config_path, pathlib.Path(mount))
+            self._mirror = cache.configuration_from_file(
+                mirror_config_path, pathlib.Path(mount)
+            )
 
     @property
     def config(self):
@@ -171,7 +176,7 @@ class Recipe:
                 view_meta[view["name"]] = {
                     "root": view["config"]["root"],
                     "activate": view["config"]["root"] + "/activate.sh",
-                    "description": "" # leave the description empty for now
+                    "description": "",  # leave the description empty for now
                 }
 
         return view_meta
@@ -249,7 +254,9 @@ class Recipe:
             env_name_map[name] = []
             for view, vc in config["views"].items():
                 if view in env_names:
-                    raise Exception(f"An environment view with the name '{view}' already exists.")
+                    raise Exception(
+                        f"An environment view with the name '{view}' already exists."
+                    )
                 # save a copy of the view configuration
                 env_name_map[name].append((view, vc))
 
@@ -262,11 +269,11 @@ class Recipe:
             # The configuration of the environment without views
             base = copy.deepcopy(environments[name])
 
-            environments[name]['view'] = None
+            environments[name]["view"] = None
             for i in range(numviews):
                 # pick a name for the environment
-                cname = name if i==0 else name + f"-{i+1}__"
-                if i>0:
+                cname = name if i == 0 else name + f"-{i+1}__"
+                if i > 0:
                     environments[cname] = copy.deepcopy(base)
 
                 view_name, view_config = views[i]
@@ -370,7 +377,9 @@ class Recipe:
             system_path = pathlib.Path.cwd() / system_path
 
         if not system_path.is_dir():
-            raise FileNotFoundError(f"The system configuration path '{system_path}' does not exist")
+            raise FileNotFoundError(
+                f"The system configuration path '{system_path}' does not exist"
+            )
 
         self._system_path = system_path
 
@@ -407,7 +416,7 @@ class Recipe:
             trim_blocks=True,
             lstrip_blocks=True,
         )
-        jenv.filters['py2yaml'] = schema.py2yaml
+        jenv.filters["py2yaml"] = schema.py2yaml
 
         makefile_template = jenv.get_template("Makefile.environments")
         push_to_cache = self.mirror is not None
@@ -418,6 +427,8 @@ class Recipe:
         files["config"] = {}
         for env, config in self.environments.items():
             spack_yaml_template = jenv.get_template("environments.spack.yaml")
-            files["config"][env] = spack_yaml_template.render(config=config, name=env, store=self.config["store"])
+            files["config"][env] = spack_yaml_template.render(
+                config=config, name=env, store=self.config["store"]
+            )
 
         return files
