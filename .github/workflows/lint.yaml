@@ -22,7 +22,7 @@ jobs:
         black --check --verbose .
     - name: isort
       run: |
-        isort --check-only .
+        isort --check --diff .
     - name: flake8
       run: |
         flake8 --count --show-source --statistics .
