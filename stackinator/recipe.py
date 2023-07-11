@@ -399,7 +399,9 @@ class Recipe:
         makefile_template = env.get_template("Makefile.compilers")
         push_to_cache = self.mirror is not None
         files["makefile"] = makefile_template.render(
-            compilers=self.compilers, push_to_cache=push_to_cache, develop=self.spack_develop
+            compilers=self.compilers,
+            push_to_cache=push_to_cache,
+            develop=self.spack_develop,
         )
 
         # generate compilers/<compiler>/spack.yaml
@@ -424,7 +426,9 @@ class Recipe:
         makefile_template = jenv.get_template("Makefile.environments")
         push_to_cache = self.mirror is not None
         files["makefile"] = makefile_template.render(
-            environments=self.environments, push_to_cache=push_to_cache, develop=self.spack_develop
+            environments=self.environments,
+            push_to_cache=push_to_cache,
+            develop=self.spack_develop,
         )
 
         files["config"] = {}
