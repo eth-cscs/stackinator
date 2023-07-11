@@ -40,10 +40,6 @@ class Recipe:
         # set the system configuration path
         self.system_config_path = args.system
 
-        # set the recipe-defined mount point
-        if args.mount:
-            self.config["store"] = args.mount
-
         # set the recipe path
         self.path = args.recipe
 
@@ -51,6 +47,10 @@ class Recipe:
 
         # required config.yaml file
         self.config = self.path / "config.yaml"
+
+        # set the recipe-defined mount point
+        if args.mount:
+            self.config["store"] = args.mount
 
         # required compiler.yaml file
         compiler_path = self.path / "compilers.yaml"
