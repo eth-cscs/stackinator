@@ -37,12 +37,11 @@ class Recipe:
         self._logger = root_logger
         self._logger.debug("Generating recipe")
 
+        # Optionally support breaking changes in Spack develop
+        self.spack_develop = args.develop
+
         # set the system configuration path
         self.system_config_path = args.system
-
-        # set the recipe-defined mount point
-        if args.mount:
-            self.config["store"] = args.mount
 
         # set the recipe path
         self.path = args.recipe
@@ -51,6 +50,10 @@ class Recipe:
 
         # required config.yaml file
         self.config = self.path / "config.yaml"
+
+        # set the recipe-defined mount point
+        if args.mount:
+            self.config["store"] = args.mount
 
         # required compiler.yaml file
         compiler_path = self.path / "compilers.yaml"
@@ -396,7 +399,7 @@ class Recipe:
         makefile_template = env.get_template("Makefile.compilers")
         push_to_cache = self.mirror is not None
         files["makefile"] = makefile_template.render(
-            compilers=self.compilers, push_to_cache=push_to_cache
+            compilers=self.compilers, push_to_cache=push_to_cache, develop=self.spack_develop
         )
 
         # generate compilers/<compiler>/spack.yaml
@@ -421,7 +424,7 @@ class Recipe:
         makefile_template = jenv.get_template("Makefile.environments")
         push_to_cache = self.mirror is not None
         files["makefile"] = makefile_template.render(
-            environments=self.environments, push_to_cache=push_to_cache
+            environments=self.environments, push_to_cache=push_to_cache, develop=self.spack_develop
         )
 
         files["config"] = {}

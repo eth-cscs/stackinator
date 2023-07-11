@@ -58,6 +58,7 @@ def make_argparser():
     parser.add_argument("-d", "--debug", action="store_true")
     parser.add_argument("-m", "--mount", required=False, type=str)
     parser.add_argument("-c", "--cache", required=False, type=str)
+    parser.add_argument("--develop", action="store_true", required=False)
 
     return parser
 

@@ -10,7 +10,7 @@ To use a build cache, create a simple YAML file:
 
 ```yaml title='cache-config.yaml'
 root: $SCRATCH/uenv-cache
-key:  $HOME/.keys/spack-push-key.gpg
+key:  $SCRATCH/.keys/spack-push-key.gpg
 ```
 
 To use the cache, pass the configuration as an option to `stack-config` via the `-c/--cache` flag:
