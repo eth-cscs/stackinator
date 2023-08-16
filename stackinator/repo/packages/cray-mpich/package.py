@@ -106,7 +106,6 @@ class CrayMpich(Package):
             if __compiler != "nvhpc":
                 conflicts("%{}".format(__compiler), msg="nvhpc required")
 
-
     with when("@8.1.24-gcc"):
         # libgfortran.so.5
         conflicts("%gcc@:7")
@@ -249,9 +248,13 @@ class CrayMpich(Package):
     @property
     def headers(self):
         hdrs = find_headers("mpi", self.prefix.include, recursive=True)
-        hdrs += find_headers("cray_version", self.prefix.include, recursive=True) # cray_version.h
+        hdrs += find_headers(
+            "cray_version", self.prefix.include, recursive=True
+        )  # cray_version.h
         # cray-mpich depends on cray-pmi
-        hdrs += find_headers("pmi", self.prefix.include, recursive=True) # See cray-pmi package
+        hdrs += find_headers(
+            "pmi", self.prefix.include, recursive=True
+        )  # See cray-pmi package
         hdrs.directories = os.path.dirname(hdrs[0])
         return hdrs
 
