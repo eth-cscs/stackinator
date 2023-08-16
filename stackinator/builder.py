@@ -10,7 +10,8 @@ from datetime import datetime
 import jinja2
 import yaml
 
-from . import VERSION, root_logger, cache
+from . import VERSION, cache, root_logger
+
 
 class Builder:
     def __init__(self, args):
@@ -72,7 +73,7 @@ class Builder:
 
     @environment_meta.setter
     def environment_meta(self, recipe):
-        '''
+        """
         The output that we want to generate looks like the following,
         Which should correspond directly to the environment_view_meta provided
         by the recipe.
@@ -96,7 +97,7 @@ class Builder:
             }
           }
         }
-        '''
+        """
         conf = recipe.config
         meta = {}
         meta["name"] = conf["name"]
@@ -204,9 +205,12 @@ class Builder:
             # print warning if mirrors.yaml is found
             if f_config.name in ["mirrors.yaml"]:
                 self._logger.error(
-                        "mirrors.yaml have been removed from cluster configurations,"
-                        " use the --cache option on stack-config instead.")
-                raise RuntimeError("Unsupported mirrors.yaml file in cluster configuration.")
+                    "mirrors.yaml have been removed from cluster configurations,"
+                    " use the --cache option on stack-config instead."
+                )
+                raise RuntimeError(
+                    "Unsupported mirrors.yaml file in cluster configuration."
+                )
 
             # construct full file path
             src = system_config_path / f_config.name
@@ -219,7 +223,7 @@ class Builder:
         if recipe.mirror:
             dst = config_path / "mirrors.yaml"
             self._logger.debug(f"generate the build cache mirror: {dst}")
-            with dst.open('w') as fid:
+            with dst.open("w") as fid:
                 fid.write(cache.generate_mirrors_yaml(recipe.mirror))
 
         # append recipe packages to packages.yaml
@@ -366,8 +370,9 @@ class Builder:
         with debug_script_path.open("w") as f:
             f.write(
                 debug_script_template.render(
-                    mount_path=recipe.config["store"], build_path=str(self.path), verbose=False
+                    mount_path=recipe.config["store"],
+                    build_path=str(self.path),
+                    verbose=False,
                 )
             )
             f.write("\n")
-

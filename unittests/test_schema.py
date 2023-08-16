@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 
-import jsonschema
 import pathlib
+
+import jsonschema
 import pytest
 import yaml
 
@@ -54,6 +55,7 @@ def test_config_yaml(yaml_path):
         assert raw["modules"] == False  # noqa: E712
         assert raw["mirror"] == {"enable": True, "key": "/home/bob/veryprivate.key"}
         assert raw["description"] == "a really useful environment"
+
 
 def test_recipe_config_yaml(recipe_paths):
     # validate the config.yaml in the test recipes
