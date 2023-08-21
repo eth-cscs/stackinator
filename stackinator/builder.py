@@ -277,8 +277,20 @@ class Builder:
             user_repo_packages = user_repo_path / "packages"
             for user_recipe_dir in user_repo_packages.iterdir():
                 if user_recipe_dir.is_dir():  # iterdir() yelds files too
+                    spack_package_dir = (
+                        spack_path
+                        / "var/spack/repos/builtin/packages"
+                        / user_recipe_dir.name
+                    )
+                    user_package_dir = repo_dst / "packages" / user_recipe_dir.name
+                    if spack_package_dir.is_dir():
+                        shutil.copytree(
+                            spack_package_dir,
+                            user_package_dir,
+                            ignore=lambda src, names: "__pycache__",
+                        )
                     shutil.copytree(
-                        user_recipe_dir, repo_dst / "packages" / user_recipe_dir.name
+                        user_recipe_dir, user_package_dir, dirs_exist_ok=True
                     )
 
         # Generate the makefile and spack.yaml files that describe the compilers
