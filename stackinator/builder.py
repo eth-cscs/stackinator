@@ -284,13 +284,23 @@ class Builder:
                     )
                     user_package_dir = repo_dst / "packages" / user_recipe_dir.name
                     if spack_package_dir.is_dir():
+                        self._logger.debug(
+                            f"Copying official repo from {spack_package_dir} to {user_package_dir}"
+                        )
                         shutil.copytree(
                             spack_package_dir,
                             user_package_dir,
-                            ignore=lambda src, names: "__pycache__",
+                            ignore=shutil.ignore_patterns("__pycache__"),
                         )
-                    shutil.copytree(
-                        user_recipe_dir, user_package_dir, dirs_exist_ok=True
+
+                    # copy the contents of user_recipe_dir to user_package_dir
+                    # @TODO python 3.8 supports the dirs_exist_ok argument
+                    # copytree(user_recipe_dir, user_package_dir, dirs_exist_ok=True)
+                    self._logger.debug(
+                        f"rsync -aI {user_recipe_dir}/ {user_package_dir}"
+                    )
+                    subprocess.run(
+                        ["rsync", "-aI", f"{user_recipe_dir}/", f"{user_package_dir}"]
                     )
 
         # Generate the makefile and spack.yaml files that describe the compilers
