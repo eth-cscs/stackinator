@@ -35,6 +35,10 @@ class Builder:
         if parts[1] == "tmp":
             raise IOError("build path can't be in '/tmp'")
 
+        # the build path can't be in $HOME because the build step rebinds $HOME
+        if path.is_relative_to(pathlib.Path.home()):
+            raise IOError("build path can't be in '$HOME' or '~'")
+
         self.path = path
         self.root = pathlib.Path(__file__).parent.resolve()
 
