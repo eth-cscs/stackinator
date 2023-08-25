@@ -277,21 +277,30 @@ class Builder:
             user_repo_packages = user_repo_path / "packages"
             for user_recipe_dir in user_repo_packages.iterdir():
                 if user_recipe_dir.is_dir():  # iterdir() yelds files too
-                    spack_package_dir = (
-                        spack_path
-                        / "var/spack/repos/builtin/packages"
-                        / user_recipe_dir.name
-                    )
                     user_package_dir = repo_dst / "packages" / user_recipe_dir.name
-                    if spack_package_dir.is_dir():
-                        self._logger.debug(
-                            f"Copying official repo from {spack_package_dir} to {user_package_dir}"
+                    # if copy.yaml exists in the user recipe, load it and check the flags
+                    copy_yaml = user_recipe_dir / "copy.yaml"
+                    if copy_yaml.exists():
+                        with copy_yaml.open() as fid:
+                            copy_data = yaml.load(fid, Loader=yaml.Loader)
+                        spack_package_dir = (
+                            spack_path
+                            / "var/spack/repos/builtin/packages"
+                            / user_recipe_dir.name
                         )
-                        shutil.copytree(
-                            spack_package_dir,
-                            user_package_dir,
-                            ignore=shutil.ignore_patterns("__pycache__"),
-                        )
+                        if copy_data["patches"] == True and spack_package_dir.is_dir():
+                            self._logger.debug(
+                                f"Copying official repo patches from {spack_package_dir} to {user_package_dir}"
+                            )
+                            shutil.copytree(
+                                spack_package_dir,
+                                user_package_dir,
+                                ignore=lambda dir, filenames: [
+                                    filename
+                                    for filename in filenames
+                                    if not filename.endswith(".patch")
+                                ],
+                            )
 
                     # copy the contents of user_recipe_dir to user_package_dir
                     # @TODO python 3.8 supports the dirs_exist_ok argument
