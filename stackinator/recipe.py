@@ -120,7 +120,7 @@ class Recipe:
         if self.post_install_hook is not None:
             self._logger.debug(f"post install hook {self.post_install_hook}")
         else:
-            self._logger.debug(f"no post install hook provided")
+            self._logger.debug("no post install hook provided")
 
     # Returns:
     #   Path: of the recipe extra path if it exists
