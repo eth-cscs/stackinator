@@ -115,7 +115,7 @@ class Builder:
         meta["views"] = recipe.environment_view_meta
         modules = None
         if conf["modules"]:
-            modules = {"root": conf["store"] + "/modules"}
+            modules = {"root": str(recipe.mount / "modules")}
         meta["modules"] = modules
         self._environment_meta = meta
 
@@ -196,7 +196,7 @@ class Builder:
         with (self.path / "Make.user").open("w") as f:
             f.write(
                 make_user_template.render(
-                    build_path=self.path, store=recipe.config["store"], verbose=False
+                    build_path=self.path, store=recipe.mount, verbose=False
                 )
             )
             f.write("\n")
@@ -288,7 +288,7 @@ class Builder:
         # Step 2: Create a repos.yaml file in build_path/config
         repos_yaml_template = jinja_env.get_template("repos.yaml")
         with (config_path / "repos.yaml").open("w") as f:
-            repo_path = pathlib.Path(recipe.config["store"]) / "repo"
+            repo_path = recipe.mount / "repo"
             f.write(
                 repos_yaml_template.render(
                     repo_path=repo_path.as_posix(), verbose=False
@@ -371,12 +371,14 @@ class Builder:
         meta_path.mkdir(exist_ok=True)
         # write a json file with basic meta data
         with (meta_path / "configure.json").open("w") as f:
-            f.write(json.dumps(self.configuration_meta, sort_keys=True, indent=2))
+            # default serialisation is str to serialise the pathlib.PosixPath
+            f.write(json.dumps(self.configuration_meta, sort_keys=True, indent=2, default=str))
             f.write("\n")
 
         # write a json file with the environment view meta data
         with (meta_path / "env.json").open("w") as f:
-            f.write(json.dumps(self.environment_meta, sort_keys=True, indent=2))
+            # default serialisation is str to serialise the pathlib.PosixPath
+            f.write(json.dumps(self.environment_meta, sort_keys=True, indent=2, default=str))
             f.write("\n")
 
         # copy the recipe to a recipe subdirectory of the meta path
@@ -403,7 +405,7 @@ class Builder:
         with debug_script_path.open("w") as f:
             f.write(
                 debug_script_template.render(
-                    mount_path=recipe.config["store"],
+                    mount_path=recipe.mount,
                     build_path=str(self.path),
                     verbose=False,
                 )

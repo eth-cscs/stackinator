@@ -55,6 +55,12 @@ class Recipe:
         if args.mount:
             self.config["store"] = args.mount
 
+        # ensure that the requested mount point exists
+        if not self.mount.is_dir():
+            raise FileNotFoundError(
+                f"the mount point '{self.mount}' must exist"
+            )
+
         # required compiler.yaml file
         compiler_path = self.path / "compilers.yaml"
         self._logger.debug(f"opening {compiler_path}")
@@ -110,7 +116,7 @@ class Recipe:
             )
             raise RuntimeError("Unsupported mirrors.yaml file in recipe.")
 
-        self.mirror = (args.cache, self.config["store"])
+        self.mirror = (args.cache, self.mount)
 
         # optional post install hook
         if self.post_install_hook is not None:
@@ -194,7 +200,7 @@ class Recipe:
             if view is not None:
                 view_meta[view["name"]] = {
                     "root": view["config"]["root"],
-                    "activate": view["config"]["root"] + "/activate.sh",
+                    "activate": view["config"]["root"] / "activate.sh",
                     "description": "",  # leave the description empty for now
                 }
 
@@ -205,7 +211,7 @@ class Recipe:
         with self.modules.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
             raw["modules"]["default"]["roots"]["tcl"] = (
-                pathlib.Path(self.config["store"]) / "modules"
+                pathlib.Path(self.mount) / "modules"
             ).as_posix()
             return yaml.dump(raw)
 
@@ -297,9 +303,9 @@ class Recipe:
 
                 view_name, view_config = views[i]
                 if view_config is None:
-                    view_config = {"root": self.config["store"] + "/env/" + view_name}
+                    view_config = {"root": self.mount / "env" / view_name}
                 else:
-                    view_config["root"] = self.config["store"] + "/env/" + view_name
+                    view_config["root"] = self.mount / "env" / view_name
                 environments[cname]["view"] = {"name": view_name, "config": view_config}
 
         self.environments = environments
@@ -455,7 +461,7 @@ class Recipe:
         for env, config in self.environments.items():
             spack_yaml_template = jenv.get_template("environments.spack.yaml")
             files["config"][env] = spack_yaml_template.render(
-                config=config, name=env, store=self.config["store"]
+                config=config, name=env, store=self.mount
             )
 
         return files
