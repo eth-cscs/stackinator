@@ -40,10 +40,10 @@ class Builder:
         # NOTE that this would be much easier to determine with PosixPath.is_relative_to
         # introduced in Python 3.9.
         home_parts = pathlib.Path.home().parts
-        if (len(home_parts) <= len(parts)) and (home_parts==parts[:len(home_parts)]):
+        if (len(home_parts) <= len(parts)) and (home_parts == parts[: len(home_parts)]):
             raise IOError("build path can't be in '$HOME' or '~'")
-        #if path.is_relative_to(pathlib.Path.home()):
-            #raise IOError("build path can't be in '$HOME' or '~'")
+        # if path.is_relative_to(pathlib.Path.home()):
+        # raise IOError("build path can't be in '$HOME' or '~'")
 
         self.path = path
         self.root = pathlib.Path(__file__).parent.resolve()
@@ -186,8 +186,10 @@ class Builder:
         with (self.path / "Makefile").open("w") as f:
             f.write(
                 makefile_template.render(
-                    cache=recipe.mirror, modules=recipe.config["modules"],
-                    post_install_hook=recipe.post_install_hook, verbose=False
+                    cache=recipe.mirror,
+                    modules=recipe.config["modules"],
+                    post_install_hook=recipe.post_install_hook,
+                    verbose=False,
                 )
             )
             f.write("\n")
@@ -209,9 +211,11 @@ class Builder:
         post_hook = recipe.post_install_hook
         if post_hook is not None:
             self._logger.debug("installing post-install-hook script")
-            jinja_recipe_env = jinja2.Environment(loader=jinja2.FileSystemLoader(recipe.path))
+            jinja_recipe_env = jinja2.Environment(
+                loader=jinja2.FileSystemLoader(recipe.path)
+            )
             post_hook_template = jinja_recipe_env.get_template("post-install")
-            hook_destination = store_path / 'post-install-hook'
+            hook_destination = store_path / "post-install-hook"
 
             with hook_destination.open("w") as f:
                 hook_env = {
@@ -220,9 +224,7 @@ class Builder:
                     "build": self.path,
                     "spack": self.path / "spack",
                 }
-                f.write(
-                    post_hook_template.render(env=hook_env, verbose=False)
-                )
+                f.write(post_hook_template.render(env=hook_env, verbose=False))
                 f.write("\n")
 
             os.chmod(hook_destination, os.stat(hook_destination).st_mode | stat.S_IEXEC)
@@ -372,13 +374,19 @@ class Builder:
         # write a json file with basic meta data
         with (meta_path / "configure.json").open("w") as f:
             # default serialisation is str to serialise the pathlib.PosixPath
-            f.write(json.dumps(self.configuration_meta, sort_keys=True, indent=2, default=str))
+            f.write(
+                json.dumps(
+                    self.configuration_meta, sort_keys=True, indent=2, default=str
+                )
+            )
             f.write("\n")
 
         # write a json file with the environment view meta data
         with (meta_path / "env.json").open("w") as f:
             # default serialisation is str to serialise the pathlib.PosixPath
-            f.write(json.dumps(self.environment_meta, sort_keys=True, indent=2, default=str))
+            f.write(
+                json.dumps(self.environment_meta, sort_keys=True, indent=2, default=str)
+            )
             f.write("\n")
 
         # copy the recipe to a recipe subdirectory of the meta path
