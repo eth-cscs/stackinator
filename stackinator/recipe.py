@@ -112,6 +112,12 @@ class Recipe:
 
         self.mirror = (args.cache, self.config["store"])
 
+        # optional post install hook
+        if self.post_install_hook is not None:
+            self._logger.debug(f"post install hook {self.post_install_hook}")
+        else:
+            self._logger.debug(f"no post install hook provided")
+
     # Returns:
     #   Path: of the recipe extra path if it exists
     #   None: if there is no user-provided extra path in the recipe
@@ -120,6 +126,16 @@ class Recipe:
         extra_path = self.path / "extra"
         if extra_path.exists() and extra_path.is_dir():
             return extra_path
+        return None
+
+    # Returns:
+    #   Path: of the recipe post install script if it was provided
+    #   None: if there is no user-provided post install script
+    @property
+    def post_install_hook(self):
+        hook_path = self.path / "post-install.sh"
+        if hook_path.exists() and hook_path.is_file():
+            return hook_path
         return None
 
     # Returns a dictionary with the following fields

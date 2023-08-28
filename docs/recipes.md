@@ -12,6 +12,7 @@ A recipe is comprised of the following yaml files in a directory:
     * follows the spec for [spack package configuration](https://spack.readthedocs.io/en/latest/build_settings.html)
 * `repo`: _optional_ custom spack package definitions.
 * `extra`: _optional_ additional meta data to copy to the meta data of the stack.
+* `post.sh`: _optional_ a script to run after Spack has been executed to build the stack.
 
 ## Configuration
 
@@ -318,6 +319,29 @@ The `alps` repository is installed alongside the packages, and is automatically 
 !!! warning
     Unlike Spack package repositories, any `repos.yaml` file in the `repo` path will be ignored and a warning will be issued.
     This is because the provided packages are added to the `alps` namespace.
+
+## Post install configuration
+
+If a script `post-install.sh` is provided in the recipe, it will be run in the mount path, after all the stack has been built, and just before the final squashfs image is generated.
+
+Such a script can be used to perform operations
+
+* configure a license file
+* install additional software outside of Spack
+* generate activation scripts
+    * e.g. a script that starts a reverse 
+
+If the script is in the path `$recipe`, and the mount point is the default `/user-environment`, the following steps are effectively run:
+
+```bash
+cp "$recipe"/post-install.sh /user-environment
+chmod +x /user-environment/post-install.sh
+cd /user-environment
+./post-install.sh
+```
+
+```
+```
 
 ## Meta-Data
 

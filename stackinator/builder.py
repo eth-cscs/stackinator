@@ -3,6 +3,7 @@ import os
 import pathlib
 import platform
 import shutil
+import stat
 import subprocess
 import sys
 from datetime import datetime
@@ -36,8 +37,13 @@ class Builder:
             raise IOError("build path can't be in '/tmp'")
 
         # the build path can't be in $HOME because the build step rebinds $HOME
-        if path.is_relative_to(pathlib.Path.home()):
+        # NOTE that this would be much easier to determine with PosixPath.is_relative_to
+        # introduced in Python 3.9.
+        home_parts = pathlib.Path.home().parts
+        if (len(home_parts) <= len(parts)) and (home_parts==parts[:len(home_parts)]):
             raise IOError("build path can't be in '$HOME' or '~'")
+        #if path.is_relative_to(pathlib.Path.home()):
+            #raise IOError("build path can't be in '$HOME' or '~'")
 
         self.path = path
         self.root = pathlib.Path(__file__).parent.resolve()
@@ -180,7 +186,8 @@ class Builder:
         with (self.path / "Makefile").open("w") as f:
             f.write(
                 makefile_template.render(
-                    cache=recipe.mirror, modules=recipe.config["modules"], verbose=False
+                    cache=recipe.mirror, modules=recipe.config["modules"],
+                    post_install_hook=recipe.post_install_hook, verbose=False
                 )
             )
             f.write("\n")
@@ -197,6 +204,15 @@ class Builder:
         etc_path = self.root / "etc"
         for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "add-compiler-links.py"]:
             shutil.copy2(etc_path / f_etc, self.path / f_etc)
+
+        # copy post install hook file, if provided
+        post_hook = recipe.post_install_hook
+        if post_hook is not None:
+            self._logger.debug("installing post-install-hook script")
+            hook_destination = store_path / 'post-install-hook.sh'
+            shutil.copy2(post_hook, hook_destination)
+            # ensure that the post install hook is executable
+            os.chmod(hook_destination, os.stat(hook_destination).st_mode | stat.S_IEXEC)
 
         # Generate the system configuration: the compilers, environments, etc.
         # that are defined for the target cluster.
