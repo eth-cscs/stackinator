@@ -54,7 +54,8 @@ modules: environments generate-config
 	$(SANDBOX) $(SPACK) -C $(SOFTWARE_STACK_PROJECT)/modules module tcl refresh --upstream-modules --delete-tree --yes-to-all
 
 post-install: generate-config environments{% if modules %} modules{% endif %}
-	$(SANDBOX) $(STORE)/post-install-hook.sh
+
+	$(SANDBOX) $(STORE)/post-install-hook
 
 # Create a squashfs file from the installed software.
 store.squashfs: environments generate-config{% if modules %} modules{% endif %}{% if post_install_hook %} post-install{% endif %}

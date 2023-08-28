@@ -1,12 +1,9 @@
 #!/bin/bash
 
-
-
 echo "====================================="
 echo "=====     post install hook     ====="
 
-mount_path=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-
+mount_path={{ env.mount }}
 echo RUNNING IN $mount_path
 
 echo
@@ -14,8 +11,11 @@ echo "=====   environment variabls    ====="
 printenv
 
 echo
-echo "=====   touching    ====="
-
+echo "=====   create post file {{ env.mount }}/post  ====="
 echo "$(date)" > "$mount_path/post"
+
+echo
+echo "===== list all spack packages ====="
+spack -C {{ env.config }} find
 
 echo "====================================="

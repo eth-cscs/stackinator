@@ -174,14 +174,14 @@ class Builder:
 
         # load the jinja templating environment
         template_path = self.root / "templates"
-        env = jinja2.Environment(
+        jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(template_path),
             trim_blocks=True,
             lstrip_blocks=True,
         )
 
         # generate top level makefiles
-        makefile_template = env.get_template("Makefile")
+        makefile_template = jinja_env.get_template("Makefile")
 
         with (self.path / "Makefile").open("w") as f:
             f.write(
@@ -192,7 +192,7 @@ class Builder:
             )
             f.write("\n")
 
-        make_user_template = env.get_template("Make.user")
+        make_user_template = jinja_env.get_template("Make.user")
         with (self.path / "Make.user").open("w") as f:
             f.write(
                 make_user_template.render(
@@ -209,9 +209,22 @@ class Builder:
         post_hook = recipe.post_install_hook
         if post_hook is not None:
             self._logger.debug("installing post-install-hook script")
-            hook_destination = store_path / 'post-install-hook.sh'
-            shutil.copy2(post_hook, hook_destination)
-            # ensure that the post install hook is executable
+            jinja_recipe_env = jinja2.Environment(loader=jinja2.FileSystemLoader(recipe.path))
+            post_hook_template = jinja_recipe_env.get_template("post-install")
+            hook_destination = store_path / 'post-install-hook'
+
+            with hook_destination.open("w") as f:
+                hook_env = {
+                    "mount": recipe.mount,
+                    "config": recipe.mount / "config",
+                    "build": self.path,
+                    "spack": self.path / "spack",
+                }
+                f.write(
+                    post_hook_template.render(env=hook_env, verbose=False)
+                )
+                f.write("\n")
+
             os.chmod(hook_destination, os.stat(hook_destination).st_mode | stat.S_IEXEC)
 
         # Generate the system configuration: the compilers, environments, etc.
@@ -273,7 +286,7 @@ class Builder:
         shutil.copytree(repo_src, repo_dst)
 
         # Step 2: Create a repos.yaml file in build_path/config
-        repos_yaml_template = env.get_template("repos.yaml")
+        repos_yaml_template = jinja_env.get_template("repos.yaml")
         with (config_path / "repos.yaml").open("w") as f:
             repo_path = pathlib.Path(recipe.config["store"]) / "repo"
             f.write(
@@ -329,7 +342,7 @@ class Builder:
 
         # generate the makefile that generates the configuration for the spack
         # installation in the generate-config sub-directory of the build path.
-        make_config_template = env.get_template("Makefile.generate-config")
+        make_config_template = jinja_env.get_template("Makefile.generate-config")
         generate_config_path = self.path / "generate-config"
         generate_config_path.mkdir(exist_ok=True)
 
@@ -386,7 +399,7 @@ class Builder:
 
         # create debug helper script
         debug_script_path = self.path / "stack-debug.sh"
-        debug_script_template = env.get_template("stack-debug.sh")
+        debug_script_template = jinja_env.get_template("stack-debug.sh")
         with debug_script_path.open("w") as f:
             f.write(
                 debug_script_template.render(

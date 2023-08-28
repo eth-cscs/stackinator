@@ -334,14 +334,38 @@ Such a script can be used to perform operations
 If the script is in the path `$recipe`, and the mount point is the default `/user-environment`, the following steps are effectively run:
 
 ```bash
-cp "$recipe"/post-install.sh /user-environment
-chmod +x /user-environment/post-install.sh
+# copy the 
+cp "$recipe"/post-install /user-environment
+chmod +x /user-environment/post-install
+
+# apply Jinja templates
+jinja -d env.json /user-environment/post-install > /user-environment/post-install
+
+# execute the script from inside the mount point
 cd /user-environment
-./post-install.sh
+/user-environment/post-install
 ```
 
+The post-install script is templated using Jinja, with the following variables available for use in a script.
+
+| Variable    | Description                          |
+| ----------- | ------------------------------------ |
+| `env.mount` | The mount point of the image - default `/user-environment` |
+| `env.config`| The installation tree of the Spack installation that was built in previous steps |
+| `env.build` | The build path |
+| `env.spack` | The location of Spack used to build the software stack (only available during installation) |
+
+The following is a simple example of a bash script that generates an activation script that adds the bin path of GROMACS installed in a stack to the system PATH:
+
+```bash title="`post-install`"
+#!/bin/bash
+
+gmx_path=$(spack -C {{ env.config }} location -i gromacs)/bin
+echo "export PATH=$gmx_path:$PATH" >> {{ env.mount }}/activate.sh
 ```
-```
+
+!!! note
+    The script does not have to be bash - it can be in any scripting language, such as Python or Perl, that is available on the target system.
 
 ## Meta-Data
 

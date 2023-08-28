@@ -133,7 +133,7 @@ class Recipe:
     #   None: if there is no user-provided post install script
     @property
     def post_install_hook(self):
-        hook_path = self.path / "post-install.sh"
+        hook_path = self.path / "post-install"
         if hook_path.exists() and hook_path.is_file():
             return hook_path
         return None
@@ -401,6 +401,10 @@ class Recipe:
             )
 
         self._system_path = system_path
+
+    @property
+    def mount(self):
+        return pathlib.Path(self.config["store"])
 
     @property
     def compiler_files(self):
