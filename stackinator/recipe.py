@@ -55,6 +55,10 @@ class Recipe:
         if args.mount:
             self.config["store"] = args.mount
 
+        # ensure that the requested mount point exists
+        if not self.mount.is_dir():
+            raise FileNotFoundError(f"the mount point '{self.mount}' must exist")
+
         # required compiler.yaml file
         compiler_path = self.path / "compilers.yaml"
         self._logger.debug(f"opening {compiler_path}")
@@ -110,7 +114,13 @@ class Recipe:
             )
             raise RuntimeError("Unsupported mirrors.yaml file in recipe.")
 
-        self.mirror = (args.cache, self.config["store"])
+        self.mirror = (args.cache, self.mount)
+
+        # optional post install hook
+        if self.post_install_hook is not None:
+            self._logger.debug(f"post install hook {self.post_install_hook}")
+        else:
+            self._logger.debug("no post install hook provided")
 
     # Returns:
     #   Path: of the recipe extra path if it exists
@@ -120,6 +130,16 @@ class Recipe:
         extra_path = self.path / "extra"
         if extra_path.exists() and extra_path.is_dir():
             return extra_path
+        return None
+
+    # Returns:
+    #   Path: of the recipe post install script if it was provided
+    #   None: if there is no user-provided post install script
+    @property
+    def post_install_hook(self):
+        hook_path = self.path / "post-install"
+        if hook_path.exists() and hook_path.is_file():
+            return hook_path
         return None
 
     # Returns a dictionary with the following fields
@@ -178,7 +198,7 @@ class Recipe:
             if view is not None:
                 view_meta[view["name"]] = {
                     "root": view["config"]["root"],
-                    "activate": view["config"]["root"] + "/activate.sh",
+                    "activate": view["config"]["root"] / "activate.sh",
                     "description": "",  # leave the description empty for now
                 }
 
@@ -189,7 +209,7 @@ class Recipe:
         with self.modules.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
             raw["modules"]["default"]["roots"]["tcl"] = (
-                pathlib.Path(self.config["store"]) / "modules"
+                pathlib.Path(self.mount) / "modules"
             ).as_posix()
             return yaml.dump(raw)
 
@@ -281,9 +301,9 @@ class Recipe:
 
                 view_name, view_config = views[i]
                 if view_config is None:
-                    view_config = {"root": self.config["store"] + "/env/" + view_name}
+                    view_config = {"root": self.mount / "env" / view_name}
                 else:
-                    view_config["root"] = self.config["store"] + "/env/" + view_name
+                    view_config["root"] = self.mount / "env" / view_name
                 environments[cname]["view"] = {"name": view_name, "config": view_config}
 
         self.environments = environments
@@ -387,6 +407,10 @@ class Recipe:
         self._system_path = system_path
 
     @property
+    def mount(self):
+        return pathlib.Path(self.config["store"])
+
+    @property
     def compiler_files(self):
         files = {}
 
@@ -435,7 +459,7 @@ class Recipe:
         for env, config in self.environments.items():
             spack_yaml_template = jenv.get_template("environments.spack.yaml")
             files["config"][env] = spack_yaml_template.render(
-                config=config, name=env, store=self.config["store"]
+                config=config, name=env, store=self.mount
             )
 
         return files

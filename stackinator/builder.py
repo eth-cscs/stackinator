@@ -3,6 +3,7 @@ import os
 import pathlib
 import platform
 import shutil
+import stat
 import subprocess
 import sys
 from datetime import datetime
@@ -36,8 +37,13 @@ class Builder:
             raise IOError("build path can't be in '/tmp'")
 
         # the build path can't be in $HOME because the build step rebinds $HOME
-        if path.is_relative_to(pathlib.Path.home()):
+        # NOTE that this would be much easier to determine with PosixPath.is_relative_to
+        # introduced in Python 3.9.
+        home_parts = pathlib.Path.home().parts
+        if (len(home_parts) <= len(parts)) and (home_parts == parts[: len(home_parts)]):
             raise IOError("build path can't be in '$HOME' or '~'")
+        # if path.is_relative_to(pathlib.Path.home()):
+        # raise IOError("build path can't be in '$HOME' or '~'")
 
         self.path = path
         self.root = pathlib.Path(__file__).parent.resolve()
@@ -109,7 +115,7 @@ class Builder:
         meta["views"] = recipe.environment_view_meta
         modules = None
         if conf["modules"]:
-            modules = {"root": conf["store"] + "/modules"}
+            modules = {"root": str(recipe.mount / "modules")}
         meta["modules"] = modules
         self._environment_meta = meta
 
@@ -168,28 +174,31 @@ class Builder:
 
         # load the jinja templating environment
         template_path = self.root / "templates"
-        env = jinja2.Environment(
+        jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(template_path),
             trim_blocks=True,
             lstrip_blocks=True,
         )
 
         # generate top level makefiles
-        makefile_template = env.get_template("Makefile")
+        makefile_template = jinja_env.get_template("Makefile")
 
         with (self.path / "Makefile").open("w") as f:
             f.write(
                 makefile_template.render(
-                    cache=recipe.mirror, modules=recipe.config["modules"], verbose=False
+                    cache=recipe.mirror,
+                    modules=recipe.config["modules"],
+                    post_install_hook=recipe.post_install_hook,
+                    verbose=False,
                 )
             )
             f.write("\n")
 
-        make_user_template = env.get_template("Make.user")
+        make_user_template = jinja_env.get_template("Make.user")
         with (self.path / "Make.user").open("w") as f:
             f.write(
                 make_user_template.render(
-                    build_path=self.path, store=recipe.config["store"], verbose=False
+                    build_path=self.path, store=recipe.mount, verbose=False
                 )
             )
             f.write("\n")
@@ -197,6 +206,28 @@ class Builder:
         etc_path = self.root / "etc"
         for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "add-compiler-links.py"]:
             shutil.copy2(etc_path / f_etc, self.path / f_etc)
+
+        # copy post install hook file, if provided
+        post_hook = recipe.post_install_hook
+        if post_hook is not None:
+            self._logger.debug("installing post-install-hook script")
+            jinja_recipe_env = jinja2.Environment(
+                loader=jinja2.FileSystemLoader(recipe.path)
+            )
+            post_hook_template = jinja_recipe_env.get_template("post-install")
+            hook_destination = store_path / "post-install-hook"
+
+            with hook_destination.open("w") as f:
+                hook_env = {
+                    "mount": recipe.mount,
+                    "config": recipe.mount / "config",
+                    "build": self.path,
+                    "spack": self.path / "spack",
+                }
+                f.write(post_hook_template.render(env=hook_env, verbose=False))
+                f.write("\n")
+
+            os.chmod(hook_destination, os.stat(hook_destination).st_mode | stat.S_IEXEC)
 
         # Generate the system configuration: the compilers, environments, etc.
         # that are defined for the target cluster.
@@ -257,9 +288,9 @@ class Builder:
         shutil.copytree(repo_src, repo_dst)
 
         # Step 2: Create a repos.yaml file in build_path/config
-        repos_yaml_template = env.get_template("repos.yaml")
+        repos_yaml_template = jinja_env.get_template("repos.yaml")
         with (config_path / "repos.yaml").open("w") as f:
-            repo_path = pathlib.Path(recipe.config["store"]) / "repo"
+            repo_path = recipe.mount / "repo"
             f.write(
                 repos_yaml_template.render(
                     repo_path=repo_path.as_posix(), verbose=False
@@ -313,7 +344,7 @@ class Builder:
 
         # generate the makefile that generates the configuration for the spack
         # installation in the generate-config sub-directory of the build path.
-        make_config_template = env.get_template("Makefile.generate-config")
+        make_config_template = jinja_env.get_template("Makefile.generate-config")
         generate_config_path = self.path / "generate-config"
         generate_config_path.mkdir(exist_ok=True)
 
@@ -342,12 +373,20 @@ class Builder:
         meta_path.mkdir(exist_ok=True)
         # write a json file with basic meta data
         with (meta_path / "configure.json").open("w") as f:
-            f.write(json.dumps(self.configuration_meta, sort_keys=True, indent=2))
+            # default serialisation is str to serialise the pathlib.PosixPath
+            f.write(
+                json.dumps(
+                    self.configuration_meta, sort_keys=True, indent=2, default=str
+                )
+            )
             f.write("\n")
 
         # write a json file with the environment view meta data
         with (meta_path / "env.json").open("w") as f:
-            f.write(json.dumps(self.environment_meta, sort_keys=True, indent=2))
+            # default serialisation is str to serialise the pathlib.PosixPath
+            f.write(
+                json.dumps(self.environment_meta, sort_keys=True, indent=2, default=str)
+            )
             f.write("\n")
 
         # copy the recipe to a recipe subdirectory of the meta path
@@ -370,11 +409,11 @@ class Builder:
 
         # create debug helper script
         debug_script_path = self.path / "stack-debug.sh"
-        debug_script_template = env.get_template("stack-debug.sh")
+        debug_script_template = jinja_env.get_template("stack-debug.sh")
         with debug_script_path.open("w") as f:
             f.write(
                 debug_script_template.render(
-                    mount_path=recipe.config["store"],
+                    mount_path=recipe.mount,
                     build_path=str(self.path),
                     verbose=False,
                 )

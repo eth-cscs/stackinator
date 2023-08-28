@@ -12,6 +12,7 @@ A recipe is comprised of the following yaml files in a directory:
     * follows the spec for [spack package configuration](https://spack.readthedocs.io/en/latest/build_settings.html)
 * `repo`: _optional_ custom spack package definitions.
 * `extra`: _optional_ additional meta data to copy to the meta data of the stack.
+* `post-install`: _optional_ a script to run after Spack has been executed to build the stack.
 
 ## Configuration
 
@@ -29,7 +30,7 @@ description: "HPC development tools for building MPI applications with the GNU c
 * `store`: the location where the environment will be mounted.
 * `spack`: which spack repository to use for installation.
 * `modules`: _optional_ enable/diasble module file generation (default `true`).
-* `description`: _optional_ a string that describes the environment.
+* `description`: _optional_ a string that describes the environment (default empty).
 
 ## Compilers
 
@@ -318,6 +319,54 @@ The `alps` repository is installed alongside the packages, and is automatically 
 !!! warning
     Unlike Spack package repositories, any `repos.yaml` file in the `repo` path will be ignored and a warning will be issued.
     This is because the provided packages are added to the `alps` namespace.
+
+## Post install configuration
+
+If a script `post-install` is provided in the recipe, it will be run during the build process: after the stack has been built, and just before the final squashfs image is generated.
+Post install scripts can be used to modify or extend an environment with operations that can't be performed in Spack, for example:
+
+* configure a license file;
+* install additional software outside of Spack;
+* generate activation scripts.
+
+The following steps are effectively run, where we assume that the recipe is in `$recipe` and the mount point is the default `/user-environment`:
+
+```bash
+# copy the 
+cp "$recipe"/post-install /user-environment
+chmod +x /user-environment/post-install
+
+# apply Jinja templates
+jinja -d env.json /user-environment/post-install > /user-environment/post-install
+
+# execute the script from inside the mount point
+cd /user-environment
+/user-environment/post-install
+```
+
+The post-install script is templated using Jinja, with the following variables available for use in a script:
+
+| Variable    | Description                          |
+| ----------- | ------------------------------------ |
+| `env.mount` | The mount point of the image - default `/user-environment` |
+| `env.config`| The installation tree of the Spack installation that was built in previous steps |
+| `env.build` | The build path |
+| `env.spack` | The location of Spack used to build the software stack (only available during installation) |
+
+The use of Jinja templates is demonstrated in the following example of a bash script that generates an activation script that adds the installation path of GROMACS to the system PATH:
+
+```bash title="post-install script that generates a simple activation script."
+#!/bin/bash
+
+gmx_path=$(spack -C {{ env.config }} location -i gromacs)/bin
+echo "export PATH=$gmx_path:$PATH" >> {{ env.mount }}/activate.sh
+```
+
+!!! note
+    The copy of Spack used to build the stack is available in the environment in which `post-install` runs, and can be called directly.
+
+!!! note
+    The script does not have to be bash - it can be in any scripting language, such as Python or Perl, that is available on the target system.
 
 ## Meta-Data
 

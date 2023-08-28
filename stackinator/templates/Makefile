@@ -53,8 +53,12 @@ environments: compilers
 modules: environments generate-config
 	$(SANDBOX) $(SPACK) -C $(SOFTWARE_STACK_PROJECT)/modules module tcl refresh --upstream-modules --delete-tree --yes-to-all
 
+post-install: generate-config environments{% if modules %} modules{% endif %}
+
+	$(SANDBOX) $(STORE)/post-install-hook
+
 # Create a squashfs file from the installed software.
-store.squashfs: environments generate-config {% if modules %} modules {% endif %}
+store.squashfs: environments generate-config{% if modules %} modules{% endif %}{% if post_install_hook %} post-install{% endif %}
 
 	$(SANDBOX) env -u SOURCE_DATE_EPOCH "$$($(SANDBOX) $(SPACK) -e ./compilers/bootstrap find --format='{prefix}' squashfs | head -n1)/bin/mksquashfs" $(STORE) $@ -all-root -all-time $$(date +%s) -no-recovery -noappend -Xcompression-level 3
 
