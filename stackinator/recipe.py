@@ -198,7 +198,7 @@ class Recipe:
             if view is not None:
                 view_meta[view["name"]] = {
                     "root": view["config"]["root"],
-                    "activate": view["config"]["root"] / "activate.sh",
+                    "activate": view["config"]["root"] + "/activate.sh",
                     "description": "",  # leave the description empty for now
                 }
 
@@ -300,10 +300,13 @@ class Recipe:
                     environments[cname] = copy.deepcopy(base)
 
                 view_name, view_config = views[i]
+                # note: the "root" path is stored as a string, not as a pathlib.PosixPath
+                # to avoid serialisation issues when generating the spack.yaml file for
+                # each environment.
                 if view_config is None:
-                    view_config = {"root": self.mount / "env" / view_name}
+                    view_config = {"root": str(self.mount / "env" / view_name)}
                 else:
-                    view_config["root"] = self.mount / "env" / view_name
+                    view_config["root"] = str(self.mount / "env" / view_name)
                 environments[cname]["view"] = {"name": view_name, "config": view_config}
 
         self.environments = environments
