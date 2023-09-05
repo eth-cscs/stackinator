@@ -88,3 +88,14 @@ key: $SCRATCH/.keys/spack-push-key.gpg
 
 !!! failure "Don't use `$HOME`"
     Don't put the keys in `$HOME`, because the build process remounts `~` as a tmpfs, and you will get error messages that Spack can't read the key.
+
+## Force pushing to build cache
+
+When build caches are enabled, all packages in a each Spack environment are pushed to the build cache after the whole environment has been built succesfully -- nothing will be pushed to the cache if there is an error when building one of the packages.
+
+When debugging a recipe, where failing builds have to be run multiple times, the overheads of rebuilding all packages from scratch can be wasteful.
+To force push all packages that have been built, use the `cache-force` makefile taret:
+
+```bash
+env --ignore-environment PATH=/usr/bin:/bin:`pwd`/spack/bin make cache-force
+```

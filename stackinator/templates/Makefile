@@ -62,6 +62,11 @@ store.squashfs: environments generate-config{% if modules %} modules{% endif %}{
 
 	$(SANDBOX) env -u SOURCE_DATE_EPOCH "$$($(SANDBOX) $(SPACK) -e ./compilers/bootstrap find --format='{prefix}' squashfs | head -n1)/bin/mksquashfs" $(STORE) $@ -all-root -all-time $$(date +%s) -no-recovery -noappend -Xcompression-level 3
 
+# Force push all built packages to the build cache
+cache-force: mirror-setup
+	$(SANDBOX) $(SPACK) -C $(STORE)/config buildcache create --rebuild-index --allow-root --only=package alpscache \
+	$$($(SANDBOX) $(SPACK) --color=never -C $(STORE)/config find --format '{/hash}')
+
 # A backup of all the generated files during the build, useful for posterity,
 # excluding the binaries themselves, since they're in the squashfs file
 build.tar.gz: spack-version Make.user Make.inc Makefile | environments

@@ -16,4 +16,3 @@ build-env >>>
 
 The new shell has `spack` in its path, and has the store path mounted at the environment's mount point.
 To finish debugging, exit the shell with `exit` or ctrl-d.
-
