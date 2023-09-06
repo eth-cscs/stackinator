@@ -300,7 +300,7 @@ class Recipe:
                     environments[cname] = copy.deepcopy(base)
 
                 view_name, view_config = views[i]
-                # note: the "root" path is stored as a string, not as a pathlib.PosixPath
+                # note: the root path is stored as a string, not as a pathlib.PosixPath
                 # to avoid serialisation issues when generating the spack.yaml file for
                 # each environment.
                 if view_config is None:
