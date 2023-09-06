@@ -64,8 +64,23 @@ store.squashfs: environments generate-config{% if modules %} modules{% endif %}{
 
 # Force push all built packages to the build cache
 cache-force: mirror-setup
+{% if cache.key %}
+	$(warning ================================================================================)
+	$(warning Generate the config in order to force push partially built compiler environments)
+	$(warning if this step is performed with partially built compiler envs, you will)
+	$(warning likely have to start a fresh build (but that's okay, because build caches FTW))
+	$(warning ================================================================================)
+	$(SANDBOX) $(MAKE) -C generate-config
+{% if develop %}
 	$(SANDBOX) $(SPACK) -C $(STORE)/config buildcache create --rebuild-index --allow-root --only=package alpscache \
 	$$($(SANDBOX) $(SPACK) --color=never -C $(STORE)/config find --format '{/hash}')
+{% else %}
+	$(SANDBOX) $(SPACK) -C $(STORE)/config buildcache create --rebuild-index --allow-root --only=package -m alpscache \
+	$$($(SANDBOX) $(SPACK) --color=never -C $(STORE)/config find --format '{/hash}')
+{% endif %}
+{% else %}
+	$(warning "pushing to the build cache is not enabled. See the documentation on how to add a key: https://eth-cscs.github.io/stackinator/build-caches/")
+{% endif %}
 
 # A backup of all the generated files during the build, useful for posterity,
 # excluding the binaries themselves, since they're in the squashfs file
