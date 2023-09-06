@@ -13,7 +13,7 @@ A recipe is comprised of the following yaml files in a directory:
 * `repo`: _optional_ custom spack package definitions.
 * `extra`: _optional_ additional meta data to copy to the meta data of the stack.
 * `post-install`: _optional_ a script to run after Spack has been executed to build the stack.
-* `pre-install`: _optional_ a script to run any packages have been built.
+* `pre-install`: _optional_ a script to run before any packages have been built.
 
 ## Configuration
 
@@ -374,7 +374,7 @@ echo "export PATH=$gmx_path:$PATH" >> {{ env.mount }}/activate.sh
 Similarly to the post-install hook, if a `pre-install` script is provided in the recipe, it will be run during the build process:
 
 * directly after the initial test that Spack has been installed correctly;
-* directly before the build cache is configured, or the first compiler environment is concretised.
+* directly before the build cache is configured, and/or the first compiler environment is concretised.
 
 The pre-install script is copied, templated and executed similarly to the post-install hook (see above).
 
