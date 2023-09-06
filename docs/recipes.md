@@ -376,7 +376,7 @@ Similarly to the post-install hook, if a `pre-install` script is provided in the
 * directly after the initial test that Spack has been installed correctly;
 * directly before the build cache is configured, or the first compiler environment is concretised.
 
-The pre-install script is copied, tempalted and executed similarly to the post-install hook (see above).
+The pre-install script is copied, templated and executed similarly to the post-install hook (see above).
 
 ## Meta-Data
 
