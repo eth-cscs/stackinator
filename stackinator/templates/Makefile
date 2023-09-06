@@ -32,7 +32,11 @@ spack-setup: spack-version
 	$(SANDBOX) $(SPACK) spec zlib > /dev/null; \
 	printf "yup\n"
 
-mirror-setup: spack-setup
+pre-install: spack-setup
+	$(SANDBOX) $(STORE)/pre-install-hook
+
+mirror-setup: spack-setup{% if pre_install_hook %} pre-install{% endif %}
+
 	{% if cache %}
 	$(SANDBOX) $(SPACK) buildcache keys --install --trust
 	{% if cache.key %}

@@ -13,6 +13,7 @@ A recipe is comprised of the following yaml files in a directory:
 * `repo`: _optional_ custom spack package definitions.
 * `extra`: _optional_ additional meta data to copy to the meta data of the stack.
 * `post-install`: _optional_ a script to run after Spack has been executed to build the stack.
+* `pre-install`: _optional_ a script to run any packages have been built.
 
 ## Configuration
 
@@ -332,14 +333,14 @@ Post install scripts can be used to modify or extend an environment with operati
 The following steps are effectively run, where we assume that the recipe is in `$recipe` and the mount point is the default `/user-environment`:
 
 ```bash
-# copy the 
+# copy the post-install script to the mount point
 cp "$recipe"/post-install /user-environment
 chmod +x /user-environment/post-install
 
 # apply Jinja templates
 jinja -d env.json /user-environment/post-install > /user-environment/post-install
 
-# execute the script from inside the mount point
+# execute the script from the mount point
 cd /user-environment
 /user-environment/post-install
 ```
@@ -367,6 +368,15 @@ echo "export PATH=$gmx_path:$PATH" >> {{ env.mount }}/activate.sh
 
 !!! note
     The script does not have to be bash - it can be in any scripting language, such as Python or Perl, that is available on the target system.
+
+## Pre install configuration
+
+Similarly to the post-install hook, if a `pre-install` script is provided in the recipe, it will be run during the build process:
+
+* directly after the initial test that Spack has been installed correctly;
+* directly before the build cache is configured, or the first compiler environment is concretised.
+
+The pre-install script is copied, tempalted and executed similarly to the post-install hook (see above).
 
 ## Meta-Data
 

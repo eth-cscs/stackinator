@@ -1,0 +1,18 @@
+#!/bin/bash
+
+echo "====================================="
+echo "=====      pre install hook     ====="
+
+mount_path={{ env.mount }}
+build_path={{ env.build }}
+echo RUNNING IN $mount_path with build path $build_path
+
+echo
+echo "=====   environment variabls    ====="
+printenv
+
+echo
+echo "=====   create \"config\" file {{ env.build }}/configxxx  ====="
+echo "$(date)" > "$build_path/configxxx"
+
+echo "====================================="

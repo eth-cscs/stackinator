@@ -189,6 +189,7 @@ class Builder:
                     cache=recipe.mirror,
                     modules=recipe.config["modules"],
                     post_install_hook=recipe.post_install_hook,
+                    pre_install_hook=recipe.pre_install_hook,
                     verbose=False,
                 )
             )
@@ -207,6 +208,15 @@ class Builder:
         for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "add-compiler-links.py"]:
             shutil.copy2(etc_path / f_etc, self.path / f_etc)
 
+
+        # used to configure both pre and post install hooks, if they are provided.
+        hook_env = {
+            "mount": recipe.mount,
+            "config": recipe.mount / "config",
+            "build": self.path,
+            "spack": self.path / "spack",
+        }
+
         # copy post install hook file, if provided
         post_hook = recipe.post_install_hook
         if post_hook is not None:
@@ -215,19 +225,29 @@ class Builder:
                 loader=jinja2.FileSystemLoader(recipe.path)
             )
             post_hook_template = jinja_recipe_env.get_template("post-install")
-            hook_destination = store_path / "post-install-hook"
+            post_hook_destination = store_path / "post-install-hook"
 
-            with hook_destination.open("w") as f:
-                hook_env = {
-                    "mount": recipe.mount,
-                    "config": recipe.mount / "config",
-                    "build": self.path,
-                    "spack": self.path / "spack",
-                }
+            with post_hook_destination.open("w") as f:
                 f.write(post_hook_template.render(env=hook_env, verbose=False))
                 f.write("\n")
 
-            os.chmod(hook_destination, os.stat(hook_destination).st_mode | stat.S_IEXEC)
+            os.chmod(post_hook_destination, os.stat(post_hook_destination).st_mode | stat.S_IEXEC)
+
+        # copy pre install hook file, if provided
+        pre_hook = recipe.pre_install_hook
+        if pre_hook is not None:
+            self._logger.debug("installing pre-install-hook script")
+            jinja_recipe_env = jinja2.Environment(
+                loader=jinja2.FileSystemLoader(recipe.path)
+            )
+            pre_hook_template = jinja_recipe_env.get_template("pre-install")
+            pre_hook_destination = store_path / "pre-install-hook"
+
+            with pre_hook_destination.open("w") as f:
+                f.write(pre_hook_template.render(env=hook_env, verbose=False))
+                f.write("\n")
+
+            os.chmod(pre_hook_destination, os.stat(pre_hook_destination).st_mode | stat.S_IEXEC)
 
         # Generate the system configuration: the compilers, environments, etc.
         # that are defined for the target cluster.
