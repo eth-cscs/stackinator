@@ -122,6 +122,12 @@ class Recipe:
         else:
             self._logger.debug("no post install hook provided")
 
+        # optional pre install hook
+        if self.pre_install_hook is not None:
+            self._logger.debug(f"pre install hook {self.pre_install_hook}")
+        else:
+            self._logger.debug("no pre install hook provided")
+
     # Returns:
     #   Path: of the recipe extra path if it exists
     #   None: if there is no user-provided extra path in the recipe
@@ -138,6 +144,16 @@ class Recipe:
     @property
     def post_install_hook(self):
         hook_path = self.path / "post-install"
+        if hook_path.exists() and hook_path.is_file():
+            return hook_path
+        return None
+
+    # Returns:
+    #   Path: of the recipe pre install script if it was provided
+    #   None: if there is no user-provided pre install script
+    @property
+    def pre_install_hook(self):
+        hook_path = self.path / "pre-install"
         if hook_path.exists() and hook_path.is_file():
             return hook_path
         return None
