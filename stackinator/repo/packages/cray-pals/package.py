@@ -20,11 +20,27 @@ class CrayPals(Package):
 
     version(
         "1.2.12",
-        sha256="06fe281d18bf94b7bb6d275079f0b6b8d3dc0e079ce786bdf92ab929398ca989",
+        sha256="0bcade87c7e466f5ba6c5d096a084764ebae5b5b2ecdb90f3f01b00cd9545337",
     )
     version(
         "1.2.11",
-        sha256="54a5f7c339dde4bff61151f3c057e686d183982692bd494bd8465328361d745a",
+        sha256="52c11e864a603fa07a37ce508fa8b9861b30d15e83c16e33612df5ee85ca6135",
+    )
+    version(
+        "1.2.9",
+        sha256="e563a6a8962c15deebc466454fe6860576e33c52fd2cbdcd125e2164613c29fa",
+    )
+    version(
+        "1.2.5",
+        sha256="81bfbd433f3276694da3565c1be03dd47887e344626bfe7f43d0de1d73fcb567",
+    )
+    version(
+        "1.2.4",
+        sha256="ec5b61a9dcabb6acf2edba305570f0ed9beed80ccec2d3a3f0afd853f080645b",
+    )
+    version(
+        "1.2.0",
+        sha256="eaefdd5d7e8031a617ecb1277d4fc79cc34b150a1d109358db0118f66de45a14",
     )
 
     # Fix up binaries with patchelf.
