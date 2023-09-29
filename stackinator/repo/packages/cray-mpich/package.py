@@ -20,11 +20,27 @@ class CrayMpich(Package):
 
     version(
         "8.1.26",
-        sha256="9134c3292d4bf4537d3d49ee95d8cc25440e070d76956b23312b0da3cf61a2c3",
+        sha256="0f26f7cc691d6378f9eddc66d896f363bfd2f2a1e40d916aa469d5cc0ae6f486",
     )
     version(
         "8.1.25",
-        sha256="c8f8e93e55f5b41e29b989d3ede84ea16cfddeb66ed232b9fd423fa65a282591",
+        sha256="98dcd4ff715a8e8f1af9e9c4732a671d7d5241ce3bc6ecfa463e570b19f969ff",
+    )
+    version(
+        "8.1.24",
+        sha256="2d77b39a5399143d3b31de025515d0bd557dd9ea9ba152b9ef5ff6f6b39eed4b",
+    )
+    version(
+        "8.1.23",
+        sha256="e56a5cd2aea3418638c121efc5e4a0ae3b369a2a45b9afc07c5e2086a59f35d7",
+    )
+    version(
+        "8.1.21",
+        sha256="ea8921a2f08b0a85e35c2123235f09d2f86d9b092f32f72c5e025e8c5264732e",
+    )
+    version(
+        "8.1.18",
+        sha256="45d519be217cea89c58893d25826b15d99183247d15ecee9c3f64913660d79c2",
     )
 
     variant("cuda", default=False)
@@ -37,7 +53,7 @@ class CrayMpich(Package):
     # Fix up binaries with patchelf.
     depends_on("patchelf", type="build")
 
-    for ver in ["8.1.25", "8.1.26"]:
+    for ver in ["8.1.18", "8.1.21", "8.1.23", "8.1.24", "8.1.25", "8.1.26"]:
         with when("+cuda"):
             depends_on(f"cray-gtl@{ver} +cuda", type="link", when="@" + ver)
         with when("+rocm"):
@@ -45,8 +61,12 @@ class CrayMpich(Package):
 
     depends_on("libfabric@1:", type="link")
 
-    depends_on("cray-pmi@6.1.10", type="link", when="@8.1.25")
     depends_on("cray-pmi@6.1.11", type="link", when="@8.1.26")
+    depends_on("cray-pmi@6.1.10", type="link", when="@8.1.25")
+    depends_on("cray-pmi@6.1.9", type="link", when="@8.1.24")
+    depends_on("cray-pmi@6.1.8", type="link", when="@8.1.23")
+    depends_on("cray-pmi@6.1.7", type="link", when="@8.1.21")
+    depends_on("cray-pmi@6.0.17", type="link", when="@8.1.18")
 
     conflicts("%gcc@:7")
 

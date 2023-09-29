@@ -17,12 +17,28 @@ class CrayGtl(Package):
     maintainers = ["bcumming"]
 
     version(
-        "8.1.25",
-        sha256="e4cacd2266d4915028865e55763cc1735246767e4867297e9974328445e7ddc3",
+        "8.1.26",
+        sha256="319e4e2ac0f06c1272ac6ba756924e2a5b239857b3a3b58e7a9a4672aa63c138",
     )
     version(
-        "8.1.26",
-        sha256="76487504af1c8a2dff5ec55b0a6837199cdb28acf674d9230db244e9b850efbc",
+        "8.1.25",
+        sha256="527c63823ea3a15ca989ded43f8b085e40baad38b9276d6893b8dce3fdf91254",
+    )
+    version(
+        "8.1.24",
+        sha256="980cbc3538501e5422528e12cb7b99d3e5b21e029e17f55decbbf4812c793aaa",
+    )
+    version(
+        "8.1.23",
+        sha256="9ea85f8bcc623fd5c8d6b46dec776a90c8c8d9a85abb43d3836eb89697e6e5b8",
+    )
+    version(
+        "8.1.21",
+        sha256="44ba43d31721031d54bdce5b722ed0cd7f3bc39dae08141b93b2e779b7900e4e",
+    )
+    version(
+        "8.1.18",
+        sha256="5ac6b0877fd0f6afaaf391fffef41daf4d3150edc3250721c9abd4ded6b58486",
     )
 
     variant("cuda", default=False)

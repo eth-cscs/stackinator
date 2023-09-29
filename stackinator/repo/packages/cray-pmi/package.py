@@ -20,17 +20,37 @@ class CrayPmi(Package):
 
     version(
         "6.1.11",
-        sha256="ec278522af94115d6157a573ac914f39ad5fae5b2c4caa0b84b6aa757223bfc2",
+        sha256="de6c6b3e31ff884c0192c7bac7b999167710850cae8a663f5c20c4af30f40c3d",
     )
     version(
         "6.1.10",
-        sha256="b5281a0f931990c2584ae3250bc49a36398b4bf8e798990b395e7bfb8f43cd09",
+        sha256="548dc1ed44b86ca85f52da1bb6af9abbfb71a6a434170f86bbf9219cb2f0a913",
+    )
+    version(
+        "6.1.9",
+        sha256="9839585ca211b665b66a34ee9d81629a7529bebef45b664d55e9b602255ca97e",
+    )
+    version(
+        "6.1.8",
+        sha256="b8e94335ca3857dc4895e416b91eaeaee5bfbbe928b5dcfc15300239401a8b7b",
+    )
+    version(
+        "6.1.7",
+        sha256="7cf52023ef54d82e1836712b12bf6f6a179ae562e35b0f710ca4c7086f4e35e5",
+    )
+    version(
+        "6.0.17",
+        sha256="4fc1f8cc32a98f7f3d339915564347b75db8c373647f748bde01daaf0ac4bf70",
     )
 
     # Fix up binaries with patchelf.
     depends_on("patchelf", type="build")
     depends_on("cray-pals@1.2.12", type="link", when="@6.1.11")
     depends_on("cray-pals@1.2.11", type="link", when="@6.1.10")
+    depends_on("cray-pals@1.2.9", type="link", when="@6.1.9")
+    depends_on("cray-pals@1.2.5", type="link", when="@6.1.8")
+    depends_on("cray-pals@1.2.4", type="link", when="@6.1.7")
+    depends_on("cray-pals@1.2.0", type="link", when="@6.0.17")
 
     def get_rpaths(self):
         # Those rpaths are already set in the build environment, so
