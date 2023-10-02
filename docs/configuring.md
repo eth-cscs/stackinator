@@ -17,7 +17,7 @@ The following flags are required:
 The following flags are optional:
 
 * `-c/--cache`: configure the [build cache](build-caches.md).
-* `-d/--develop`: introduce compatibility with Spack's `develop` branch.
+* `--develop`: introduce compatibility with Spack's `develop` branch.
 * `-m/--mount`: override the [mount point](installing.md) where the stack will be installed.
 * `--version`: print the stackinator version.
 * `-h/--help`: print help message.
