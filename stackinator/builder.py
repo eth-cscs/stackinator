@@ -73,6 +73,7 @@ class Builder:
             "args": sys.argv,
             "python": sys.executable,
         }
+        meta["mount"] = str(recipe.mount)
         meta["spack"] = recipe.config["spack"]
         self._configuration_meta = meta
 
@@ -91,6 +92,7 @@ class Builder:
         {
           name: "prgenv-gnu",
           description: "useful programming tools",
+          mount: "/user-environment"
           modules: {
               "root": /user-environment/modules,
           },
@@ -113,6 +115,7 @@ class Builder:
         meta["name"] = conf["name"]
         meta["description"] = conf["description"]
         meta["views"] = recipe.environment_view_meta
+        meta["mount"] = str(recipe.mount)
         modules = None
         if conf["modules"]:
             modules = {"root": str(recipe.mount / "modules")}
