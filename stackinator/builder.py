@@ -48,6 +48,9 @@ class Builder:
         self.path = path
         self.root = pathlib.Path(__file__).parent.resolve()
 
+        # Optionally support breaking changes in Spack develop
+        self.spack_develop = args.develop
+
     @property
     def configuration_meta(self):
         """Meta data about the configuration and build"""
@@ -193,6 +196,7 @@ class Builder:
                     modules=recipe.config["modules"],
                     post_install_hook=recipe.post_install_hook,
                     pre_install_hook=recipe.pre_install_hook,
+                    develop=self.spack_develop,
                     verbose=False,
                 )
             )
