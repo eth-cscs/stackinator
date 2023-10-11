@@ -83,8 +83,8 @@ def main():
         )
         root_logger.info(f"cd {builder.path}")
         root_logger.info(
-            "env --ignore-environment PATH=/usr/bin:/bin:`pwd` HOME=~"
-            "/spack/bin make store.squashfs -j32"
+            "env --ignore-environment PATH=/usr/bin:/bin:`pwd`"
+            "/spack/bin HOME=~ make store.squashfs -j32"
         )
         return 0
     except Exception as e:
