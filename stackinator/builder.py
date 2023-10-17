@@ -14,6 +14,29 @@ import yaml
 from . import VERSION, cache, root_logger
 
 
+def custom_copy(src, dst, *, follow_symlinks=True):
+    """Copy data and metadata. Add chmod a+rX equivalent permissions."""
+
+    shutil.copy2(src, dst, follow_symlinks=follow_symlinks)
+
+    # Fetch the current mode of the destination.
+    mode = os.stat(dst).st_mode
+
+    # cf: https://www.gnu.org/software/libc/manual/html_node/Permission-Bits.html
+    # Always give read permissions for user, group, and others.
+    new_mode = mode | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH
+
+    # If it's a directory, set the execute bit for all.
+    if stat.S_ISDIR(mode):
+        new_mode |= stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+
+    # If execute bit is set for owner or group, set it for others too.
+    elif mode & (stat.S_IXUSR | stat.S_IXGRP):
+        new_mode |= stat.S_IXOTH | stat.S_IXGRP | stat.S_IXUSR
+
+    os.chmod(dst, new_mode)
+
+
 class Builder:
     def __init__(self, args):
         self._logger = root_logger
@@ -317,7 +340,7 @@ class Builder:
         if repo_dst.exists():
             shutil.rmtree(repo_dst)
 
-        shutil.copytree(repo_src, repo_dst)
+        shutil.copytree(repo_src, repo_dst, copy_function=custom_copy)
 
         # Step 2: Create a repos.yaml file in build_path/config
         repos_yaml_template = jinja_env.get_template("repos.yaml")
@@ -345,7 +368,9 @@ class Builder:
             for user_recipe_dir in user_repo_packages.iterdir():
                 if user_recipe_dir.is_dir():  # iterdir() yelds files too
                     shutil.copytree(
-                        user_recipe_dir, repo_dst / "packages" / user_recipe_dir.name
+                        user_recipe_dir,
+                        repo_dst / "packages" / user_recipe_dir.name,
+                        copy_function=custom_copy,
                     )
 
         # Generate the makefile and spack.yaml files that describe the compilers
@@ -427,7 +452,10 @@ class Builder:
         if meta_recipe_path.exists():
             shutil.rmtree(meta_recipe_path)
         shutil.copytree(
-            recipe.path, meta_recipe_path, ignore=shutil.ignore_patterns(".git")
+            recipe.path,
+            meta_recipe_path,
+            ignore=shutil.ignore_patterns(".git"),
+            copy_function=custom_copy,
         )
 
         # create the meta/extra path and copy recipe meta data if it exists
@@ -437,7 +465,9 @@ class Builder:
             shutil.rmtree(meta_extra_path)
         if recipe.user_extra is not None:
             self._logger.debug(f"copying extra recipe meta data to {meta_extra_path}")
-            shutil.copytree(recipe.user_extra, meta_extra_path)
+            shutil.copytree(
+                recipe.user_extra, meta_extra_path, copy_function=custom_copy
+            )
 
         # create debug helper script
         debug_script_path = self.path / "stack-debug.sh"
