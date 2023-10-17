@@ -42,5 +42,6 @@ In order to use Spack's `develop` branch it is possible to configure the Spack s
 The `--develop` option does the following:
  
 * Use build cache mirror name as positional argument instead of using the removed `-m` option ([stackinator#115](https://github.com/eth-cscs/stackinator/issues/115))
+* `spack env --with-view <name>` requires an argument.
 
 Once the supported Spack releases are updated, the changes introduced by `--develop` will be used by default.
