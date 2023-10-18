@@ -14,6 +14,43 @@ import yaml
 from . import VERSION, cache, root_logger
 
 
+def install(src, dst, *, ignore=None, symlinks=False):
+    """Call shutil.copytree or shutil.copy2. copy2 is used if `src` is not a directory.
+    Afterwards run the equivalent of chmod a+rX dst."""
+
+    def apply_permissions_recursive(directory):
+        """Apply permissions recursively to an entire directory."""
+
+        def set_permissions(path):
+            """Set permissions for a given path based on chmod a+rX equivalent."""
+            mode = os.stat(path).st_mode
+            # Always give read permissions for user, group, and others.
+            new_mode = mode | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH
+            # If it's a directory or execute bit is set for owner or group,
+            # set execute bit for all.
+            if stat.S_ISDIR(mode) or mode & (stat.S_IXUSR | stat.S_IXGRP):
+                new_mode |= stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+            os.chmod(path, new_mode)
+
+        for dirpath, dirnames, filenames in os.walk(directory):
+            for dirname in dirnames:
+                set_permissions(os.path.join(dirpath, dirname))
+            for filename in filenames:
+                set_permissions(os.path.join(dirpath, filename))
+
+    if stat.S_ISDIR(os.stat(src).st_mode):
+        shutil.copytree(
+            src,
+            dst,
+            ignore=ignore,
+            symlinks=symlinks,
+        )
+    else:
+        shutil.copy2(src, dst, follow_symlinks=symlinks)
+    # set permissions
+    apply_permissions_recursive(dst)
+
+
 class Builder:
     def __init__(self, args):
         self._logger = root_logger
@@ -317,7 +354,7 @@ class Builder:
         if repo_dst.exists():
             shutil.rmtree(repo_dst)
 
-        shutil.copytree(repo_src, repo_dst)
+        install(repo_src, repo_dst)
 
         # Step 2: Create a repos.yaml file in build_path/config
         repos_yaml_template = jinja_env.get_template("repos.yaml")
@@ -344,7 +381,7 @@ class Builder:
             user_repo_packages = user_repo_path / "packages"
             for user_recipe_dir in user_repo_packages.iterdir():
                 if user_recipe_dir.is_dir():  # iterdir() yelds files too
-                    shutil.copytree(
+                    install(
                         user_recipe_dir, repo_dst / "packages" / user_recipe_dir.name
                     )
 
@@ -426,9 +463,7 @@ class Builder:
         meta_recipe_path.mkdir(exist_ok=True)
         if meta_recipe_path.exists():
             shutil.rmtree(meta_recipe_path)
-        shutil.copytree(
-            recipe.path, meta_recipe_path, ignore=shutil.ignore_patterns(".git")
-        )
+        install(recipe.path, meta_recipe_path, ignore=shutil.ignore_patterns(".git"))
 
         # create the meta/extra path and copy recipe meta data if it exists
         meta_extra_path = meta_path / "extra"
@@ -437,7 +472,7 @@ class Builder:
             shutil.rmtree(meta_extra_path)
         if recipe.user_extra is not None:
             self._logger.debug(f"copying extra recipe meta data to {meta_extra_path}")
-            shutil.copytree(recipe.user_extra, meta_extra_path)
+            install(recipe.user_extra, meta_extra_path)
 
         # create debug helper script
         debug_script_path = self.path / "stack-debug.sh"
