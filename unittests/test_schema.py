@@ -115,6 +115,10 @@ def test_environments_yaml(yaml_path):
         assert env["mpi"] is None
         assert env["views"] == {}
 
+        env = raw["defaults-env-mpi-nogpu"]
+        assert env["mpi"]["spec"] is not None
+        assert env["mpi"]["gpu"] is None
+
         # the full-env sets all of the fields
         # test that they have been read correctly
 

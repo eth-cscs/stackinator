@@ -30,3 +30,11 @@ defaults-env:
   # assert mpi=None
   # assert packages=[]
   # assert view=True
+defaults-env-mpi-nogpu:
+  compiler:
+  - toolchain: gcc
+    spec: gcc@11
+  specs:
+  - tree
+  mpi:
+    spec: cray-mpich
