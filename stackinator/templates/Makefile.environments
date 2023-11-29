@@ -38,8 +38,13 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 {% for env, config in environments.items() %}
 {{ env }}/generated/view_config: {{ env }}/generated/env
 {% if config.view %}
+{% if develop %}
+	$(SPACK) env activate --with-view {{ config.view.name }} --sh ./{{ env }} > $(STORE)/env/{{ config.view.name }}/activate.sh
+	$(SOFTWARE_STACK_PROJECT)/add-compiler-links.py  ./{{ env }}/compilers.yaml $(STORE)/env/{{ config.view.name }}/activate.sh $(SOFTWARE_STACK_PROJECT)
+{% else %}
 	$(SPACK) env activate --with-view --sh ./{{ env }} > $(STORE)/env/{{ config.view.name }}/activate.sh
 	$(SOFTWARE_STACK_PROJECT)/add-compiler-links.py  ./{{ env }}/compilers.yaml $(STORE)/env/{{ config.view.name }}/activate.sh $(SOFTWARE_STACK_PROJECT)
+{% endif %}
 {% endif %}
 	touch $@
 
