@@ -19,6 +19,10 @@ class CrayPals(Package):
     maintainers = ["simonpintarelli"]
 
     version(
+        "1.3.2",
+        sha256="deea749476de0f545b31fcd0912f133d7ba60b84f673e47d8b4b15d5a117254c",
+    )
+    version(
         "1.2.12",
         sha256="c94d29c09ed650c4e98a236df7ced77f027bdf987919a91a1a1382f704a85bb9",
     )

@@ -17,6 +17,14 @@ class CrayGtl(Package):
     maintainers = ["bcumming"]
 
     version(
+        "8.1.28",
+        sha256="2e82c618648e79bdc4b8bf9394be8fd59c34ccd77f172afd11fce38beca1ecab",
+    )
+    version(
+        "8.1.27",
+        sha256="c00836641c7d1f40300f8e4b068a1ba1ff4b0ca31af24b9507d768fc6fe5753c",
+    )
+    version(
         "8.1.26",
         sha256="37d9626cb5f851f63c9799c18a419354c6f21c77f90558472552156df9eef311",
     )
@@ -51,8 +59,8 @@ class CrayGtl(Package):
     conflicts("+cuda", when="+rocm", msg="Pick either CUDA or ROCM")
 
     with when("+cuda"):
-        # libcudart.so.11.0
-        depends_on("cuda@11.0:11", type="link")
+        depends_on("cuda@11.0:11", type="link", when="@:8.1.27")
+        depends_on("cuda@12:", type="link", when="@8.1.28:")
 
     with when("+rocm"):
         # libamdhip64.so.5

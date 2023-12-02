@@ -19,6 +19,14 @@ class CrayPmi(Package):
     maintainers = ["bcumming"]
 
     version(
+        "6.1.13",
+        sha256="217ac554cf84a4c7f08cd149c6a18428e1e3533d73e350fa291b6800895b632e",
+    )
+    version(
+        "6.1.12",
+        sha256="0f1caa93c881e1a5a4b5a65d1cb3a04d9c549ffdb9524b53a6e7ca9317dd90ee",
+    )
+    version(
         "6.1.11",
         sha256="5ebcece6a610da02cd41a9a386fd7463ee909bd55e3370d6d372603f90be9afe",
     )
@@ -41,7 +49,9 @@ class CrayPmi(Package):
 
     # Fix up binaries with patchelf.
     depends_on("patchelf", type="build")
-    depends_on("cray-pals@1.2.12", type="link", when="@6.1.11")
+
+    depends_on("cray-pals@1.3.2", type="link", when="@6.1.13:")
+    depends_on("cray-pals@1.2.12", type="link", when="@6.1.11:6.1.12")
     depends_on("cray-pals@1.2.11", type="link", when="@6.1.10")
     depends_on("cray-pals@1.2.9", type="link", when="@6.1.9")
     depends_on("cray-pals@1.2.5", type="link", when="@6.1.8")

@@ -19,6 +19,14 @@ class CrayMpich(Package):
     maintainers = ["bcumming"]
 
     version(
+        "8.1.28",
+        sha256="935fca183dabfcae1a4cfc664234537f25f1e87fb2765f32636be7352514f476",
+    )
+    version(
+        "8.1.27",
+        sha256="c555f180cbe7272acd76e3e55cd9150c2b20b8ec263228f64fe2b682eec1c612",
+    )
+    version(
         "8.1.26",
         sha256="3c23cfe24b8f05e0c68a059919ac7dd77c45a333cad9aea41872a51d256b12d1",
     )
@@ -39,10 +47,6 @@ class CrayMpich(Package):
         sha256="8b4e0ff9cba48ef7dcd4dd8092b35bb6456420de2dcf7b4f05d7c69f8e266de3",
     )
     version(
-        "8.1.18.4",
-        sha256="3e7d8c562e4d210a9658f35a7f5fbf23e550e1b9e57b6df6b99adbec7d983903",
-    )
-    version(
         "8.1.18",
         sha256="45d519be217cea89c58893d25826b15d99183247d15ecee9c3f64913660d79c2",
     )
@@ -57,7 +61,16 @@ class CrayMpich(Package):
     # Fix up binaries with patchelf.
     depends_on("patchelf", type="build")
 
-    for ver in ["8.1.18", "8.1.21", "8.1.23", "8.1.24", "8.1.25", "8.1.26"]:
+    for ver in [
+        "8.1.18",
+        "8.1.21",
+        "8.1.23",
+        "8.1.24",
+        "8.1.25",
+        "8.1.26",
+        "8.1.27",
+        "8.1.28",
+    ]:
         with when("+cuda"):
             depends_on(f"cray-gtl@{ver} +cuda", type="link", when="@" + ver)
         with when("+rocm"):
@@ -65,14 +78,10 @@ class CrayMpich(Package):
 
     depends_on("libfabric@1:", type="link")
 
-    depends_on("cray-pmi@6.1.11", type="link", when="@8.1.26")
-    depends_on("cray-pmi@6.1.10", type="link", when="@8.1.25")
-    depends_on("cray-pmi@6.1.9", type="link", when="@8.1.24")
-    depends_on("cray-pmi@6.1.8", type="link", when="@8.1.23")
-    depends_on("cray-pmi@6.1.7", type="link", when="@8.1.21")
-    depends_on("cray-pmi@6.0.17", type="link", when="@8.1.18")
+    depends_on("cray-pmi", type="link")
 
     conflicts("%gcc@:7")
+    conflicts("%gcc@:11", when="@8.1.28:")
 
     def setup_run_environment(self, env):
         env.set("MPICC", join_path(self.prefix.bin, "mpicc"))
