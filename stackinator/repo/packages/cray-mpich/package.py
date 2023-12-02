@@ -20,23 +20,27 @@ class CrayMpich(Package):
 
     version(
         "8.1.26",
-        sha256="0f26f7cc691d6378f9eddc66d896f363bfd2f2a1e40d916aa469d5cc0ae6f486",
+        sha256="3c23cfe24b8f05e0c68a059919ac7dd77c45a333cad9aea41872a51d256b12d1",
     )
     version(
         "8.1.25",
-        sha256="98dcd4ff715a8e8f1af9e9c4732a671d7d5241ce3bc6ecfa463e570b19f969ff",
+        sha256="46e8c2804f5d34815bcf381e1957e749e6d7b286853bd94ae2bff73a6df39263",
     )
     version(
         "8.1.24",
-        sha256="2d77b39a5399143d3b31de025515d0bd557dd9ea9ba152b9ef5ff6f6b39eed4b",
+        sha256="96876331bb7098e9ef2eea2c8bb25e479838c48b294ae5790094c19644e73a7d",
     )
     version(
         "8.1.23",
-        sha256="e56a5cd2aea3418638c121efc5e4a0ae3b369a2a45b9afc07c5e2086a59f35d7",
+        sha256="c0985424ef376b29e6f1b9c2016b8cfe6430b9ce434da9700a6c14433b47cf20",
     )
     version(
         "8.1.21",
-        sha256="ea8921a2f08b0a85e35c2123235f09d2f86d9b092f32f72c5e025e8c5264732e",
+        sha256="8b4e0ff9cba48ef7dcd4dd8092b35bb6456420de2dcf7b4f05d7c69f8e266de3",
+    )
+    version(
+        "8.1.18.4",
+        sha256="3e7d8c562e4d210a9658f35a7f5fbf23e550e1b9e57b6df6b99adbec7d983903",
     )
     version(
         "8.1.18",

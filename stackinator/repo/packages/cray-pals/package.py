@@ -20,27 +20,23 @@ class CrayPals(Package):
 
     version(
         "1.2.12",
-        sha256="0bcade87c7e466f5ba6c5d096a084764ebae5b5b2ecdb90f3f01b00cd9545337",
+        sha256="c94d29c09ed650c4e98a236df7ced77f027bdf987919a91a1a1382f704a85bb9",
     )
     version(
         "1.2.11",
-        sha256="52c11e864a603fa07a37ce508fa8b9861b30d15e83c16e33612df5ee85ca6135",
+        sha256="e1af09e39d70e28381de806548c6cb29c23abf891a078f46eb71c301a3f0994c",
     )
     version(
         "1.2.9",
-        sha256="e563a6a8962c15deebc466454fe6860576e33c52fd2cbdcd125e2164613c29fa",
+        sha256="ceec6f99bea9df3f7f657a7df499445e62976064dda3f3e437d61e895ec31601",
     )
     version(
         "1.2.5",
-        sha256="81bfbd433f3276694da3565c1be03dd47887e344626bfe7f43d0de1d73fcb567",
+        sha256="d7269ed8f4deab816e3d4006090ec68b25ccc585200d16728ed9a914baf4d9bf",
     )
     version(
         "1.2.4",
-        sha256="ec5b61a9dcabb6acf2edba305570f0ed9beed80ccec2d3a3f0afd853f080645b",
-    )
-    version(
-        "1.2.0",
-        sha256="eaefdd5d7e8031a617ecb1277d4fc79cc34b150a1d109358db0118f66de45a14",
+        sha256="a253939585bad2bb9061b98be6e517f18bda0602ecfd38f75c734a01d12003f2",
     )
 
     # Fix up binaries with patchelf.

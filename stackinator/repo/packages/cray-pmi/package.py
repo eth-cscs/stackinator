@@ -20,27 +20,23 @@ class CrayPmi(Package):
 
     version(
         "6.1.11",
-        sha256="de6c6b3e31ff884c0192c7bac7b999167710850cae8a663f5c20c4af30f40c3d",
+        sha256="5ebcece6a610da02cd41a9a386fd7463ee909bd55e3370d6d372603f90be9afe",
     )
     version(
         "6.1.10",
-        sha256="548dc1ed44b86ca85f52da1bb6af9abbfb71a6a434170f86bbf9219cb2f0a913",
+        sha256="f4fbe75c201a171dcfe6ada773a4bf0c606767a0b7a8a76fd19d10852abe1290",
     )
     version(
         "6.1.9",
-        sha256="9839585ca211b665b66a34ee9d81629a7529bebef45b664d55e9b602255ca97e",
+        sha256="8fd4194c6c5167f8b81b1cf9b76341669e40d647d0caecef287be6f0f5d95290",
     )
     version(
         "6.1.8",
-        sha256="b8e94335ca3857dc4895e416b91eaeaee5bfbbe928b5dcfc15300239401a8b7b",
+        sha256="6c7e5d3038e26b9d0e82428b25b570d00401a6fc9f2fd3c008f15a253a8e2305",
     )
     version(
         "6.1.7",
-        sha256="7cf52023ef54d82e1836712b12bf6f6a179ae562e35b0f710ca4c7086f4e35e5",
-    )
-    version(
-        "6.0.17",
-        sha256="4fc1f8cc32a98f7f3d339915564347b75db8c373647f748bde01daaf0ac4bf70",
+        sha256="574b21bd6f8970521c2bc4f096aced896fec8b749f854272cc7bbb7130ae92d8",
     )
 
     # Fix up binaries with patchelf.

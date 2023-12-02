@@ -18,23 +18,23 @@ class CrayGtl(Package):
 
     version(
         "8.1.26",
-        sha256="319e4e2ac0f06c1272ac6ba756924e2a5b239857b3a3b58e7a9a4672aa63c138",
+        sha256="37d9626cb5f851f63c9799c18a419354c6f21c77f90558472552156df9eef311",
     )
     version(
         "8.1.25",
-        sha256="527c63823ea3a15ca989ded43f8b085e40baad38b9276d6893b8dce3fdf91254",
+        sha256="a2e2af2037e63b64ef74d870c0bab91a8109e75eef82a30250b81b0d785ff6ae",
     )
     version(
         "8.1.24",
-        sha256="980cbc3538501e5422528e12cb7b99d3e5b21e029e17f55decbbf4812c793aaa",
+        sha256="2fa8635f829e67844e7b30dffb092a336d257e0e769d2225030f2ccf4c1d302f",
     )
     version(
         "8.1.23",
-        sha256="9ea85f8bcc623fd5c8d6b46dec776a90c8c8d9a85abb43d3836eb89697e6e5b8",
+        sha256="034667c2ea49eec76ef8f79494231bad94884b99683edabf781beed01ec681e4",
     )
     version(
         "8.1.21",
-        sha256="44ba43d31721031d54bdce5b722ed0cd7f3bc39dae08141b93b2e779b7900e4e",
+        sha256="78072edfcb6cc24cfefab06e824111b5b2b839551235ece68cd154bec7936a24",
     )
     version(
         "8.1.18",
