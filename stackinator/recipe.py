@@ -210,16 +210,16 @@ class Recipe:
         # determine the "major" version, if it can be inferred.
         # one of "0.20", "0.21", "develop" or "unknown".
         commit = self.config["spack"]["commit"]
-        if commit is None or commit=="develop":
+        if commit is None or commit == "develop":
             return "develop"
         # currently supported
-        if commit.find("0.20")>=0:
+        if commit.find("0.20") >= 0:
             return "0.20"
         # currently supported
-        if commit.find("0.21")>=0:
+        if commit.find("0.21") >= 0:
             return "0.21"
         # branches that contain wip for the next v0.22 release
-        if commit.find("0.22")>=0:
+        if commit.find("0.22") >= 0:
             return "0.22"
 
         return "unknown"
@@ -494,7 +494,7 @@ class Recipe:
             environments=self.environments,
             push_to_cache=push_to_cache,
             develop=self.spack_develop,
-            spack_version=self.spack_version
+            spack_version=self.spack_version,
         )
 
         files["config"] = {}
