@@ -41,6 +41,7 @@ def log_header(args):
     mount = args.mount or "default"
     root_logger.info(f"  mount      : {mount}")
     root_logger.info(f"  build cache: {args.cache}")
+    root_logger.info(f"  develop    : {args.develop}")
 
 
 def make_argparser():

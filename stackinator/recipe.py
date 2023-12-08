@@ -285,8 +285,11 @@ class Recipe:
         # for the "default" view.
         # The workaround is to create multiple versions of the same environment, one for
         # each view.
-        # TODO: remove when the minimum supported version of Spack supports generation
-        # for more than one view.
+        # TODO: remove when the minimum supported version of spack is v0.21, in which this
+        # issue was fixed, see https://github.com/spack/spack/pull/40549
+        # we have a `--develop` workaround that uses the current approach of generating a
+        # separate environment for each view, with a view named "default", and uses the name
+        # default to generated the activation script.
         env_names = set()
         env_name_map = {}
         for name, config in environments.items():
