@@ -75,13 +75,8 @@ cache-force: mirror-setup
 	$(warning likely have to start a fresh build (but that's okay, because build caches FTW))
 	$(warning ================================================================================)
 	$(SANDBOX) $(MAKE) -C generate-config
-{% if develop %}
 	$(SANDBOX) $(SPACK) -C $(STORE)/config buildcache create --rebuild-index --allow-root --only=package alpscache \
 	$$($(SANDBOX) $(SPACK) --color=never -C $(STORE)/config find --format '{/hash}')
-{% else %}
-	$(SANDBOX) $(SPACK) -C $(STORE)/config buildcache create --rebuild-index --allow-root --only=package -m alpscache \
-	$$($(SANDBOX) $(SPACK) --color=never -C $(STORE)/config find --format '{/hash}')
-{% endif %}
 {% else %}
 	$(warning "pushing to the build cache is not enabled. See the documentation on how to add a key: https://eth-cscs.github.io/stackinator/build-caches/")
 {% endif %}

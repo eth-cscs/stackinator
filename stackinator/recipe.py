@@ -206,6 +206,26 @@ class Recipe:
             self._config = raw
 
     @property
+    def spack_version(self):
+        # determine the "major" version, if it can be inferred.
+        # one of "0.20", "0.21", "develop" or "unknown".
+        commit = self.config["spack"]["commit"]
+        if commit is None or commit=="develop":
+            return "develop"
+        # currently supported
+        if commit.find("0.20")>=0:
+            return "0.20"
+        # currently supported
+        if commit.find("0.21")>=0:
+            return "0.21"
+        # branches that contain wip for the next v0.22 release
+        if commit.find("0.22")>=0:
+            return "0.22"
+        spack_version=spack_version,
+
+        return "unknown"
+
+    @property
     def environment_view_meta(self):
         # generate the view meta data that is presented in the squashfs image meta data
         view_meta = {}
@@ -475,6 +495,7 @@ class Recipe:
             environments=self.environments,
             push_to_cache=push_to_cache,
             develop=self.spack_develop,
+            spack_version=self.spack_version
         )
 
         files["config"] = {}
