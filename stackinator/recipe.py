@@ -221,7 +221,6 @@ class Recipe:
         # branches that contain wip for the next v0.22 release
         if commit.find("0.22")>=0:
             return "0.22"
-        spack_version=spack_version,
 
         return "unknown"
 
