@@ -172,6 +172,7 @@ class Builder:
         tmp_path.mkdir(exist_ok=True)
 
         # check out the version of spack
+        spack_version = recipe.spack_version
         spack = recipe.config["spack"]
         spack_path = self.path / "spack"
 
@@ -234,6 +235,7 @@ class Builder:
                     post_install_hook=recipe.post_install_hook,
                     pre_install_hook=recipe.pre_install_hook,
                     develop=self.spack_develop,
+                    spack_version=spack_version,
                     verbose=False,
                 )
             )
