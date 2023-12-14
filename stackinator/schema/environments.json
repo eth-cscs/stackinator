@@ -9,6 +9,10 @@
              "required": ["compiler", "specs"],
              "additionalProperties": false,
              "properties": {
+                 "deprecated": {
+                     "type": "boolean",
+                     "default": false
+                 },
                  "unify": {
                      "enum": ["when_possible", true, false],
                      "default": true

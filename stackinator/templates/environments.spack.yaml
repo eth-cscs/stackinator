@@ -7,7 +7,7 @@ spack:
   - compilers.yaml
   - config.yaml
   config:
-    deprecated: false
+    deprecated: {{ config.deprecated }}
   concretizer:
     unify: {{ config.unify }}
     reuse: false
