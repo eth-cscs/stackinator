@@ -6,6 +6,8 @@ spack:
 {% endif %}
   - compilers.yaml
   - config.yaml
+  config:
+    deprecated: false
   concretizer:
     unify: {{ config.unify }}
     reuse: false
