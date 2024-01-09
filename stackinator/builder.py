@@ -32,6 +32,7 @@ def install(src, dst, *, ignore=None, symlinks=False):
                 new_mode |= stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
             os.chmod(path, new_mode)
 
+        set_permissions(directory)
         for dirpath, dirnames, filenames in os.walk(directory):
             for dirname in dirnames:
                 set_permissions(os.path.join(dirpath, dirname))
