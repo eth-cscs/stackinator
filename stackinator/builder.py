@@ -33,6 +33,7 @@ def install(src, dst, *, ignore=None, symlinks=False):
             os.chmod(path, new_mode)
 
         for dirpath, dirnames, filenames in os.walk(directory):
+            set_permissions(dirpath)
             for dirname in dirnames:
                 set_permissions(os.path.join(dirpath, dirname))
             for filename in filenames:
