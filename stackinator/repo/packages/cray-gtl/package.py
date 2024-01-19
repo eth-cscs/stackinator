@@ -22,7 +22,7 @@ class CrayGtl(Package):
     )
     version(
         "8.1.27",
-        sha256="c00836641c7d1f40300f8e4b068a1ba1ff4b0ca31af24b9507d768fc6fe5753c",
+        sha256="80c7e94d30b5a3573ac6b2cc5fb0373046760a0acdff44a178e723ab3c8fdfb9",
     )
     version(
         "8.1.26",

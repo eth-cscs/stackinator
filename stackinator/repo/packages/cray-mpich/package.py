@@ -24,7 +24,7 @@ class CrayMpich(Package):
     )
     version(
         "8.1.27",
-        sha256="c555f180cbe7272acd76e3e55cd9150c2b20b8ec263228f64fe2b682eec1c612",
+        sha256="c7f2f5366aba9ff9781084a430b5b9462427ee8120069ff530d1965065ef220b",
     )
     version(
         "8.1.26",
