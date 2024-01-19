@@ -59,8 +59,8 @@ class CrayGtl(Package):
     conflicts("+cuda", when="+rocm", msg="Pick either CUDA or ROCM")
 
     with when("+cuda"):
-        depends_on("cuda@11.0:11", type="link", when="@:8.1.27")
-        depends_on("cuda@12:", type="link", when="@8.1.28:")
+        depends_on("cuda@11.0:11", type="link", when="@:8.1.26")
+        depends_on("cuda@12.0:12", type="link", when="@8.1.27:")
 
     with when("+rocm"):
         # libamdhip64.so.5
@@ -109,3 +109,6 @@ class CrayGtl(Package):
                 # __gxx_personality_v0 but wasn't linked against libstdc++.
                 if "libmpi_gtl_cuda.so" in str(f):
                     patchelf("--add-needed", "libstdc++.so", f, fail_on_error=False)
+                if "@8.1.27" in self.spec:
+                    patchelf("--add-needed", "libcudart.so", f, fail_on_error=False)
+                    patchelf("--add-needed", "libcuda.so", f, fail_on_error=False)
