@@ -24,7 +24,7 @@ class CrayPmi(Package):
     )
     version(
         "6.1.12",
-        sha256="0f1caa93c881e1a5a4b5a65d1cb3a04d9c549ffdb9524b53a6e7ca9317dd90ee",
+        sha256="d1a4bd929b73197823dd9b4bcb3c8ef06d80326297a07291b24e5996b60330a8",
     )
     version(
         "6.1.11",
