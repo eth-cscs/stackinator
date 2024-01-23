@@ -20,31 +20,31 @@ class CrayMpich(Package):
 
     version(
         "8.1.28",
-        sha256="935fca183dabfcae1a4cfc664234537f25f1e87fb2765f32636be7352514f476",
+        sha256="d2d2c36b55259826a83d76cc7d0cff2f332fc236088a0d6b8ddf27937ea290f8",
     )
     version(
         "8.1.27",
-        sha256="c7f2f5366aba9ff9781084a430b5b9462427ee8120069ff530d1965065ef220b",
+        sha256="ac3fa0500a734a551f5af1e6987a397513c8f57594a1ffb3f61e00615c1f3224",
     )
     version(
         "8.1.26",
-        sha256="3c23cfe24b8f05e0c68a059919ac7dd77c45a333cad9aea41872a51d256b12d1",
+        sha256="2e921d75836699caa21d7a06ba818583ba8de5e170d9405c35122f3fb50b6ec3",
     )
     version(
         "8.1.25",
-        sha256="46e8c2804f5d34815bcf381e1957e749e6d7b286853bd94ae2bff73a6df39263",
+        sha256="bfd3b0a2dd1a45f50f5ff9f214d0f14e77c1ecf095d14d6fdcee8e5b6cf14d0b",
     )
     version(
         "8.1.24",
-        sha256="96876331bb7098e9ef2eea2c8bb25e479838c48b294ae5790094c19644e73a7d",
+        sha256="68f38a2833655e989e6e6187930ed5eaffa2d08cb7db4d7239a229c2f618ac08",
     )
     version(
         "8.1.23",
-        sha256="c0985424ef376b29e6f1b9c2016b8cfe6430b9ce434da9700a6c14433b47cf20",
+        sha256="9c452c76c684ec8abef3c666acbb2fb5286e76dfd48117d5dbed6cbb04ed16e4",
     )
     version(
         "8.1.21",
-        sha256="8b4e0ff9cba48ef7dcd4dd8092b35bb6456420de2dcf7b4f05d7c69f8e266de3",
+        sha256="41e8b5b1a2ca0777a1dd412df1bbcf602b27568806ee28e3ff891e6b43fd78d1",
     )
     version(
         "8.1.18",
@@ -148,10 +148,10 @@ class CrayMpich(Package):
         # link with the relevant gtl lib
         if "+cuda" in self.spec:
             lpath = self.spec["cray-gtl"].prefix.lib
-            gtl_library = f"-L{lpath} -lmpi_gtl_cuda"
+            gtl_library = f"-L{lpath} -Wl,-rpath,{lpath} -lmpi_gtl_cuda"
         elif "+rocm" in self.spec:
             lpath = self.spec["cray-gtl"].prefix.lib
-            gtl_library = f"-L{lpath} -lmpi_gtl_hsa"
+            gtl_library = f"-L{lpath} -Wl,-rpath,{lpath}  -lmpi_gtl_hsa"
         else:
             gtl_library = ""
         print("==== GTL_LIBRARY", gtl_library)
