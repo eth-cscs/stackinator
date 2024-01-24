@@ -4,9 +4,38 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import platform
 
 import spack.compilers
 from spack.package import *
+
+_versions = {
+    "8.1.28": {
+        "Linux-aarch64": "dfd6c685adfbf070fe9d546d95b31e108ee7089a738447fa7326973a3e696e8d",
+        "Linux-x86_64": "55a0a068bd8bff14f302c5371d7e2b4cf732d5c1ec875bb03e375644e1a6beab",
+    },
+    "8.1.27": {
+        "Linux-x86_64": "5d59cc69b7ae2ef692ae49843bb2c7a44b5a8478d72eaf2ab1f1f6c5983eee0b"
+    },
+    "8.1.26": {
+        "Linux-x86_64": "d308cf3e254ce5873af6caee5ec683a397fed5ce92975f57e5c9215a98d8edad"
+    },
+    "8.1.25": {
+        "Linux-x86_64": "024ab0c4526670a37df7e2995172ba264454fd69c05d8ffe140c9e519397a65c"
+    },
+    "8.1.24": {
+        "Linux-x86_64": "2c3fa339511ed822892e112d3e4d5a39a634d00a31cf22e02ce843f0efcc5ae8"
+    },
+    "8.1.23": {
+        "Linux-x86_64": "ed7ff286ede30ea96dede4c53aa2ef98e8090c988a0bea764cd505ba5fcc0520"
+    },
+    "8.1.21": {
+        "Linux-x86_64": "5fda115f356c26e5d9f8cc68fe578e954a70edd10ebf007182d945345886b61a"
+    },
+    "8.1.18": {
+        "Linux-x86_64": "45d519be217cea89c58893d25826b15d99183247d15ecee9c3f64913660d79c2"
+    },
+}
 
 
 class CrayMpich(Package):
@@ -17,39 +46,15 @@ class CrayMpich(Package):
     homepage = "https://www.hpe.com/us/en/compute/hpc/hpc-software.html"
     url = "https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.26.tar.gz"
     maintainers = ["bcumming"]
-
-    version(
-        "8.1.28",
-        sha256="d2d2c36b55259826a83d76cc7d0cff2f332fc236088a0d6b8ddf27937ea290f8",
-    )
-    version(
-        "8.1.27",
-        sha256="ac3fa0500a734a551f5af1e6987a397513c8f57594a1ffb3f61e00615c1f3224",
-    )
-    version(
-        "8.1.26",
-        sha256="2e921d75836699caa21d7a06ba818583ba8de5e170d9405c35122f3fb50b6ec3",
-    )
-    version(
-        "8.1.25",
-        sha256="bfd3b0a2dd1a45f50f5ff9f214d0f14e77c1ecf095d14d6fdcee8e5b6cf14d0b",
-    )
-    version(
-        "8.1.24",
-        sha256="68f38a2833655e989e6e6187930ed5eaffa2d08cb7db4d7239a229c2f618ac08",
-    )
-    version(
-        "8.1.23",
-        sha256="9c452c76c684ec8abef3c666acbb2fb5286e76dfd48117d5dbed6cbb04ed16e4",
-    )
-    version(
-        "8.1.21",
-        sha256="41e8b5b1a2ca0777a1dd412df1bbcf602b27568806ee28e3ff891e6b43fd78d1",
-    )
-    version(
-        "8.1.18",
-        sha256="45d519be217cea89c58893d25826b15d99183247d15ecee9c3f64913660d79c2",
-    )
+    for ver, packages in _versions.items():
+        key = "{0}-{1}".format(platform.system(), platform.machine())
+        sha = packages.get(key)
+        if sha:
+            version(
+                ver,
+                sha256=sha,
+                url=f"https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-{ver}.{platform.machine()}.tar.gz",
+            )
 
     variant("cuda", default=False)
     variant("rocm", default=False)
