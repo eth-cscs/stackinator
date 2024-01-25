@@ -80,13 +80,14 @@ To provide a single Spack stack that meets the workflow's needs, we would create
 ```yaml title="environments.yaml high level overview"
 # A GCC-based programming environment
 prgenv-gnu:
-  compiler: # ... compiler toolchain
-  mpi:      # ... mpi configuration
-  unify:    # ... configure Spack concretizer
-  specs:    # ... list of packages to install
-  variants: # ... variants to apply to packages (e.g. +mpi)
-  packages: # ... list of external packages to use
-  views:    # ... environment views to provide to users
+  compiler:   # ... compiler toolchain
+  mpi:        # ... mpi configuration
+  deprecated: # ... whether to allow usage of deprecated packages or not
+  unify:      # ... configure Spack concretizer
+  specs:      # ... list of packages to install
+  variants:   # ... variants to apply to packages (e.g. +mpi)
+  packages:   # ... list of external packages to use
+  views:      # ... environment views to provide to users
 # An NVIDIA programming environment
 prgenv-nvgpu:
   # ... same structure as prgenv-gnu
@@ -180,6 +181,8 @@ The following versions of cray-mpich are currently provided:
 ### Specs
 
 The list of software packages to install is configured in the `spec:` field of an environment. The specs follow the [standard Spack practice](https://spack.readthedocs.io/en/latest/environments.html#spec-concretization).
+
+The `deprecated: ` field controls if Spack should consider versions marked as deprecated, and can be set to `true` or `false` (for considering or not considering deprecated versions, respectively).
 
 The `unify:` field controls the Spack concretiser, and can be set to three values `true`, `false` or `when_possible`.
 The 
