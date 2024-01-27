@@ -11,7 +11,7 @@ from spack.package import *
 
 _versions = {
     "8.1.28": {
-        "Linux-aarch64": "dfd6c685adfbf070fe9d546d95b31e108ee7089a738447fa7326973a3e696e8d",
+        "Linux-aarch64": "001fe9f94274e059c060f9ff55ee84f8f2818440df9932a9504303110a95943f",
         "Linux-x86_64": "55a0a068bd8bff14f302c5371d7e2b4cf732d5c1ec875bb03e375644e1a6beab",
     },
     "8.1.27": {
