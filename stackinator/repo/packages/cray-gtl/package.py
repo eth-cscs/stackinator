@@ -115,6 +115,6 @@ class CrayGtl(Package):
                 # __gxx_personality_v0 but wasn't linked against libstdc++.
                 if "libmpi_gtl_cuda.so" in str(f):
                     patchelf("--add-needed", "libstdc++.so", f, fail_on_error=False)
-                if "@8.1.27" in self.spec:
+                if "@8.1.27+cuda" in self.spec:
                     patchelf("--add-needed", "libcudart.so", f, fail_on_error=False)
                     patchelf("--add-needed", "libcuda.so", f, fail_on_error=False)
