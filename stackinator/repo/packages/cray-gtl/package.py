@@ -4,9 +4,38 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import platform
 
 import spack.compilers
 from spack.package import *
+
+_versions = {
+    "8.1.28": {
+        "Linux-aarch64": "0bb881cba502b199dadce7875bba62e7403e1c55abc6669c76a7cba7c05fa5ad",
+        "Linux-x86_64": "2e82c618648e79bdc4b8bf9394be8fd59c34ccd77f172afd11fce38beca1ecab",
+    },
+    "8.1.27": {
+        "Linux-x86_64": "80c7e94d30b5a3573ac6b2cc5fb0373046760a0acdff44a178e723ab3c8fdfb9"
+    },
+    "8.1.26": {
+        "Linux-x86_64": "37d9626cb5f851f63c9799c18a419354c6f21c77f90558472552156df9eef311"
+    },
+    "8.1.25": {
+        "Linux-x86_64": "a2e2af2037e63b64ef74d870c0bab91a8109e75eef82a30250b81b0d785ff6ae"
+    },
+    "8.1.24": {
+        "Linux-x86_64": "2fa8635f829e67844e7b30dffb092a336d257e0e769d2225030f2ccf4c1d302f"
+    },
+    "8.1.23": {
+        "Linux-x86_64": "034667c2ea49eec76ef8f79494231bad94884b99683edabf781beed01ec681e4"
+    },
+    "8.1.21": {
+        "Linux-x86_64": "78072edfcb6cc24cfefab06e824111b5b2b839551235ece68cd154bec7936a24"
+    },
+    "8.1.18": {
+        "Linux-x86_64": "5ac6b0877fd0f6afaaf391fffef41daf4d3150edc3250721c9abd4ded6b58486"
+    },
+}
 
 
 class CrayGtl(Package):
@@ -14,40 +43,17 @@ class CrayGtl(Package):
 
     homepage = "https://www.hpe.com/us/en/compute/hpc/hpc-software.html"
     url = "https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-gtl-8.1.26.tar.gz"
-    maintainers = ["bcumming"]
+    maintainers = ["bcumming", "simonpintarelli"]
 
-    version(
-        "8.1.28",
-        sha256="2e82c618648e79bdc4b8bf9394be8fd59c34ccd77f172afd11fce38beca1ecab",
-    )
-    version(
-        "8.1.27",
-        sha256="80c7e94d30b5a3573ac6b2cc5fb0373046760a0acdff44a178e723ab3c8fdfb9",
-    )
-    version(
-        "8.1.26",
-        sha256="37d9626cb5f851f63c9799c18a419354c6f21c77f90558472552156df9eef311",
-    )
-    version(
-        "8.1.25",
-        sha256="a2e2af2037e63b64ef74d870c0bab91a8109e75eef82a30250b81b0d785ff6ae",
-    )
-    version(
-        "8.1.24",
-        sha256="2fa8635f829e67844e7b30dffb092a336d257e0e769d2225030f2ccf4c1d302f",
-    )
-    version(
-        "8.1.23",
-        sha256="034667c2ea49eec76ef8f79494231bad94884b99683edabf781beed01ec681e4",
-    )
-    version(
-        "8.1.21",
-        sha256="78072edfcb6cc24cfefab06e824111b5b2b839551235ece68cd154bec7936a24",
-    )
-    version(
-        "8.1.18",
-        sha256="5ac6b0877fd0f6afaaf391fffef41daf4d3150edc3250721c9abd4ded6b58486",
-    )
+    for ver, packages in _versions.items():
+        key = "{0}-{1}".format(platform.system(), platform.machine())
+        sha = packages.get(key)
+        if sha:
+            version(
+                ver,
+                sha256=sha,
+                url=f"https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-gtl-{ver}.{platform.machine()}.tar.gz",
+            )
 
     variant("cuda", default=False)
     variant("rocm", default=False)
@@ -109,6 +115,6 @@ class CrayGtl(Package):
                 # __gxx_personality_v0 but wasn't linked against libstdc++.
                 if "libmpi_gtl_cuda.so" in str(f):
                     patchelf("--add-needed", "libstdc++.so", f, fail_on_error=False)
-                if "@8.1.27" in self.spec:
+                if "@8.1.27+cuda" in self.spec:
                     patchelf("--add-needed", "libcudart.so", f, fail_on_error=False)
                     patchelf("--add-needed", "libcuda.so", f, fail_on_error=False)

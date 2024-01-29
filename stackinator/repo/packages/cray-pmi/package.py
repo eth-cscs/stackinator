@@ -4,9 +4,35 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import platform
 
 import spack.compilers
 from spack.package import *
+
+_versions = {
+    "6.1.13": {
+        "Linux-aarch64": "f865f410145a66bb05520c32ee5b64b6dfcb9ae33aace6d3db5f870e4f4714bc",
+        "Linux-x86_64": "217ac554cf84a4c7f08cd149c6a18428e1e3533d73e350fa291b6800895b632e",
+    },
+    "6.1.12": {
+        "Linux-x86_64": "d1a4bd929b73197823dd9b4bcb3c8ef06d80326297a07291b24e5996b60330a8"
+    },
+    "6.1.11": {
+        "Linux-x86_64": "5ebcece6a610da02cd41a9a386fd7463ee909bd55e3370d6d372603f90be9afe"
+    },
+    "6.1.10": {
+        "Linux-x86_64": "f4fbe75c201a171dcfe6ada773a4bf0c606767a0b7a8a76fd19d10852abe1290"
+    },
+    "6.1.9": {
+        "Linux-x86_64": "8fd4194c6c5167f8b81b1cf9b76341669e40d647d0caecef287be6f0f5d95290"
+    },
+    "6.1.8": {
+        "Linux-x86_64": "6c7e5d3038e26b9d0e82428b25b570d00401a6fc9f2fd3c008f15a253a8e2305"
+    },
+    "6.1.7": {
+        "Linux-x86_64": "574b21bd6f8970521c2bc4f096aced896fec8b749f854272cc7bbb7130ae92d8"
+    },
+}
 
 
 class CrayPmi(Package):
@@ -16,36 +42,17 @@ class CrayPmi(Package):
 
     homepage = "https://www.hpe.com/us/en/compute/hpc/hpc-software.html"
     url = "https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-pmi-6.1.11.tar.gz"
-    maintainers = ["bcumming"]
+    maintainers = ["bcumming", "simonpintarelli"]
 
-    version(
-        "6.1.13",
-        sha256="217ac554cf84a4c7f08cd149c6a18428e1e3533d73e350fa291b6800895b632e",
-    )
-    version(
-        "6.1.12",
-        sha256="d1a4bd929b73197823dd9b4bcb3c8ef06d80326297a07291b24e5996b60330a8",
-    )
-    version(
-        "6.1.11",
-        sha256="5ebcece6a610da02cd41a9a386fd7463ee909bd55e3370d6d372603f90be9afe",
-    )
-    version(
-        "6.1.10",
-        sha256="f4fbe75c201a171dcfe6ada773a4bf0c606767a0b7a8a76fd19d10852abe1290",
-    )
-    version(
-        "6.1.9",
-        sha256="8fd4194c6c5167f8b81b1cf9b76341669e40d647d0caecef287be6f0f5d95290",
-    )
-    version(
-        "6.1.8",
-        sha256="6c7e5d3038e26b9d0e82428b25b570d00401a6fc9f2fd3c008f15a253a8e2305",
-    )
-    version(
-        "6.1.7",
-        sha256="574b21bd6f8970521c2bc4f096aced896fec8b749f854272cc7bbb7130ae92d8",
-    )
+    for ver, packages in _versions.items():
+        key = "{0}-{1}".format(platform.system(), platform.machine())
+        sha = packages.get(key)
+        if sha:
+            version(
+                ver,
+                sha256=sha,
+                url=f"https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-pmi-{ver}.{platform.machine()}.tar.gz",
+            )
 
     # Fix up binaries with patchelf.
     depends_on("patchelf", type="build")

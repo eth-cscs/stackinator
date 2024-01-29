@@ -4,9 +4,41 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import platform
 
 import spack.compilers
 from spack.package import *
+
+_versions = {
+    "8.1.29": {
+        "Linux-aarch64": "6133ce31b20612a8152323d2d64211085a026ec62beacda4e8a2566d7b807605",
+    },
+    "8.1.28": {
+        "Linux-aarch64": "dfd6c685adfbf070fe9d546d95b31e108ee7089a738447fa7326973a3e696e8d",
+        "Linux-x86_64": "55a0a068bd8bff14f302c5371d7e2b4cf732d5c1ec875bb03e375644e1a6beab",
+    },
+    "8.1.27": {
+        "Linux-x86_64": "5d59cc69b7ae2ef692ae49843bb2c7a44b5a8478d72eaf2ab1f1f6c5983eee0b"
+    },
+    "8.1.26": {
+        "Linux-x86_64": "d308cf3e254ce5873af6caee5ec683a397fed5ce92975f57e5c9215a98d8edad"
+    },
+    "8.1.25": {
+        "Linux-x86_64": "024ab0c4526670a37df7e2995172ba264454fd69c05d8ffe140c9e519397a65c"
+    },
+    "8.1.24": {
+        "Linux-x86_64": "2c3fa339511ed822892e112d3e4d5a39a634d00a31cf22e02ce843f0efcc5ae8"
+    },
+    "8.1.23": {
+        "Linux-x86_64": "ed7ff286ede30ea96dede4c53aa2ef98e8090c988a0bea764cd505ba5fcc0520"
+    },
+    "8.1.21": {
+        "Linux-x86_64": "5fda115f356c26e5d9f8cc68fe578e954a70edd10ebf007182d945345886b61a"
+    },
+    "8.1.18": {
+        "Linux-x86_64": "45d519be217cea89c58893d25826b15d99183247d15ecee9c3f64913660d79c2"
+    },
+}
 
 
 class CrayMpich(Package):
@@ -17,39 +49,15 @@ class CrayMpich(Package):
     homepage = "https://www.hpe.com/us/en/compute/hpc/hpc-software.html"
     url = "https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-8.1.26.tar.gz"
     maintainers = ["bcumming"]
-
-    version(
-        "8.1.28",
-        sha256="935fca183dabfcae1a4cfc664234537f25f1e87fb2765f32636be7352514f476",
-    )
-    version(
-        "8.1.27",
-        sha256="c7f2f5366aba9ff9781084a430b5b9462427ee8120069ff530d1965065ef220b",
-    )
-    version(
-        "8.1.26",
-        sha256="3c23cfe24b8f05e0c68a059919ac7dd77c45a333cad9aea41872a51d256b12d1",
-    )
-    version(
-        "8.1.25",
-        sha256="46e8c2804f5d34815bcf381e1957e749e6d7b286853bd94ae2bff73a6df39263",
-    )
-    version(
-        "8.1.24",
-        sha256="96876331bb7098e9ef2eea2c8bb25e479838c48b294ae5790094c19644e73a7d",
-    )
-    version(
-        "8.1.23",
-        sha256="c0985424ef376b29e6f1b9c2016b8cfe6430b9ce434da9700a6c14433b47cf20",
-    )
-    version(
-        "8.1.21",
-        sha256="8b4e0ff9cba48ef7dcd4dd8092b35bb6456420de2dcf7b4f05d7c69f8e266de3",
-    )
-    version(
-        "8.1.18",
-        sha256="45d519be217cea89c58893d25826b15d99183247d15ecee9c3f64913660d79c2",
-    )
+    for ver, packages in _versions.items():
+        key = "{0}-{1}".format(platform.system(), platform.machine())
+        sha = packages.get(key)
+        if sha:
+            version(
+                ver,
+                sha256=sha,
+                url=f"https://jfrog.svc.cscs.ch/artifactory/cray-mpich/cray-mpich-{ver}.{platform.machine()}.tar.gz",
+            )
 
     variant("cuda", default=False)
     variant("rocm", default=False)
@@ -70,6 +78,7 @@ class CrayMpich(Package):
         "8.1.26",
         "8.1.27",
         "8.1.28",
+        "8.1.29",
     ]:
         with when("+cuda"):
             depends_on(f"cray-gtl@{ver} +cuda", type="link", when="@" + ver)
@@ -82,6 +91,7 @@ class CrayMpich(Package):
 
     conflicts("%gcc@:7")
     conflicts("%gcc@:11", when="@8.1.28:")
+    conflicts("%nvhpc", when="@8.1.29")
 
     def setup_run_environment(self, env):
         env.set("MPICC", join_path(self.prefix.bin, "mpicc"))
@@ -148,10 +158,10 @@ class CrayMpich(Package):
         # link with the relevant gtl lib
         if "+cuda" in self.spec:
             lpath = self.spec["cray-gtl"].prefix.lib
-            gtl_library = f"-L{lpath} -lmpi_gtl_cuda"
+            gtl_library = f"-L{lpath} -Wl,-rpath,{lpath} -lmpi_gtl_cuda"
         elif "+rocm" in self.spec:
             lpath = self.spec["cray-gtl"].prefix.lib
-            gtl_library = f"-L{lpath} -lmpi_gtl_hsa"
+            gtl_library = f"-L{lpath} -Wl,-rpath,{lpath}  -lmpi_gtl_hsa"
         else:
             gtl_library = ""
         print("==== GTL_LIBRARY", gtl_library)
