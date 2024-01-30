@@ -10,9 +10,6 @@ import spack.compilers
 from spack.package import *
 
 _versions = {
-    "8.1.29": {
-        "Linux-aarch64": "6133ce31b20612a8152323d2d64211085a026ec62beacda4e8a2566d7b807605",
-    },
     "8.1.28": {
         "Linux-aarch64": "dfd6c685adfbf070fe9d546d95b31e108ee7089a738447fa7326973a3e696e8d",
         "Linux-x86_64": "55a0a068bd8bff14f302c5371d7e2b4cf732d5c1ec875bb03e375644e1a6beab",
@@ -78,7 +75,6 @@ class CrayMpich(Package):
         "8.1.26",
         "8.1.27",
         "8.1.28",
-        "8.1.29",
     ]:
         with when("+cuda"):
             depends_on(f"cray-gtl@{ver} +cuda", type="link", when="@" + ver)
@@ -91,7 +87,6 @@ class CrayMpich(Package):
 
     conflicts("%gcc@:7")
     conflicts("%gcc@:11", when="@8.1.28:")
-    conflicts("%nvhpc", when="@8.1.29")
 
     def setup_run_environment(self, env):
         env.set("MPICC", join_path(self.prefix.bin, "mpicc"))
