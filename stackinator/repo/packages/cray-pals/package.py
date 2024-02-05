@@ -29,6 +29,9 @@ _versions = {
     "1.2.4": {
         "Linux-x86_64": "a253939585bad2bb9061b98be6e517f18bda0602ecfd38f75c734a01d12003f2"
     },
+    "1.2.0": {
+        "Linux-x86_64": "6f5c71aa4dd2f591b899ea693cae7a5319d859f69d8c46b7ee244fed8c094d10"
+    },
 }
 
 
