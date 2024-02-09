@@ -36,7 +36,7 @@ _versions = {
         "Linux-x86_64": "5fda115f356c26e5d9f8cc68fe578e954a70edd10ebf007182d945345886b61a"
     },
     "8.1.18": {
-        "Linux-x86_64": "45d519be217cea89c58893d25826b15d99183247d15ecee9c3f64913660d79c2"
+        "Linux-x86_64": "f7feafd204502d0dab449ff22da138c933ec22d7de3d5e30fbb9a62fc9cdf237"
     },
 }
 
