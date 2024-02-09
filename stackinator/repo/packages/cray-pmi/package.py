@@ -32,6 +32,9 @@ _versions = {
     "6.1.7": {
         "Linux-x86_64": "574b21bd6f8970521c2bc4f096aced896fec8b749f854272cc7bbb7130ae92d8"
     },
+    "6.0.17": {
+        "Linux-x86_64": "5f15cd577c6c082888fcf0f76f0f5a898ddfa32370e1c32ffe926912d4d4dad0"
+    },
 }
 
 
