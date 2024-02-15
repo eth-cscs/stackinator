@@ -10,6 +10,9 @@ import spack.compilers
 from spack.package import *
 
 _versions = {
+    "8.1.29": {
+        "Linux-aarch64": "9a99334ae81ff8f25c1c57e84ba989f12f4051ce1cc0a4aff8069a9a64321eab",
+    },
     "8.1.28": {
         "Linux-aarch64": "dfd6c685adfbf070fe9d546d95b31e108ee7089a738447fa7326973a3e696e8d",
         "Linux-x86_64": "55a0a068bd8bff14f302c5371d7e2b4cf732d5c1ec875bb03e375644e1a6beab",
@@ -81,12 +84,14 @@ class CrayMpich(Package):
         with when("+rocm"):
             depends_on(f"cray-gtl@{ver} +rocm", type="link", when="@" + ver)
 
+    depends_on("cray-gtl@8.1.28+cuda", type="link", when="@8.1.29")
     depends_on("libfabric@1:", type="link")
 
     depends_on("cray-pmi", type="link")
 
     conflicts("%gcc@:7")
     conflicts("%gcc@:11", when="@8.1.28:")
+    conflicts("%gcc", when="@8.1.29")
 
     def setup_run_environment(self, env):
         env.set("MPICC", join_path(self.prefix.bin, "mpicc"))
