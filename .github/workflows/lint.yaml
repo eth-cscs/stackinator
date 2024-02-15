@@ -22,7 +22,7 @@ jobs:
         black --check --verbose --exclude stackinator/repo stackinator unittests
     - name: isort
       run: |
-        isort --check --diff .
+        isort --check --skip stackinator/repo --diff .
     - name: flake8
       run: |
         flake8 --count --show-source --statistics .
