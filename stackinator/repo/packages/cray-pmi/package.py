@@ -88,6 +88,9 @@ class CrayPmi(Package):
     def install(self, spec, prefix):
         install_tree(".", prefix)
 
+    def setup_run_environment(self, env):
+        env.prepend_path("MANPATH", self.prefix.man)
+
     @property
     def libs(self):
         return find_libraries(["libmpi", "libpmi2"], root=self.prefix, shared=True)
