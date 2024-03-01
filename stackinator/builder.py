@@ -165,7 +165,7 @@ class Builder:
         self._environment_meta = meta
 
     def generate(self, recipe):
-        # make the paths
+        # make the paths, in case bwrap is not used, directly write to recipe.mount
         store_path = (
             self.path / "store" if not recipe.no_brwap else pathlib.Path(recipe.mount)
         )
