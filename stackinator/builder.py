@@ -166,7 +166,9 @@ class Builder:
 
     def generate(self, recipe):
         # make the paths
-        store_path = self.path / "store"
+        store_path = (
+            self.path / "store" if not recipe.no_brwap else pathlib.Path(recipe.mount)
+        )
         tmp_path = self.path / "tmp"
 
         self.path.mkdir(exist_ok=True, parents=True)
@@ -494,7 +496,7 @@ repo:
             f.write(modules_yaml)
 
         # write the meta data
-        meta_path = self.path / "store/meta"
+        meta_path = store_path / "meta"
         meta_path.mkdir(exist_ok=True)
         # write a json file with basic meta data
         with (meta_path / "configure.json").open("w") as f:
