@@ -48,6 +48,7 @@ def make_argparser():
     parser = argparse.ArgumentParser(description=("Generate a build configuration for a spack stack from " "a recipe."))
     parser.add_argument("--version", action="version", version=f"stackinator version {VERSION}")
     parser.add_argument("-b", "--build", required=True, type=str)
+    parser.add_argument("--no-bwrap", action="store_true", required=False)
     parser.add_argument("-r", "--recipe", required=True, type=str)
     parser.add_argument("-s", "--system", required=True, type=str)
     parser.add_argument("-d", "--debug", action="store_true")

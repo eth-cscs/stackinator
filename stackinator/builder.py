@@ -7,6 +7,7 @@ import stat
 import subprocess
 import sys
 from datetime import datetime
+import textwrap
 
 import jinja2
 import yaml
@@ -240,9 +241,28 @@ class Builder:
             )
             f.write("\n")
 
+        sandbox = textwrap.dedent(
+            """\
+        $(SOFTWARE_STACK_PROJECT)/bwrap-mutable-root.sh $\\
+        --tmpfs ~ $\\
+        --bind $(SOFTWARE_STACK_PROJECT)/tmp /tmp $\\
+        --bind $(SOFTWARE_STACK_PROJECT)/store $(STORE)
+        """
+        )
+
+        if recipe.no_brwap:
+            sandbox = ""
+
         make_user_template = jinja_env.get_template("Make.user")
         with (self.path / "Make.user").open("w") as f:
-            f.write(make_user_template.render(build_path=self.path, store=recipe.mount, verbose=False))
+            f.write(
+                make_user_template.render(
+                    build_path=self.path,
+                    store=recipe.mount,
+                    sandbox=sandbox,
+                    verbose=False,
+                )
+            )
             f.write("\n")
 
         etc_path = self.root / "etc"
