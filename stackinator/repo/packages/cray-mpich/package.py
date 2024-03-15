@@ -78,20 +78,19 @@ class CrayMpich(Package):
         "8.1.26",
         "8.1.27",
         "8.1.28",
+        "8.1.29",
     ]:
         with when("+cuda"):
             depends_on(f"cray-gtl@{ver} +cuda", type="link", when="@" + ver)
         with when("+rocm"):
             depends_on(f"cray-gtl@{ver} +rocm", type="link", when="@" + ver)
 
-    depends_on("cray-gtl@8.1.28+cuda", type="link", when="@8.1.29")
     depends_on("libfabric@1:", type="link")
 
     depends_on("cray-pmi", type="link")
 
     conflicts("%gcc@:7")
     conflicts("%gcc@:11", when="@8.1.28:")
-    conflicts("%gcc", when="@8.1.29")
 
     def setup_run_environment(self, env):
         env.set("MPICC", join_path(self.prefix.bin, "mpicc"))
