@@ -88,6 +88,7 @@ class CrayMpich(Package):
     depends_on("libfabric@1:", type="link")
 
     depends_on("cray-pmi", type="link")
+    depends_on("xpmem", type="link")
 
     conflicts("%gcc@:7")
     conflicts("%gcc@:11", when="@8.1.28:")
@@ -144,6 +145,7 @@ class CrayMpich(Package):
                 if not self.should_patch(f):
                     continue
                 patchelf("--force-rpath", "--set-rpath", rpath, f, fail_on_error=False)
+                patchelf("--add-needed", "libxpmem.so", f, fail_on_error=False)
 
     @run_after("install")
     def fixup_compiler_paths(self):
