@@ -3,7 +3,7 @@
     "title": "Schema for Spack Stack cache.yaml",
     "type" : "object",
     "additionalProperties": false,
-    "required": ["key", "root"],
+    "required": ["root"],
     "properties" : {
         "key" : {
             "oneOf": [
