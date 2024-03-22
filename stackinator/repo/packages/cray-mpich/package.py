@@ -145,6 +145,10 @@ class CrayMpich(Package):
                     continue
                 patchelf("--force-rpath", "--set-rpath", rpath, f, fail_on_error=False)
                 patchelf("--add-needed", "libxpmem.so", f, fail_on_error=False)
+                if "+cuda" in self.spec:
+                    patchelf("--add-needed", "libmpi_gtl_cuda.so", f, fail_on_error=False)
+                if "+rocm" in self.spec:
+                    patchelf("--add-needed", "libmpi_gtl_hsa.so", f, fail_on_error=False)
 
     @run_after("install")
     def fixup_compiler_paths(self):
