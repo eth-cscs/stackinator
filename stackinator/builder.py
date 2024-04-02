@@ -51,6 +51,7 @@ def install(src, dst, *, ignore=None, symlinks=False):
     # set permissions
     apply_permissions_recursive(dst)
 
+
 class Builder:
     def __init__(self, args):
         self._logger = root_logger
@@ -377,7 +378,7 @@ class Builder:
 
         # look for repos.yaml file of relative paths....
         repo_yaml = system_repo_path / "repos.yaml"
-        if repo_yaml.exists()  and repo_yaml.is_file():
+        if repo_yaml.exists() and repo_yaml.is_file():
             # open file
             with repo_yaml.open() as fid:
                 raw = yaml.load(fid, Loader=yaml.Loader)
@@ -405,11 +406,11 @@ class Builder:
             self._logger.debug(f"{repo_dst} exists ... deleting")
             shutil.rmtree(repo_dst)
 
-        # If there are repos we iterate over them, copying their contents into the 
+        # If there are repos we iterate over them, copying their contents into the
         # consolidated repo defined inside the uenv.
         # We never overwrite a package that has already been installed, hence
         # repos are in descending order of precidence.
-        if len(repos)>0:
+        if len(repos) > 0:
             pkg_dst = repo_dst / "packages"
             pkg_dst.mkdir(mode=0o755, parents=True)
             self._logger.debug(f"created the repo packages path {pkg_dst}")
@@ -419,16 +420,20 @@ class Builder:
                 for pkg_path in packages_path.iterdir():
                     dst = pkg_dst / pkg_path.name
                     if pkg_path.is_dir() and not dst.exists():
-                        self._logger.debug(f"  installing package {pkg_path} to {pkg_dst}")
+                        self._logger.debug(
+                            f"  installing package {pkg_path} to {pkg_dst}"
+                        )
                         install(pkg_path, dst)
                     elif dst.exists():
                         self._logger.debug(f"  not installing package {pkg_path}")
             # create the repo.yaml file that names and conifigures the repo.
             with (repo_dst / "repo.yaml").open("w") as f:
-                f.write("""\
+                f.write(
+                    """\
 repo:
   namespace: alps
-""")
+"""
+                )
 
         # Create a repos.yaml file in build_path/config
         repos_yaml_template = jinja_env.get_template("repos.yaml")

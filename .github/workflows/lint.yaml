@@ -19,7 +19,7 @@ jobs:
         python -m pip install black flake8 isort mypy
     - name: Black
       run: |
-        black --check --verbose --exclude stackinator/repo stackinator unittests
+        black --check --verbose stackinator unittests
     - name: isort
       run: |
         isort --check --skip stackinator/repo --diff .
