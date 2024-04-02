@@ -7,7 +7,10 @@ A cluster configuration is a directory with the following structure:
 /path/to/cluster/configuration
 ├─ compilers.yaml   # system compiler
 ├─ packages.yaml    # external system packages
-└─ concretiser.yaml
+├─ concretiser.yaml
+└─ repo             # an optional spack package repo
+   ├─ packages      # path with spack packages
+   └─ repos.yaml    # optional reference to additional site packages
 ```
 
 The configuration is provided during the [configuration](configuring.md) step with the `--system/-s` flag.
@@ -31,3 +34,44 @@ If there are additional system packages that you want to use in a recipe, consid
     * the more dependencies, the more potential that software stacks will have to be rebuilt when the system is updated, and the more potential there are for breaking changes;
     * the external packages are part of the Spack upstream configuration generated with the Stack - you might be constraining the choices of downstream users.
 
+## Site and System Configurations
+
+The `repo` path can be used to provide a set of custom Spack package definitions to use on the target system.
+
+These are applied automatically to every recipe built on the target cluster.
+
+To provide site wide defaults, links to additional package repositories can be provdided in the the cluster definition.
+For example, the
+
+```
+repos:
+- ../site/repo
+```
+
+The path is always interpretted as a relative path, relative to the system configuration.
+This is designed to make it encourage putting cluster definitions and the site description in the same git repository.
+
+```
+/path/to/cluster-configs
+├─ my_cluster
+│   ├─ compilers.yaml
+│   ├─ packages.yaml
+│   ├─ concretiser.yaml
+│   └─ repo
+│      ├─ packages
+│      └─ repos.yaml    # refers to ../site/repo
+└─ site
+   └─ repo              # the site wide repo
+       └─ packages
+
+## Package Precidence
+
+If custom package definitions are provided for the same package in more than one location, Stackinator has to choose which definition to use.
+
+There are multiple locations where a package may be define
+* packages defined in the (optional) `repo` path in the [recipe](recipes.md#custom-spack-packages)
+* packages defined in the (optional) `repo` path of the cluster configuration (documented here)
+* packages defined in the (optional) site repo(s) defined in the `repo/repos.yaml` file of cluster configuration (documented here)
+* packages provided by Spack (in the `var/spack/repos/builtin` path)
+
+As of Stackinator v4, the definitions of some custom repositories (mainly CSCS' custom cray-mpich and its dependencies) was removed from Stackinator, and moved to the the site configuration

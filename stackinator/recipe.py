@@ -4,7 +4,7 @@ import pathlib
 import jinja2
 import yaml
 
-from . import cache, root_logger, schema
+from . import cache, root_logger, schema, spack_util
 
 
 class Recipe:
@@ -127,6 +127,16 @@ class Recipe:
             self._logger.debug(f"pre install hook {self.pre_install_hook}")
         else:
             self._logger.debug("no pre install hook provided")
+
+    # Returns:
+    #   Path: if the recipe contains a spack package repository
+    #   None: if there is the recipe contains no repo
+    @property
+    def spack_repo(self):
+        repo_path = self.path / "repo"
+        if spack_util.is_repo(repo_path):
+            return repo_path
+        return None
 
     # Returns:
     #   Path: of the recipe extra path if it exists
