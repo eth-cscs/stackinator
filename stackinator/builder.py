@@ -385,7 +385,8 @@ class Builder:
                 P = raw["repos"]
 
             self._logger.debug(
-                f"the system spack repo contains {repo_yaml} which refers to the following repos {P}"
+                f"the system spack repo contains {repo_yaml} which"
+                "refers to the following repos {P}"
             )
 
             # iterate
