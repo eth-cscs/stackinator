@@ -60,7 +60,7 @@ This is designed to make it encourage putting cluster definitions and the site d
    └─ repo           # the site wide repo
        └─ packages
 
-## Package Precidence
+## Package Precedence
 
 If custom package definitions are provided for the same package in more than one location, Stackinator has to choose which definition to use.
 
