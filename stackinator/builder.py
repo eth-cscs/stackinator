@@ -422,7 +422,7 @@ class Builder:
                         )
                         install(pkg_path, dst)
                     elif dst.exists():
-                        self._logger.debug(f"  not installing package {pkg_path}")
+                        self._logger.debug(f"  NOT installing package {pkg_path}")
             # create the repo.yaml file that configures the repo.
             with (repo_dst / "repo.yaml").open("w") as f:
                 f.write(
