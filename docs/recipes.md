@@ -321,7 +321,7 @@ repo
 ```
 
 Additional custom packages can be provided as part of the cluster configuration, as well as additional site packages.
-These packages are all optional, and will be installed together in a single Spack package repository that is made available to downstream users of the generated uenv stack..
+These packages are all optional, and will be installed together in a single Spack package repository that is made available to downstream users of the generated uenv stack.
 See the documentation for [cluster configuration](cluster-config.md) for more detail.
 
 !!! alps
