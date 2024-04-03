@@ -212,9 +212,7 @@ class Builder:
             self._logger.debug(capture.stdout.decode("utf-8"))
 
             if capture.returncode != 0:
-                self._logger.debug(
-                    f'unable to change to the requested commit {spack["commit"]}'
-                )
+                self._logger.debug(f'unable to change to the requested commit {spack["commit"]}')
                 capture.check_returncode()
 
         # load the jinja templating environment
@@ -244,11 +242,7 @@ class Builder:
 
         make_user_template = jinja_env.get_template("Make.user")
         with (self.path / "Make.user").open("w") as f:
-            f.write(
-                make_user_template.render(
-                    build_path=self.path, store=recipe.mount, verbose=False
-                )
-            )
+            f.write(make_user_template.render(build_path=self.path, store=recipe.mount, verbose=False))
             f.write("\n")
 
         etc_path = self.root / "etc"
@@ -267,9 +261,7 @@ class Builder:
         post_hook = recipe.post_install_hook
         if post_hook is not None:
             self._logger.debug("installing post-install-hook script")
-            jinja_recipe_env = jinja2.Environment(
-                loader=jinja2.FileSystemLoader(recipe.path)
-            )
+            jinja_recipe_env = jinja2.Environment(loader=jinja2.FileSystemLoader(recipe.path))
             post_hook_template = jinja_recipe_env.get_template("post-install")
             post_hook_destination = store_path / "post-install-hook"
 
@@ -286,9 +278,7 @@ class Builder:
         pre_hook = recipe.pre_install_hook
         if pre_hook is not None:
             self._logger.debug("installing pre-install-hook script")
-            jinja_recipe_env = jinja2.Environment(
-                loader=jinja2.FileSystemLoader(recipe.path)
-            )
+            jinja_recipe_env = jinja2.Environment(loader=jinja2.FileSystemLoader(recipe.path))
             pre_hook_template = jinja_recipe_env.get_template("pre-install")
             pre_hook_destination = store_path / "pre-install-hook"
 
@@ -315,9 +305,7 @@ class Builder:
                     "mirrors.yaml have been removed from cluster configurations,"
                     " use the --cache option on stack-config instead."
                 )
-                raise RuntimeError(
-                    "Unsupported mirrors.yaml file in cluster configuration."
-                )
+                raise RuntimeError("Unsupported mirrors.yaml file in cluster configuration.")
 
             # construct full file path
             src = system_config_path / f_config.name
@@ -378,9 +366,7 @@ class Builder:
                 raw = yaml.load(fid, Loader=yaml.Loader)
                 P = raw["repos"]
 
-            self._logger.debug(
-                f"the system configuration has a repo file {repo_yaml} refers to {P}"
-            )
+            self._logger.debug(f"the system configuration has a repo file {repo_yaml} refers to {P}")
 
             # test each path
             for rel_path in P:
@@ -389,9 +375,7 @@ class Builder:
                     repos.append(repo_path)
                     self._logger.debug(f"adding site spack package repo: {repo_path}")
                 else:
-                    self._logger.error(
-                        f"{repo_path} from {repo_yaml} is not a spack package repository"
-                    )
+                    self._logger.error(f"{repo_path} from {repo_yaml} is not a spack package repository")
                     raise RuntimeError("invalid system-provided package repository")
 
         self._logger.debug(f"full list of spack package repo: {repos}")
@@ -417,9 +401,7 @@ class Builder:
                 for pkg_path in packages_path.iterdir():
                     dst = pkg_dst / pkg_path.name
                     if pkg_path.is_dir() and not dst.exists():
-                        self._logger.debug(
-                            f"  installing package {pkg_path} to {pkg_dst}"
-                        )
+                        self._logger.debug(f"  installing package {pkg_path} to {pkg_dst}")
                         install(pkg_path, dst)
                     elif dst.exists():
                         self._logger.debug(f"  NOT installing package {pkg_path}")
@@ -436,11 +418,7 @@ repo:
         repos_yaml_template = jinja_env.get_template("repos.yaml")
         with (config_path / "repos.yaml").open("w") as f:
             repo_path = recipe.mount / "repo"
-            f.write(
-                repos_yaml_template.render(
-                    repo_path=repo_path.as_posix(), verbose=False
-                )
-            )
+            f.write(repos_yaml_template.render(repo_path=repo_path.as_posix(), verbose=False))
             f.write("\n")
 
         # Generate the makefile and spack.yaml files that describe the compilers
@@ -501,19 +479,13 @@ repo:
         # write a json file with basic meta data
         with (meta_path / "configure.json").open("w") as f:
             # default serialisation is str to serialise the pathlib.PosixPath
-            f.write(
-                json.dumps(
-                    self.configuration_meta, sort_keys=True, indent=2, default=str
-                )
-            )
+            f.write(json.dumps(self.configuration_meta, sort_keys=True, indent=2, default=str))
             f.write("\n")
 
         # write a json file with the environment view meta data
         with (meta_path / "env.json").open("w") as f:
             # default serialisation is str to serialise the pathlib.PosixPath
-            f.write(
-                json.dumps(self.environment_meta, sort_keys=True, indent=2, default=str)
-            )
+            f.write(json.dumps(self.environment_meta, sort_keys=True, indent=2, default=str))
             f.write("\n")
 
         # copy the recipe to a recipe subdirectory of the meta path

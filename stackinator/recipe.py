@@ -63,9 +63,7 @@ class Recipe:
         compiler_path = self.path / "compilers.yaml"
         self._logger.debug(f"opening {compiler_path}")
         if not compiler_path.is_file():
-            raise FileNotFoundError(
-                f"The recipe path '{compiler_path}' does " f"not contain compilers.yaml"
-            )
+            raise FileNotFoundError(f"The recipe path '{compiler_path}' does " f"not contain compilers.yaml")
 
         with compiler_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
@@ -76,10 +74,7 @@ class Recipe:
         environments_path = self.path / "environments.yaml"
         self._logger.debug(f"opening {environments_path}")
         if not environments_path.is_file():
-            raise FileNotFoundError(
-                f"The recipe path '{environments_path}' does "
-                f" not contain environments.yaml"
-            )
+            raise FileNotFoundError(f"The recipe path '{environments_path}' does " f" not contain environments.yaml")
 
         with environments_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
@@ -90,9 +85,7 @@ class Recipe:
         modules_path = self.path / "modules.yaml"
         self._logger.debug(f"opening {modules_path}")
         if not modules_path.is_file():
-            modules_path = (
-                pathlib.Path(args.build) / "spack/etc/spack/defaults/modules.yaml"
-            )
+            modules_path = pathlib.Path(args.build) / "spack/etc/spack/defaults/modules.yaml"
             self._logger.debug(f"no modules.yaml provided - using the {modules_path}")
 
         self.modules = modules_path
@@ -109,8 +102,7 @@ class Recipe:
         mirrors_path = self.path / "mirrors.yaml"
         if mirrors_path.is_file():
             self._logger.warning(
-                "mirrors.yaml have been removed from recipes,"
-                " use the --cache option on stack-config instead."
+                "mirrors.yaml have been removed from recipes," " use the --cache option on stack-config instead."
             )
             raise RuntimeError("Unsupported mirrors.yaml file in recipe.")
 
@@ -190,13 +182,9 @@ class Recipe:
         if file is not None:
             mirror_config_path = pathlib.Path(file)
             if not mirror_config_path.is_file():
-                raise FileNotFoundError(
-                    f"The cache configuration '{file}' is not a file"
-                )
+                raise FileNotFoundError(f"The cache configuration '{file}' is not a file")
 
-            self._mirror = cache.configuration_from_file(
-                mirror_config_path, pathlib.Path(mount)
-            )
+            self._mirror = cache.configuration_from_file(mirror_config_path, pathlib.Path(mount))
 
     @property
     def config(self):
@@ -206,9 +194,7 @@ class Recipe:
     def config(self, config_path):
         self._logger.debug(f"opening {config_path}")
         if not config_path.is_file():
-            raise FileNotFoundError(
-                f"The recipe path '{config_path}' does not contain compilers.yaml"
-            )
+            raise FileNotFoundError(f"The recipe path '{config_path}' does not contain compilers.yaml")
 
         with config_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
@@ -253,9 +239,7 @@ class Recipe:
     def modules_yaml(self):
         with self.modules.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            raw["modules"]["default"]["roots"]["tcl"] = (
-                pathlib.Path(self.mount) / "modules"
-            ).as_posix()
+            raw["modules"]["default"]["roots"]["tcl"] = (pathlib.Path(self.mount) / "modules").as_posix()
             return yaml.dump(raw)
 
     # creates the self.environments field that describes the full specifications
@@ -325,9 +309,7 @@ class Recipe:
             env_name_map[name] = []
             for view, vc in config["views"].items():
                 if view in env_names:
-                    raise Exception(
-                        f"An environment view with the name '{view}' already exists."
-                    )
+                    raise Exception(f"An environment view with the name '{view}' already exists.")
                 # save a copy of the view configuration
                 env_name_map[name].append((view, vc))
 
@@ -429,9 +411,7 @@ class Recipe:
                     llvm["specs"].append(f"{spec}~mpi~blas~lapack")
 
                 if spec.startswith("llvm"):
-                    llvm["specs"].append(
-                        f"{spec} +clang targets=x86 ~gold ^ninja@kitware"
-                    )
+                    llvm["specs"].append(f"{spec} +clang targets=x86 ~gold ^ninja@kitware")
 
             llvm["requires"] = raw["llvm"]["requires"]
             llvm["exclude_from_cache"] = ["nvhpc"]
@@ -451,9 +431,7 @@ class Recipe:
             system_path = pathlib.Path.cwd() / system_path
 
         if not system_path.is_dir():
-            raise FileNotFoundError(
-                f"The system configuration path '{system_path}' does not exist"
-            )
+            raise FileNotFoundError(f"The system configuration path '{system_path}' does not exist")
 
         self._system_path = system_path
 
@@ -510,8 +488,6 @@ class Recipe:
         files["config"] = {}
         for env, config in self.environments.items():
             spack_yaml_template = jenv.get_template("environments.spack.yaml")
-            files["config"][env] = spack_yaml_template.render(
-                config=config, name=env, store=self.mount
-            )
+            files["config"][env] = spack_yaml_template.render(config=config, name=env, store=self.mount)
 
         return files

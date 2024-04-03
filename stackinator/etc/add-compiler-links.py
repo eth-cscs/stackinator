@@ -67,9 +67,7 @@ compilers = load_compilers_yaml(args.compiler_path)
 
 paths = []
 for c in compilers:
-    local_paths = set(
-        [os.path.dirname(v) for k, v in c["paths"].items() if v is not None]
-    )
+    local_paths = set([os.path.dirname(v) for k, v in c["paths"].items() if v is not None])
     paths += local_paths
     print(f'adding compiler {c["spec"]} -> {[p for p in local_paths]}')
 
@@ -96,9 +94,7 @@ with open(args.activate_path) as fid:
 
             # parse PATH to remove references to the build directory
             if export["variable"] == "PATH":
-                paths = [
-                    p for p in export["paths"] if not has_prefix(p, args.build_path)
-                ]
+                paths = [p for p in export["paths"] if not has_prefix(p, args.build_path)]
                 lines.append(f"export PATH={':'.join(paths)};\n")
 
             # drop the SPACK_ENV variable
