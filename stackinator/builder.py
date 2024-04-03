@@ -378,7 +378,9 @@ class Builder:
                 raw = yaml.load(fid, Loader=yaml.Loader)
                 P = raw["repos"]
 
-            self._logger.debug(f"the system configuration has a repo file {repo_yaml} refers to {P}")
+            self._logger.debug(
+                f"the system configuration has a repo file {repo_yaml} refers to {P}"
+            )
 
             # test each path
             for rel_path in P:
@@ -387,7 +389,9 @@ class Builder:
                     repos.append(repo_path)
                     self._logger.debug(f"adding site spack package repo: {repo_path}")
                 else:
-                    self._logger.error(f"{repo_path} from {repo_yaml} is not a spack package repository")
+                    self._logger.error(
+                        f"{repo_path} from {repo_yaml} is not a spack package repository"
+                    )
                     raise RuntimeError("invalid system-provided package repository")
 
         self._logger.debug(f"full list of spack package repo: {repos}")
