@@ -349,7 +349,7 @@ class Builder:
                 fid.write(packages_yaml)
 
         # Add custom spack package recipes, configured via Spack repos.
-        # Step 1: copy the CSCS repo to store_path where, it will be used to
+        # Step 1: copy Spack repos to store_path where they will be used to
         #         build the stack, and then be part of the upstream provided
         #         to users of the stack.
         #
