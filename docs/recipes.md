@@ -161,18 +161,23 @@ rocm-env:
   # ...
 ```
 
-As new versions of cray-mpich are released with CPE, they are added to Stackinator.
-The following versions of cray-mpich are currently provided:
-
-|   cray-mpich  |   CPE     |   notes                  |
-| :------------ | :-------- | :----------------------- |
-|  8.1.25       | 23.03     | released 2023-02-26 **default** |
-|  8.1.24       | 23.02     | released 2023-01-19  |
-|  8.1.23       | 22.12     | released 2022-11-29  |
-|  8.1.21.1     | 22.11     | released 2022-10-25  |
-|  8.1.18.4     | 22.08     | released 2022-07-21  |
-
 !!! alps
+
+    As new versions of cray-mpich are released with CPE, they are provided on Alps vClusters, via the Spack package repo in the [CSCS cluster configuration repo](https://github.com/eth-cscs/alps-cluster-config/tree/master/site/repo).
+    The following versions of cray-mpich are currently provided:
+
+    |   cray-mpich  |   CPE     |   notes                  |
+    | :------------ | :-------- | :----------------------- |
+    |  8.1.29       | 24.03     | pre-release  |
+    |  8.1.28       | 23.12     | released 2023-12 **default** |
+    |  8.1.27       | 23.09     | released 2023-09     |
+    |  8.1.26       | 23.06     | released 2023-06     |
+    |  8.1.25       | 23.03     | released 2023-02-26  |
+    |  8.1.24       | 23.02     | released 2023-01-19  |
+    |  8.1.23       | 22.12     | released 2022-11-29  |
+    |  8.1.21.1     | 22.11     | released 2022-10-25  |
+    |  8.1.18.4     | 22.08     | released 2022-07-21  |
+
     All versions of cray-mpich in the table have been validated on Alps vClusters with Slingshot 11 and libfabric 1.15.2.
 
 !!! note
@@ -316,12 +321,16 @@ repo
       └─ package.py
 ```
 
+Additional custom packages can be provided as part of the cluster configuration, as well as additional site packages.
+These packages are all optional, and will be installed together in a single Spack package repository that is made available to downstream users of the generated uenv stack.
+See the documentation for [cluster configuration](cluster-config.md) for more detail.
 
-Stackinator internally provides its own package repository with a custom package for `cray-mpich` package, which it puts in the `alps` namespace.
-The `alps` repository is installed alongside the packages, and is automatically available to all Spack users that use the Spack stack as an upstream.
+!!! alps
+    All packages are installed under a single spack package repository called `alps`.
+    The CSCS configurations in [github.com/eth-cscs/alps-cluster-config](https://github.com/eth-cscs/alps-cluster-config) provides a site configuration that defines cray-mpich, its dependencies, and the most up to date versions of cuda, nvhpc etc to all clusters on Alps.
 
 !!! warning
-    Unlike Spack package repositories, any `repos.yaml` file in the `repo` path will be ignored and a warning will be issued.
+    Unlike Spack package repositories, any `repos.yaml` file in the `repo` path will be ignored.
     This is because the provided packages are added to the `alps` namespace.
 
 ## Post install configuration

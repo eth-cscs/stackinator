@@ -11,7 +11,7 @@ from datetime import datetime
 import jinja2
 import yaml
 
-from . import VERSION, cache, root_logger
+from . import VERSION, cache, root_logger, spack_util
 
 
 def install(src, dst, *, ignore=None, symlinks=False):
@@ -197,7 +197,7 @@ class Builder:
             self._logger.debug(capture.stdout.decode("utf-8"))
 
             if capture.returncode != 0:
-                self._logger.debug(f'error cloning the repository {spack["repo"]}')
+                self._logger.error(f'error cloning the repository {spack["repo"]}')
                 capture.check_returncode()
 
         # Check out a branch or commit if one was specified
@@ -212,9 +212,7 @@ class Builder:
             self._logger.debug(capture.stdout.decode("utf-8"))
 
             if capture.returncode != 0:
-                self._logger.debug(
-                    f'unable to change to the requested commit {spack["commit"]}'
-                )
+                self._logger.debug(f'unable to change to the requested commit {spack["commit"]}')
                 capture.check_returncode()
 
         # load the jinja templating environment
@@ -244,11 +242,7 @@ class Builder:
 
         make_user_template = jinja_env.get_template("Make.user")
         with (self.path / "Make.user").open("w") as f:
-            f.write(
-                make_user_template.render(
-                    build_path=self.path, store=recipe.mount, verbose=False
-                )
-            )
+            f.write(make_user_template.render(build_path=self.path, store=recipe.mount, verbose=False))
             f.write("\n")
 
         etc_path = self.root / "etc"
@@ -267,9 +261,7 @@ class Builder:
         post_hook = recipe.post_install_hook
         if post_hook is not None:
             self._logger.debug("installing post-install-hook script")
-            jinja_recipe_env = jinja2.Environment(
-                loader=jinja2.FileSystemLoader(recipe.path)
-            )
+            jinja_recipe_env = jinja2.Environment(loader=jinja2.FileSystemLoader(recipe.path))
             post_hook_template = jinja_recipe_env.get_template("post-install")
             post_hook_destination = store_path / "post-install-hook"
 
@@ -286,9 +278,7 @@ class Builder:
         pre_hook = recipe.pre_install_hook
         if pre_hook is not None:
             self._logger.debug("installing pre-install-hook script")
-            jinja_recipe_env = jinja2.Environment(
-                loader=jinja2.FileSystemLoader(recipe.path)
-            )
+            jinja_recipe_env = jinja2.Environment(loader=jinja2.FileSystemLoader(recipe.path))
             pre_hook_template = jinja_recipe_env.get_template("pre-install")
             pre_hook_destination = store_path / "pre-install-hook"
 
@@ -315,9 +305,7 @@ class Builder:
                     "mirrors.yaml have been removed from cluster configurations,"
                     " use the --cache option on stack-config instead."
                 )
-                raise RuntimeError(
-                    "Unsupported mirrors.yaml file in cluster configuration."
-                )
+                raise RuntimeError("Unsupported mirrors.yaml file in cluster configuration.")
 
             # construct full file path
             src = system_config_path / f_config.name
@@ -348,45 +336,90 @@ class Builder:
             with packages_path.open("w") as fid:
                 fid.write(packages_yaml)
 
-        # Configure the CSCS custom spack environments.
-        # Step 1: copy the CSCS repo to store_path where, it will be used to
+        # Add custom spack package recipes, configured via Spack repos.
+        # Step 1: copy Spack repos to store_path where they will be used to
         #         build the stack, and then be part of the upstream provided
         #         to users of the stack.
-        repo_src = self.root / "repo"
+        #
+        # Packages in the recipe are prioritised over cluster specific packages,
+        # etc. The order of preference from highest to lowest is:
+        #
+        # 3. recipe/repo
+        # 2. cluster-config/repos.yaml
+        #   - if the repos.yaml file exists it will contain a list of relative paths
+        #     to search for package
+        # 1. spack/var/spack/repos/builtin
+
+        # Build a list of repos with packages to install.
+        repos = []
+
+        # check for a repo in the recipe
+        if recipe.spack_repo is not None:
+            self._logger.debug(f"adding recipe spack package repo: {recipe.spack_repo}")
+            repos.append(recipe.spack_repo)
+
+        # look for repos.yaml file in the system configuration
+        repo_yaml = system_config_path / "repos.yaml"
+        if repo_yaml.exists() and repo_yaml.is_file():
+            # open repos.yaml file and reat the list of repos
+            with repo_yaml.open() as fid:
+                raw = yaml.load(fid, Loader=yaml.Loader)
+                P = raw["repos"]
+
+            self._logger.debug(f"the system configuration has a repo file {repo_yaml} refers to {P}")
+
+            # test each path
+            for rel_path in P:
+                repo_path = (system_config_path / rel_path).resolve()
+                if spack_util.is_repo(repo_path):
+                    repos.append(repo_path)
+                    self._logger.debug(f"adding site spack package repo: {repo_path}")
+                else:
+                    self._logger.error(f"{repo_path} from {repo_yaml} is not a spack package repository")
+                    raise RuntimeError("invalid system-provided package repository")
+
+        self._logger.debug(f"full list of spack package repo: {repos}")
+
+        # Delete the store/repo path, if it already exists.
+        # Do this so that incremental builds (though not officially supported) won't break if a repo is updated.
         repo_dst = store_path / "repo"
+        self._logger.debug(f"creating the stack spack prepo in {repo_dst}")
         if repo_dst.exists():
+            self._logger.debug(f"{repo_dst} exists ... deleting")
             shutil.rmtree(repo_dst)
 
-        install(repo_src, repo_dst)
+        # Iterate over the source repositories copying their contents to the consolidated repo in the uenv.
+        # Do overwrite packages that have been copied from an earlier source repo, enforcing a descending
+        # order of precidence.
+        if len(repos) > 0:
+            pkg_dst = repo_dst / "packages"
+            pkg_dst.mkdir(mode=0o755, parents=True)
+            self._logger.debug(f"created the repo packages path {pkg_dst}")
+            for repo_src in repos:
+                self._logger.debug(f"installing repo {repo_src}")
+                packages_path = repo_src / "packages"
+                for pkg_path in packages_path.iterdir():
+                    dst = pkg_dst / pkg_path.name
+                    if pkg_path.is_dir() and not dst.exists():
+                        self._logger.debug(f"  installing package {pkg_path} to {pkg_dst}")
+                        install(pkg_path, dst)
+                    elif dst.exists():
+                        self._logger.debug(f"  NOT installing package {pkg_path}")
+            # create the repo.yaml file that configures the repo.
+            with (repo_dst / "repo.yaml").open("w") as f:
+                f.write(
+                    """\
+repo:
+  namespace: alps
+"""
+                )
 
-        # Step 2: Create a repos.yaml file in build_path/config
+        # Create a repos.yaml file in build_path/config
         repos_yaml_template = jinja_env.get_template("repos.yaml")
         with (config_path / "repos.yaml").open("w") as f:
             repo_path = recipe.mount / "repo"
-            f.write(
-                repos_yaml_template.render(
-                    repo_path=repo_path.as_posix(), verbose=False
-                )
-            )
+            f.write(repos_yaml_template.render(repo_path=repo_path.as_posix(), verbose=False))
             f.write("\n")
-
-        # Add user-defined repo to internal repo
-        user_repo_path = recipe.path / "repo"
-        if user_repo_path.exists() and user_repo_path.is_dir():
-            user_repo_yaml = user_repo_path / "repo.yaml"
-            if user_repo_yaml.exists():
-                self._logger.warning(f"Found 'repo.yaml' file in {user_repo_path}")
-                self._logger.warning(
-                    "'repo.yaml' is ignored, packages are added to the 'alps' repo"
-                )
-
-            # Copy user-provided recipes into repo
-            user_repo_packages = user_repo_path / "packages"
-            for user_recipe_dir in user_repo_packages.iterdir():
-                if user_recipe_dir.is_dir():  # iterdir() yelds files too
-                    install(
-                        user_recipe_dir, repo_dst / "packages" / user_recipe_dir.name
-                    )
 
         # Generate the makefile and spack.yaml files that describe the compilers
         compiler_files = recipe.compiler_files
@@ -446,19 +479,13 @@ class Builder:
         # write a json file with basic meta data
         with (meta_path / "configure.json").open("w") as f:
             # default serialisation is str to serialise the pathlib.PosixPath
-            f.write(
-                json.dumps(
-                    self.configuration_meta, sort_keys=True, indent=2, default=str
-                )
-            )
+            f.write(json.dumps(self.configuration_meta, sort_keys=True, indent=2, default=str))
             f.write("\n")
 
         # write a json file with the environment view meta data
         with (meta_path / "env.json").open("w") as f:
             # default serialisation is str to serialise the pathlib.PosixPath
-            f.write(
-                json.dumps(self.environment_meta, sort_keys=True, indent=2, default=str)
-            )
+            f.write(json.dumps(self.environment_meta, sort_keys=True, indent=2, default=str))
             f.write("\n")
 
         # copy the recipe to a recipe subdirectory of the meta path
