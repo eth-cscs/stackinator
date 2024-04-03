@@ -8,9 +8,7 @@ A cluster configuration is a directory with the following structure:
 ├─ compilers.yaml   # system compiler
 ├─ packages.yaml    # external system packages
 ├─ concretiser.yaml
-└─ repo             # an optional spack package repo
-   ├─ packages      # path with spack packages
-   └─ repos.yaml    # optional reference to additional site packages
+└─ repos.yaml       # optional reference to additional site packages
 ```
 
 The configuration is provided during the [configuration](configuring.md) step with the `--system/-s` flag.
@@ -36,19 +34,19 @@ If there are additional system packages that you want to use in a recipe, consid
 
 ## Site and System Configurations
 
-The `repo` path can be used to provide a set of custom Spack package definitions to use on the target system.
+The `repo.yaml` configuration can be used to provide a list of additional Spack package repositories to use on the target system.
 
 These are applied automatically to every recipe built on the target cluster.
 
 To provide site wide defaults, links to additional package repositories can be provdided in the the cluster definition.
-For example, the
+For example, the following definition would link to a set of site-wide package definitions
 
-```
+```yaml
 repos:
 - ../site/repo
 ```
 
-The path is always interpretted as a relative path, relative to the system configuration.
+The paths are always interpretted as relative to the system configuration.
 This is designed to make it encourage putting cluster definitions and the site description in the same git repository.
 
 ```
@@ -57,20 +55,17 @@ This is designed to make it encourage putting cluster definitions and the site d
 │   ├─ compilers.yaml
 │   ├─ packages.yaml
 │   ├─ concretiser.yaml
-│   └─ repo
-│      ├─ packages
-│      └─ repos.yaml    # refers to ../site/repo
+│   └─ repos.yaml    # refers to ../site/repo
 └─ site
-   └─ repo              # the site wide repo
+   └─ repo           # the site wide repo
        └─ packages
 
 ## Package Precidence
 
 If custom package definitions are provided for the same package in more than one location, Stackinator has to choose which definition to use.
 
-There are multiple locations where a package may be define
+There following precedence is applied, in descending order of precidence:
 * packages defined in the (optional) `repo` path in the [recipe](recipes.md#custom-spack-packages)
-* packages defined in the (optional) `repo` path of the cluster configuration (documented here)
 * packages defined in the (optional) site repo(s) defined in the `repo/repos.yaml` file of cluster configuration (documented here)
 * packages provided by Spack (in the `var/spack/repos/builtin` path)
 

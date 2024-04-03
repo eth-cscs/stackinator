@@ -197,7 +197,7 @@ class Builder:
             self._logger.debug(capture.stdout.decode("utf-8"))
 
             if capture.returncode != 0:
-                self._logger.debug(f'error cloning the repository {spack["repo"]}')
+                self._logger.error(f'error cloning the repository {spack["repo"]}')
                 capture.check_returncode()
 
         # Check out a branch or commit if one was specified
@@ -356,61 +356,53 @@ class Builder:
         # Packages in the recipe are prioritised over cluster specific packages,
         # etc. The order of preference from highest to lowest is:
         #
-        # 4. recipe/repo
-        # 3. cluster-config/repo
-        # 2. cluster-config/repo/repos.yaml
+        # 3. recipe/repo
+        # 2. cluster-config/repos.yaml
         #   - if the repos.yaml file exists it will contain a list of relative paths
         #     to search for package
         # 1. spack/var/spack/repos/builtin
 
-        # step 1: build a list of repos with packages to install.
+        # Build a list of repos with packages to install.
         repos = []
 
+        # check for a repo in the recipe
         if recipe.spack_repo is not None:
-            self._logger.debug(f"adding recipe spack repo: {recipe.spack_repo}")
+            self._logger.debug(f"adding recipe spack package repo: {recipe.spack_repo}")
             repos.append(recipe.spack_repo)
 
-        system_repo_path = system_config_path / "repo"
-        self._logger.debug(f"checking system spack repo: {system_repo_path}")
-        if spack_util.is_repo(system_repo_path):
-            self._logger.debug(f"adding system spack repo: {system_repo_path}")
-            repos.append(system_repo_path)
-
-        # look for repos.yaml file of relative paths....
-        repo_yaml = system_repo_path / "repos.yaml"
+        # look for repos.yaml file in the system configuration
+        repo_yaml = system_config_path / "repos.yaml"
         if repo_yaml.exists() and repo_yaml.is_file():
-            # open file
+            # open repos.yaml file and reat the list of repos
             with repo_yaml.open() as fid:
                 raw = yaml.load(fid, Loader=yaml.Loader)
                 P = raw["repos"]
 
-            self._logger.debug(
-                f"the system spack repo contains {repo_yaml} which"
-                "refers to the following repos {P}"
-            )
+            self._logger.debug(f"the system configuration has a repo file {repo_yaml} refers to {P}")
 
-            # iterate
+            # test each path
             for rel_path in P:
                 repo_path = (system_config_path / rel_path).resolve()
-                if repo_path.is_dir():
+                if spack_util.is_repo(repo_path):
                     repos.append(repo_path)
-                    self._logger.debug(f"adding site spack repo: {repo_path}")
+                    self._logger.debug(f"adding site spack package repo: {repo_path}")
+                else:
+                    self._logger.error(f"{repo_path} from {repo_yaml} is not a spack package repository")
+                    raise RuntimeError("invalid system-provided package repository")
 
-        self._logger.debug(f"full list of spack repo: {repos}")
+        self._logger.debug(f"full list of spack package repo: {repos}")
 
-        # Delete the target repo path, if it already exists.
-        # Do this so that incremental builds (though not officially supported)
-        # won't break if a repo is updated.
+        # Delete the store/repo path, if it already exists.
+        # Do this so that incremental builds (though not officially supported) won't break if a repo is updated.
         repo_dst = store_path / "repo"
-        self._logger.debug(f"creating the stack spack repo in {repo_dst}")
+        self._logger.debug(f"creating the stack spack prepo in {repo_dst}")
         if repo_dst.exists():
             self._logger.debug(f"{repo_dst} exists ... deleting")
             shutil.rmtree(repo_dst)
 
-        # If there are repos we iterate over them, copying their contents into the
-        # consolidated repo defined inside the uenv.
-        # We never overwrite a package that has already been installed, hence
-        # repos are in descending order of precidence.
+        # Iterate over the source repositories copying their contents to the consolidated repo in the uenv.
+        # Do overwrite packages that have been copied from an earlier source repo, enforcing a descending
+        # order of precidence.
         if len(repos) > 0:
             pkg_dst = repo_dst / "packages"
             pkg_dst.mkdir(mode=0o755, parents=True)
@@ -427,7 +419,7 @@ class Builder:
                         install(pkg_path, dst)
                     elif dst.exists():
                         self._logger.debug(f"  not installing package {pkg_path}")
-            # create the repo.yaml file that names and conifigures the repo.
+            # create the repo.yaml file that configures the repo.
             with (repo_dst / "repo.yaml").open("w") as f:
                 f.write(
                     """\
