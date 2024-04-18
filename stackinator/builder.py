@@ -6,8 +6,8 @@ import shutil
 import stat
 import subprocess
 import sys
-from datetime import datetime
 import textwrap
+from datetime import datetime
 
 import jinja2
 import yaml
