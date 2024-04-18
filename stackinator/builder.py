@@ -532,6 +532,7 @@ repo:
                 debug_script_template.render(
                     mount_path=recipe.mount,
                     build_path=str(self.path),
+                    use_bwrap=not recipe.no_bwrap,
                     verbose=False,
                 )
             )
