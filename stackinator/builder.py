@@ -166,9 +166,7 @@ class Builder:
 
     def generate(self, recipe):
         # make the paths, in case bwrap is not used, directly write to recipe.mount
-        store_path = (
-            self.path / "store" if not recipe.no_brwap else pathlib.Path(recipe.mount)
-        )
+        store_path = self.path / "store" if not recipe.no_brwap else pathlib.Path(recipe.mount)
         tmp_path = self.path / "tmp"
 
         self.path.mkdir(exist_ok=True, parents=True)
