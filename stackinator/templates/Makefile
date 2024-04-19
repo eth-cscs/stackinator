@@ -66,7 +66,7 @@ store.squashfs: environments generate-config{% if modules %} modules{% endif %}{
 
 	# clean up the __pycache__ paths in the repo
 	$(SANDBOX) find $(STORE)/repo -type d -name __pycache__ -exec rm -r {} +
-	$(SANDBOX) env -u SOURCE_DATE_EPOCH "$$($(SANDBOX) $(SPACK) -e ./compilers/bootstrap find --format='{prefix}' squashfs | head -n1)/bin/mksquashfs" $(STORE) $@ -all-root -all-time $$(date +%s) -no-recovery -noappend -Xcompression-level 3
+	$(SANDBOX) env -u SOURCE_DATE_EPOCH "$$($(SANDBOX) $(SPACK) --color=never -e ./compilers/bootstrap find --format='{prefix}' squashfs | head -n1)/bin/mksquashfs" $(STORE) $@ -all-root -all-time $$(date +%s) -no-recovery -noappend -Xcompression-level 3
 
 # Force push all built packages to the build cache
 cache-force: mirror-setup
