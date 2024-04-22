@@ -18,7 +18,11 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 {% for env, config in environments.items() %}
 {{ env }}/generated/build_cache: {{ env }}/generated/view_config
 {% if push_to_cache %}
+{% if spack_version=="0.19" %}
+	$(SPACK) -e ./{{ env }} buildcache create --rebuild-index --allow-root --only=package -m alpscache \
+{% else %}
 	$(SPACK) -e ./{{ env }} buildcache create --rebuild-index --allow-root --only=package alpscache \
+{% endif %}
 	$$($(SPACK) --color=never -e ./{{ env }} find --format '{name};{/hash};version={version}' \
 	| grep -v -E '^({% for p in config.exclude_from_cache %}{{ pipejoiner() }}{{ p }}{% endfor %});'\
 	| grep -v -E 'version=git\.'\
@@ -34,6 +38,9 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 {% if config.view %}
 {% if develop or (spack_version>="0.21") %}
 	$(SPACK) env activate --with-view default --sh ./{{ env }} > $(STORE)/env/{{ config.view.name }}/activate.sh
+	$(SOFTWARE_STACK_PROJECT)/add-compiler-links.py  ./{{ env }}/compilers.yaml $(STORE)/env/{{ config.view.name }}/activate.sh $(SOFTWARE_STACK_PROJECT)
+{% elif spack_version==0.19 %}
+	$(SPACK) env activate --with-view --sh ./{{ env }} > $(STORE)/env/{{ config.view.name }}/activate.sh
 	$(SOFTWARE_STACK_PROJECT)/add-compiler-links.py  ./{{ env }}/compilers.yaml $(STORE)/env/{{ config.view.name }}/activate.sh $(SOFTWARE_STACK_PROJECT)
 {% else %}
 	$(SPACK) env activate --with-view --sh ./{{ env }} > $(STORE)/env/{{ config.view.name }}/activate.sh

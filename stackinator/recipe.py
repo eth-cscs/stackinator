@@ -121,6 +121,8 @@ class Recipe:
         else:
             self._logger.debug("no pre install hook provided")
 
+        self._logger.debug(f"detected spack version: {self.spack_version}")
+
     # Returns:
     #   Path: if the recipe contains a spack package repository
     #   None: if there is the recipe contains no repo
@@ -209,6 +211,9 @@ class Recipe:
         commit = self.config["spack"]["commit"]
         if commit is None or commit == "develop":
             return "develop"
+        # currently supported
+        if commit.find("0.19") >= 0:
+            return "0.19"
         # currently supported
         if commit.find("0.20") >= 0:
             return "0.20"
@@ -453,6 +458,7 @@ class Recipe:
             compilers=self.compilers,
             push_to_cache=push_to_cache,
             develop=self.spack_develop,
+            spack_version=self.spack_version,
         )
 
         # generate compilers/<compiler>/spack.yaml
