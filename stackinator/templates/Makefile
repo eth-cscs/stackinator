@@ -66,7 +66,7 @@ store.squashfs: environments generate-config{% if modules %} modules{% endif %}{
 
 	# clean up the __pycache__ paths in the repo
 	$(SANDBOX) find $(STORE)/repo -type d -name __pycache__ -exec rm -r {} +
-	$(SANDBOX) env -u SOURCE_DATE_EPOCH "$$($(SANDBOX) $(SPACK) --color=never -e ./compilers/bootstrap find --format='{prefix}' squashfs | head -n1)/bin/mksquashfs" $(STORE) $@ -all-root -all-time $$(date +%s) -no-recovery -noappend -Xcompression-level 3
+	$(SANDBOX) env -u SOURCE_DATE_EPOCH "$$($(SANDBOX) $(SPACK_HELPER) -e ./compilers/bootstrap find --format='{prefix}' squashfs | head -n1)/bin/mksquashfs" $(STORE) $@ -all-root -all-time $$(date +%s) -no-recovery -noappend -Xcompression-level 3
 
 # Force push all built packages to the build cache
 cache-force: mirror-setup
@@ -78,7 +78,7 @@ cache-force: mirror-setup
 	$(warning ================================================================================)
 	$(SANDBOX) $(MAKE) -C generate-config
 	$(SANDBOX) $(SPACK) -C $(STORE)/config buildcache create --rebuild-index --allow-root --only=package alpscache \
-	$$($(SANDBOX) $(SPACK) --color=never -C $(STORE)/config find --format '{/hash}')
+	$$($(SANDBOX) $(SPACK_HELPER) -C $(STORE)/config find --format '{/hash}')
 {% else %}
 	$(warning "pushing to the build cache is not enabled. See the documentation on how to add a key: https://eth-cscs.github.io/stackinator/build-caches/")
 {% endif %}
