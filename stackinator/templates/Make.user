@@ -8,6 +8,10 @@ SOFTWARE_STACK_PROJECT := {{ build_path }}
 # What Spack should we use?
 SPACK := spack
 
+# This uses the same spack, but ensures "plain" output.
+# Useful when output has to be manipulated (e.g. build a usable path)
+SPACK_HELPER := $(SPACK) --color=never
+
 # The Spack installation root.
 STORE := {{ store }}
 
