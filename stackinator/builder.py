@@ -6,7 +6,6 @@ import shutil
 import stat
 import subprocess
 import sys
-import textwrap
 from datetime import datetime
 
 import jinja2
