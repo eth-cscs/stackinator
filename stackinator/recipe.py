@@ -41,6 +41,8 @@ class Recipe:
         # Optionally support breaking changes in Spack develop
         self.spack_develop = args.develop
 
+        self.no_bwrap = args.no_bwrap
+
         # set the system configuration path
         self.system_config_path = args.system
 
