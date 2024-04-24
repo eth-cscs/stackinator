@@ -18,7 +18,14 @@ STORE := {{ store }}
 # put the project itself in-memory, or use a flag like --bind /dev/shm/store
 # $(STORE). Use `bwrap-mutable-root.sh` in case you need to create a new
 # directory at the root /.
-SANDBOX :=  {{ sandbox }}
+{% if no_bwrap %}
+SANDBOX :=
+{% else %}
+SANDBOX := $(SOFTWARE_STACK_PROJECT)/bwrap-mutable-root.sh $\
+	--tmpfs ~ $\
+	--bind $(SOFTWARE_STACK_PROJECT)/tmp /tmp $\
+	--bind $(SOFTWARE_STACK_PROJECT)/store $(STORE)
+{% endif %}
 # Makes sure that make -Orecurse continues to print in color.
 export SPACK_COLOR := always
 

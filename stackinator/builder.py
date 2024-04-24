@@ -241,25 +241,13 @@ class Builder:
             )
             f.write("\n")
 
-        sandbox = textwrap.dedent(
-            """\
-        $(SOFTWARE_STACK_PROJECT)/bwrap-mutable-root.sh $\\
-        --tmpfs ~ $\\
-        --bind $(SOFTWARE_STACK_PROJECT)/tmp /tmp $\\
-        --bind $(SOFTWARE_STACK_PROJECT)/store $(STORE)
-        """
-        )
-
-        if recipe.no_bwrap:
-            sandbox = ""
-
         make_user_template = jinja_env.get_template("Make.user")
         with (self.path / "Make.user").open("w") as f:
             f.write(
                 make_user_template.render(
                     build_path=self.path,
                     store=recipe.mount,
-                    sandbox=sandbox,
+                    no_bwrap=recipe.no_bwrap,
                     verbose=False,
                 )
             )
