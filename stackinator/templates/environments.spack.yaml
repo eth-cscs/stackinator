@@ -1,4 +1,3 @@
-{% set separator = joiner(', ') %}
 spack:
   include:
 {% if config.packages %}
@@ -13,23 +12,22 @@ spack:
     reuse: false
   specs:
 {% for spec in config.specs %}
-  - {{ spec }}
+  - '{{ spec }}'
 {% endfor %}
   packages:
     all:
-      compiler: [{% for c in config.compiler %}{{ separator() }}{{ c.spec }}{% endfor %}]
+{% set separator = joiner(', ') %}
+      compiler: [{% for c in config.compiler %}{{ separator() }}'{{ c.spec }}'{% endfor %}]
+      require:
+{% set separator = joiner(', ') %}
+      - one_of: [{% for c in config.toolchain_constraints %}{{ separator() }}'{{ c }}'{% endfor %}]
     {% if config.variants %}
-      variants:
-      {% for variant in config.variants %}
-      - {{ variant }}
-      {% endfor %}
-      {% for constraint in config.toolchain_constraints %}
-      - {{ constraint }}
-      {% endfor %}
+{% set separator = joiner(', ') %}
+      variants: [{% for v in config.variants %}{{ separator() }}'{{ v }}'{% endfor %}]
     {% endif %}
     {% if config.mpi.spec %}
     mpi:
-      require: {{ config.mpi.spec }}
+      require: '{{ config.mpi.spec }}'
     {% endif %}
 {% if config.view %}
   view:
