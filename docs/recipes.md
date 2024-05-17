@@ -101,7 +101,7 @@ The `compiler` field describes a list compilers to use to build the software sta
 Each compiler toolchain is specified using toolchain and spec
 
 ```yaml title="compile all packages with gcc@11.3"
-  compiler
+  compiler:
   - toolchain: gcc
     spec: gcc@11.3
 ```
@@ -110,20 +110,37 @@ Sometimes two compiler toolchains are required, for example when using the `nvhp
 The example below uses the `nvhpc` compilers with gcc@11.3.
 
 ```yaml title="compile all packages with gcc@11.3"
-  compiler
-  - toolchain: llvm
-    spec: nvhpc@22.7
+  compiler:
   - toolchain: gcc
     spec: gcc@11.3
+  - toolchain: llvm
+    spec: nvhpc@22.7
 ```
 
 !!! note
     If more than one version of gcc has been installed, use the same version that was used to install `nvhpc`.
 
 !!! warning
-    As a rule, use a single compiler wherever possible - keep it simple!
+    Stackinator does not test or support using two versions of gcc in the same toolchain.
 
-    We don't test or support using two versions of gcc in the same toolchain.
+The order of the compilers is significant. The first compiler is the default, and the other compilers will only be used to build packages when explicitly added to a spec.
+For example, in the recipe below, only `netcdf-fortran` will be built with the `nvhpc` toolchain, while the root specs `cmake` and `netcdf-c` and all dependencies will be built using the `gcc` toolchain.
+
+
+```yaml title="compile all packages with gcc@11.3"
+  compiler:
+  - toolchain: gcc
+    spec: gcc
+  - toolchain: llvm
+    spec: nvhpc
+  specs
+  - cmake
+  - netcdf-c
+  - netcdf-fortran%nvhpc
+```
+
+!!! note
+    This approach is typically used to build Fortran applications and packages with one toolchain (e.g. `nvhpc`), and all of the C/C++ dependencies with a different toolchain (e.g. `gcc`).
 
 ### MPI
 

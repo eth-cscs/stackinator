@@ -23,6 +23,9 @@ spack:
       {% for variant in config.variants %}
       - {{ variant }}
       {% endfor %}
+      {% for constraint in config.toolchain_constraints %}
+      - {{ constraint }}
+      {% endfor %}
     {% endif %}
     {% if config.mpi.spec %}
     mpi:

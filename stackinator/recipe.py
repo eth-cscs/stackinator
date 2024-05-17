@@ -293,6 +293,20 @@ class Recipe:
                         # TODO: Create a custom exception type
                         raise Exception(f"Unsupported mpi: {mpi_impl}")
 
+        # set constraints that ensure the the main compiler is always used to build packages
+        # that do not explicitly request a compiler.
+        for name, config in environments.items():
+            compilers = config["compiler"]
+            if len(compilers)==1:
+                config["toolchain_constraints"] = []
+                continue
+            requires = [f"%{compilers[0]['spec']}"]
+            for spec in config["specs"]:
+                if '%' not in spec:
+                    requires.append(spec)
+
+            config["toolchain_constraints"] = requires
+
         # An awkward hack to work around spack not supporting creating activation
         # scripts for each file system view in an environment: it only generates them
         # for the "default" view.
