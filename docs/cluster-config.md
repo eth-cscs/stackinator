@@ -35,7 +35,6 @@ If there are additional system packages that you want to use in a recipe, consid
 ## Site and System Configurations
 
 The `repo.yaml` configuration can be used to provide a list of additional Spack package repositories to use on the target system.
-
 These are applied automatically to every recipe built on the target cluster.
 
 To provide site wide defaults, links to additional package repositories can be provdided in the the cluster definition.
@@ -59,14 +58,18 @@ This is designed to make it encourage putting cluster definitions and the site d
 └─ site
    └─ repo           # the site wide repo
        └─ packages
+```
+
+!!! alps
+    The site wide package definitions on Alps are maintained in the [alps-cluster-config repository](https://github.com/eth-cscs/alps-cluster-config/tree/master/site/repo).
 
 ## Package Precedence
 
 If custom package definitions are provided for the same package in more than one location, Stackinator has to choose which definition to use.
 
-There following precedence is applied, in descending order of precidence:
-* packages defined in the (optional) `repo` path in the [recipe](recipes.md#custom-spack-packages)
-* packages defined in the (optional) site repo(s) defined in the `repo/repos.yaml` file of cluster configuration (documented here)
-* packages provided by Spack (in the `var/spack/repos/builtin` path)
+The following precedence is applied, in descending order of precidence (1 has higher precedence than 2 or 3):
+1. packages defined in the (optional) `repo` path in the [recipe](recipes.md#custom-spack-packages)
+2. packages defined in the (optional) site repo(s) defined in the `repo/repos.yaml` file of cluster configuration (documented here)
+3. packages provided by Spack (in the `var/spack/repos/builtin` path)
 
 As of Stackinator v4, the definitions of some custom repositories (mainly CSCS' custom cray-mpich and its dependencies) was removed from Stackinator, and moved to the the site configuration
