@@ -67,7 +67,8 @@ This is designed to make it encourage putting cluster definitions and the site d
 
 If custom package definitions are provided for the same package in more than one location, Stackinator has to choose which definition to use.
 
-The following precedence is applied, in descending order of precidence (1 has higher precedence than 2 or 3):
+The following precedence is applied, where 1 has higher precedence than 2 or 3:
+
 1. packages defined in the (optional) `repo` path in the [recipe](recipes.md#custom-spack-packages)
 2. packages defined in the (optional) site repo(s) defined in the `repo/repos.yaml` file of cluster configuration (documented here)
 3. packages provided by Spack (in the `var/spack/repos/builtin` path)
