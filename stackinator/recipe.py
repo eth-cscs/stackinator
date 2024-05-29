@@ -297,12 +297,12 @@ class Recipe:
         # that do not explicitly request a compiler.
         for name, config in environments.items():
             compilers = config["compiler"]
-            if len(compilers)==1:
+            if len(compilers) == 1:
                 config["toolchain_constraints"] = []
                 continue
             requires = [f"%{compilers[0]['spec']}"]
             for spec in config["specs"]:
-                if '%' in spec:
+                if "%" in spec:
                     requires.append(spec)
 
             config["toolchain_constraints"] = requires
