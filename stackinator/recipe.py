@@ -469,6 +469,7 @@ class Recipe:
             compilers=self.compilers,
             push_to_cache=push_to_cache,
             develop=self.spack_develop,
+            spack_version=self.spack_version,
         )
 
         # generate compilers/<compiler>/spack.yaml
