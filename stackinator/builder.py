@@ -395,13 +395,33 @@ class Builder:
             self._logger.debug(f"{repo_dst} exists ... deleting")
             shutil.rmtree(repo_dst)
 
+
+        # create the repository step 1: create the repo directory
+        pkg_dst = repo_dst / "packages"
+        pkg_dst.mkdir(mode=0o755, parents=True)
+        self._logger.debug(f"created the repo packages path {pkg_dst}")
+
+        # create the repository step 2: create the repo.yaml file that
+        # configures the repo.
+        with (repo_dst / "repo.yaml").open("w") as f:
+            f.write(
+"""\
+repo:
+  namespace: alps
+"""
+            )
+
+        # create the repository step 2: create the repos.yaml file in build_path/config
+        repos_yaml_template = jinja_env.get_template("repos.yaml")
+        with (config_path / "repos.yaml").open("w") as f:
+            repo_path = recipe.mount / "repo"
+            f.write(repos_yaml_template.render(repo_path=repo_path.as_posix(), verbose=False))
+            f.write("\n")
+
         # Iterate over the source repositories copying their contents to the consolidated repo in the uenv.
         # Do overwrite packages that have been copied from an earlier source repo, enforcing a descending
         # order of precidence.
         if len(repos) > 0:
-            pkg_dst = repo_dst / "packages"
-            pkg_dst.mkdir(mode=0o755, parents=True)
-            self._logger.debug(f"created the repo packages path {pkg_dst}")
             for repo_src in repos:
                 self._logger.debug(f"installing repo {repo_src}")
                 packages_path = repo_src / "packages"
@@ -412,21 +432,6 @@ class Builder:
                         install(pkg_path, dst)
                     elif dst.exists():
                         self._logger.debug(f"  NOT installing package {pkg_path}")
-            # create the repo.yaml file that configures the repo.
-            with (repo_dst / "repo.yaml").open("w") as f:
-                f.write(
-                    """\
-repo:
-  namespace: alps
-"""
-                )
-
-        # Create a repos.yaml file in build_path/config
-        repos_yaml_template = jinja_env.get_template("repos.yaml")
-        with (config_path / "repos.yaml").open("w") as f:
-            repo_path = recipe.mount / "repo"
-            f.write(repos_yaml_template.render(repo_path=repo_path.as_posix(), verbose=False))
-            f.write("\n")
 
         # Generate the makefile and spack.yaml files that describe the compilers
         compiler_files = recipe.compiler_files
