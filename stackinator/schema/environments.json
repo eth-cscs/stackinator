@@ -84,6 +84,20 @@
                                     "patternProperties": {
                                         "all|\\w[\\w-]*": {"type": "string"}
                                     }
+                                },
+                                "uenv": {
+                                    "type": "object",
+                                    "additionalPropertis": false,
+                                    "properties": {
+                                        "add_compilers": {
+                                            "type": "boolean",
+                                            "default": true
+                                        }
+                                        "set_ld_library_path": {
+                                            "type": "boolean",
+                                            "default": false
+                                        }
+                                    }
                                 }
                             }
                         }

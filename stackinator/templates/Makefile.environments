@@ -34,9 +34,10 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 {% if config.view %}
 {% if develop or (spack_version>="0.21") %}
 	$(SPACK) env activate --with-view default --sh ./{{ env }} > $(STORE)/env/{{ config.view.name }}/activate.sh
-	$(SOFTWARE_STACK_PROJECT)/add-compiler-links.py  ./{{ env }}/compilers.yaml $(STORE)/env/{{ config.view.name }}/activate.sh $(SOFTWARE_STACK_PROJECT)
 {% else %}
 	$(SPACK) env activate --with-view --sh ./{{ env }} > $(STORE)/env/{{ config.view.name }}/activate.sh
+{% endif %}
+{% if config.view.extra.add_compilers or config.view.extra.add_ld_library_path %}
 	$(SOFTWARE_STACK_PROJECT)/add-compiler-links.py  ./{{ env }}/compilers.yaml $(STORE)/env/{{ config.view.name }}/activate.sh $(SOFTWARE_STACK_PROJECT)
 {% endif %}
 {% endif %}

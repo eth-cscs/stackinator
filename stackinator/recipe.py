@@ -337,7 +337,9 @@ class Recipe:
                     view_config = {"root": str(self.mount / "env" / view_name)}
                 else:
                     view_config["root"] = str(self.mount / "env" / view_name)
-                environments[cname]["view"] = {"name": view_name, "config": view_config}
+                extra = view_config.pop("uenv")
+
+                environments[cname]["view"] = {"name": view_name, "config": view_config, "extra": extra}
 
         self.environments = environments
 
