@@ -45,9 +45,9 @@
                              "properties": {
                                  "spec": {"type": "string"},
                                  "gpu":  {
-					 "enum": ["cuda", "rocm", null, false],
-					 "default": null
-				 }
+                                     "enum": ["cuda", "rocm", null, false],
+                                     "default": null
+                                 }
                              }
                          },
                          {"enum": [null, false]}
@@ -61,16 +61,15 @@
                  },
                  "views": {
                     "type": "object",
-                    "default": {},
                     "patternProperties": {
                         "\\w+": {
+                            "type": "object",
                             "additionalProperties": false,
                             "properties": {
                                 "link": {
                                     "type": "string",
                                     "enum": ["roots", "all", "run"]
                                 },
-                                "link_type": {"type": "string"},
                                 "select": {
                                     "type": "array",
                                     "items": {"type": "string"}
@@ -89,19 +88,20 @@
                                     "type": "object",
                                     "additionalPropertis": false,
                                     "properties": {
-                                        "add_compilers": {
-                                            "type": "boolean",
-                                            "default": true
-                                        }
-                                        "set_ld_library_path": {
-                                            "type": "boolean",
-                                            "default": false
-                                        }
+                                        "add_compilers": { "type": "boolean" },
+                                        "set_ld_library_path": { "type": "boolean" }
                                     }
                                 }
                             }
                         }
-                    }
+                    },
+                            "default": {
+                                "link": "roots",
+                                "uenv": {
+                                    "add_compilers": true,
+                                    "set_ld_library_path": false
+                                }
+                            }
                  }
              }
          }

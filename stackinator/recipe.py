@@ -317,6 +317,9 @@ class Recipe:
         # - creating copies of the env so that there is one copy per view.
         # - configure each view
         for name, views in env_name_map.items():
+            print(f"{name}:")
+            for vvv in views:
+                print(f" {vvv}")
             numviews = len(env_name_map[name])
 
             # The configuration of the environment without views
@@ -337,6 +340,7 @@ class Recipe:
                     view_config = {"root": str(self.mount / "env" / view_name)}
                 else:
                     view_config["root"] = str(self.mount / "env" / view_name)
+                print(f"  = {view_name} {view_config}")
                 extra = view_config.pop("uenv")
 
                 environments[cname]["view"] = {"name": view_name, "config": view_config, "extra": extra}
