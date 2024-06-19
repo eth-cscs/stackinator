@@ -63,8 +63,8 @@
                     "type": "object",
                     "patternProperties": {
                         "\\w+": {
-                            "type": "object",
                             "additionalProperties": false,
+                            "comment": "we can't set default values in such a construction, so they are set inside stackinator",
                             "properties": {
                                 "link": {
                                     "type": "string",
@@ -94,14 +94,7 @@
                                 }
                             }
                         }
-                    },
-                            "default": {
-                                "link": "roots",
-                                "uenv": {
-                                    "add_compilers": true,
-                                    "set_ld_library_path": false
-                                }
-                            }
+                    }
                  }
              }
          }

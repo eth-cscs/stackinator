@@ -4,6 +4,7 @@ import argparse
 from enum import Enum
 import json
 import os
+import yaml
 from typing import Optional, List
 
 class EnvVarOp (Enum):
@@ -85,6 +86,13 @@ class ListEnvVar(EnvVar):
 
     def concat(self, other: 'ListEnvVar'):
         self._updates += other.updates
+
+    @property
+    def paths(self):
+        paths = []
+        for u in self._updates:
+            paths += u.value
+        return paths
 
     # Given the current value, return the value that should be set
     # current is None implies that the variable is not set
@@ -365,58 +373,59 @@ def read_activation_script(filename: str, env: Optional[EnvVarSet]=None) -> EnvV
 
     return env
 
-def impl1():
-    # parse CLI arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument("script", help="Path to the activate script to parse",
-                        type=str)
-    parser.add_argument("json", help="Path to where the json file should be ouput",
-                        type=str)
-    parser.add_argument("meta", help="path to the meta",
-                        type=str)
-    parser.add_argument("view", help="the name of the view",
-                        type=str)
-    args = parser.parse_args()
+def spack_impl(args):
+    print(f"parsing activate script {args.activate} with compilers {args.compilers} and LD_LIBRARY_PATH {args.ld_library_path}")
 
-    # verify that the paths exist
-    if not os.path.exists(args.script):
-        print(f"error - activation script '{args.script}' does not exist.")
-        exit(2)
-    if not os.path.exists(args.meta):
-        print(f"error - uenv meta data file '{args.meta}' does not exist.")
-        exit(2)
+    if not os.path.isfile(args.activate):
+        print(f"error - activation script {args.activate} does not exist")
 
-    # parse the activation script for its environment variable changes
-    envvars = read_activation_script(args.script)
+    envvars = read_activation_script(args.activate)
 
-    # write the environment variable update to a json file
-    print(f"writing environment variable information to json: {args.json}")
-    with open(args.json, "w") as fid:
-        fid.write(envvars.as_json())
-        fid.write("\n")
+    if args.compilers is not None:
+        if not os.path.isfile(args.compilers):
+            print(f"error - compiler yaml file {args.compilers} does not exist")
 
-    # parse the uenv meta data from file
-    print(f"loading meta data to update: {args.meta}")
-    with open(args.meta) as fid:
-        meta = json.load(fid)
+        with open(args.compilers, "r") as file:
+            data = yaml.safe_load(file)
+        compilers = [c["compiler"] for c in data["compilers"]]
 
-    # TODO: handle the case where there is no matching view description
-    meta["views"][args.view]["json"] = { "version": 1, "values": envvars.as_dict() }
-    meta["views"][args.view]["type"] = "spack-view"
+        compiler_paths = []
+        for c in compilers:
+            local_paths = set([os.path.dirname(v) for _, v in c["paths"].items() if v is not None])
+            compiler_paths += local_paths
+            print(f'adding compiler {c["spec"]} -> {[p for p in local_paths]}')
 
-    # update the uenv meta data file with the new env. variable description
-    with open(args.meta, "w") as fid:
-        # write updated meta data
-        json.dump(meta, fid)
+        envvars.set_list("PATH", compiler_paths, EnvVarOp.PREPEND)
 
-def impl2():
-    # parse CLI arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument("mount",    help="mount point of the image",type=str)
-    parser.add_argument("--modules", help="configure a module view", action="store_true")
-    parser.add_argument("--spack",  help="configure a spack view. Format is \"spack_url,git_commit\"",  type=str, default=None)
-    args = parser.parse_args()
+    if args.set_ld_library_path:
+        # get the root path of the env
+        root_path = os.path.dirname(args.activate)
+        print(f"LD_LIBRARY_PATH: root path {root_path}")
 
+        # search for root/lib, root/lib64
+        paths = []
+        for p in ["lib", "lib64"]:
+            test_path = f"{root_path}/{p}"
+            if os.path.isdir(test_path):
+                paths.append(test_path)
+
+        print(f"LD_LIBRARY_PATH: found {paths}")
+
+        # TODO: only update 
+        if "LD_LIBRARY_PATH" in envvars.lists:
+            ld_paths = envvars.lists["LD_LIBRARY_PATH"].paths
+            final_paths = [p for p in paths if p not in ld_paths]
+            envvars.set_list("LD_LIBRARY_PATH", final_paths, EnvVarOp.PREPEND)
+        else:
+            envvars.set_list("LD_LIBRARY_PATH", paths, EnvVarOp.PREPEND)
+
+
+    #args.activate
+    #args.set_ld_library_path
+    #args.compilers
+
+
+def meta_impl(args):
     # verify that the paths exist
     if not os.path.exists(args.mount):
         print(f"error - uenv mount '{args.mount}' does not exist.")
@@ -452,7 +461,7 @@ def impl2():
     if args.modules:
         module_path = f"{args.mount}/modules"
         meta["views"]["modules"] = {
-            "activate": None,
+            "activate": "/dev/null",
             "description": "activate modules",
             "root": module_path,
             "json": {
@@ -474,7 +483,7 @@ def impl2():
         url, version = args.spack.split(',')
         spack_path = f"{args.mount}/config".replace("//", "/")
         meta["views"]["spack"] = {
-            "activate": None,
+            "activate": "/dev/null",
             "description": "configure spack upstream",
             "root": spack_path,
             "json": {
@@ -482,7 +491,6 @@ def impl2():
                 "values": {
                     "list": {},
                     "scalar": {
-                        "SPACK_SYSTEM_CONFIG_PATH": spack_path,
                         "UENV_SPACK_CONFIG_PATH": spack_path,
                         "UENV_SPACK_COMMIT": version,
                         "UENV_SPACK_URL": url
@@ -498,5 +506,29 @@ def impl2():
         fid.write("\n")
 
 if __name__ == "__main__":
-    #impl1()
-    impl2()
+    # parse CLI arguments
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(dest="command")
+    spack_parser = subparsers.add_parser("spack-env",
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            help="generate environment configuration for a specific spack env")
+    spack_parser.add_argument("activate", help="path of the activation script",type=str)
+    spack_parser.add_argument("--set_ld_library_path", help="force setting of LD_LIBRARY_PATH", action="store_true")
+    # only add compilers if this argument is passed
+    spack_parser.add_argument("--compilers",  help="path of the compilers.yaml file",  type=str, default=None)
+
+    uenv_parser = subparsers.add_parser("uenv",
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            help="generate final meta data for a whole uenv.")
+    uenv_parser.add_argument("mount",    help="mount point of the image",type=str)
+    uenv_parser.add_argument("--modules", help="configure a module view", action="store_true")
+    uenv_parser.add_argument("--spack",  help="configure a spack view. Format is \"spack_url,git_commit\"",  type=str, default=None)
+
+    args = parser.parse_args()
+
+    if args.command == "uenv":
+        print("!!! running meta")
+        meta_impl(args)
+    elif args.command == "spack":
+        print("!!! running spack")
+        spack_impl(args)

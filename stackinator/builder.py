@@ -253,7 +253,7 @@ class Builder:
             f.write("\n")
 
         etc_path = self.root / "etc"
-        for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "add-compiler-links.py"]:
+        for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "envvars.py"]:
             shutil.copy2(etc_path / f_etc, self.path / f_etc)
 
         # used to configure both pre and post install hooks, if they are provided.
@@ -490,7 +490,7 @@ repo:
             f.write("\n")
 
         # write a json file with the environment view meta data
-        with (meta_path / "env.json").open("w") as f:
+        with (meta_path / "env.json.in").open("w") as f:
             # default serialisation is str to serialise the pathlib.PosixPath
             f.write(json.dumps(self.environment_meta, sort_keys=True, indent=2, default=str))
             f.write("\n")

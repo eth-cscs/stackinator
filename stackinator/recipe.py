@@ -310,6 +310,15 @@ class Recipe:
             for view, vc in config["views"].items():
                 if view in env_names:
                     raise Exception(f"An environment view with the name '{view}' already exists.")
+                # set some default values:
+                # vc["link"] = "roots"
+                # vc["uenv"]["add_compilers"] = True
+                # vc["uenv"]["set_ld_library_path"] = True
+                if vc is None: vc = {}
+                vc.setdefault("link", "roots")
+                vc.setdefault("uenv", {})
+                vc["uenv"].setdefault("add_compilers", True)
+                vc["uenv"].setdefault("set_ld_library_path", True)
                 # save a copy of the view configuration
                 env_name_map[name].append((view, vc))
 
@@ -317,9 +326,6 @@ class Recipe:
         # - creating copies of the env so that there is one copy per view.
         # - configure each view
         for name, views in env_name_map.items():
-            print(f"{name}:")
-            for vvv in views:
-                print(f" {vvv}")
             numviews = len(env_name_map[name])
 
             # The configuration of the environment without views
@@ -340,7 +346,11 @@ class Recipe:
                     view_config = {"root": str(self.mount / "env" / view_name)}
                 else:
                     view_config["root"] = str(self.mount / "env" / view_name)
-                print(f"  = {view_name} {view_config}")
+
+                # The "uenv" field is not spack configuration, it is additional information
+                # used by stackinator additionally set compiler paths and LD_LIBRARY_PATH
+                # Remove it from the view_config that will be passed directly to spack, and pass
+                # it separately for configuring the envvars.py helper during the uenv build.
                 extra = view_config.pop("uenv")
 
                 environments[cname]["view"] = {"name": view_name, "config": view_config, "extra": extra}
