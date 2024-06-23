@@ -63,7 +63,7 @@ post-install: generate-config environments{% if modules %} modules{% endif %}
 	touch post-install
 
 $(BUILD_ROOT)/store/meta/env.json: post-install
-	$(SANDBOX) envvars.py {% if modules %} --modules {% endif %} --spack $(STORE)/meta/env.json.in $(STORE)/meta/env.json
+	$(SANDBOX) envvars.py uenv {% if modules %}--modules{% endif %} --spack $(STORE)/meta/env.json.in $(STORE)/meta/env.json
 
 # Create a squashfs file from the installed software.
 store.squashfs: $(BUILD_ROOT)/store/meta/env.json
