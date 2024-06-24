@@ -45,8 +45,8 @@ def is_env_value_list(v):
 
 class ListEnvVarUpdate():
     def __init__(self, value: List[str], op: EnvVarOp):
-        # strip white space from each entry
-        self._value = [v.strip() for v in value]
+        # clean up paths as they are inserted
+        self._value = [os.path.normpath(p) for p in value]
         self._op = op
 
     @property
@@ -59,6 +59,11 @@ class ListEnvVarUpdate():
 
     def set_op(self, op: EnvVarOp):
         self._op = op
+
+    # remove all paths that have root as common root
+    def remove_root(self, root: str):
+        root = os.path.normpath(root)
+        self._value = [p for p in self._value if root!=os.path.commonprefix([root, p])]
 
     def __repr__(self):
         return f"envvar.ListEnvVarUpdate({self.value}, {self.op})"
@@ -82,6 +87,10 @@ class ListEnvVar(EnvVar):
 
     def update(self, value: List[str], op:EnvVarOp):
         self._updates.append(ListEnvVarUpdate(value, op))
+
+    def remove_root(self, root: str):
+        for i in range(len(self._updates)):
+            self._updates[i].remove_root(root)
 
     @property
     def updates(self):
@@ -211,6 +220,10 @@ class EnvVarSet:
     def make_dirty(self):
         for name in self._lists:
             self._lists[name].make_dirty()
+
+    def remove_root(self, root: str):
+        for name in self._lists:
+            self._lists[name].remove_root(root)
 
     def set_scalar(self, name: str, value: str):
         self._scalars[name] = ScalarEnvVar(name, value)
@@ -385,7 +398,7 @@ def read_activation_script(filename: str, env: Optional[EnvVarSet]=None) -> EnvV
     return env
 
 def view_impl(args):
-    print(f"parsing view {args.root}\n  compilers {args.compilers}\n  LD_LIBRARY_PATH {args.set_ld_library_path}")
+    print(f"parsing view {args.root}\n  compilers {args.compilers}\n  prefix_paths '{args.prefix_paths}'\n  build_path '{args.build_path}'")
 
     if not os.path.isdir(args.root):
         print(f"error - environment root path {args.root} does not exist")
@@ -398,8 +411,10 @@ def view_impl(args):
         exit(1)
 
     envvars = read_activation_script(activate_path)
+
     # force all prefix path style variables (list vars) to use PREPEND the first operation.
     envvars.make_dirty()
+    envvars.remove_root(args.build_path)
 
     if args.compilers is not None:
         if not os.path.isfile(args.compilers):
@@ -418,37 +433,36 @@ def view_impl(args):
 
         envvars.set_list("PATH", compiler_paths, EnvVarOp.PREPEND)
 
-    if args.set_ld_library_path:
+    if args.prefix_paths:
         # get the root path of the env
-        print(f"LD_LIBRARY_PATH: searching in {root_path}")
+        print(f"prefix_paths: searching in {root_path}")
 
-        # search for root/lib, root/lib64
-        paths = []
-        for p in ["lib", "lib64"]:
-            test_path = f"{root_path}/{p}"
-            if os.path.isdir(test_path):
-                paths.append(test_path)
+        for p in args.prefix_paths.split(','):
+            name, value = p.split('=')
+            paths = []
+            for path in [os.path.normpath(p) for p in value.split(':')]:
+                test_path = f"{root_path}/{path}"
+                if os.path.isdir(test_path):
+                    paths.append(test_path)
 
-        print(f"LD_LIBRARY_PATH: found {paths}")
+            print(f"{name}:")
+            for p in paths:
+                print(f"  {p}")
 
-        # TODO: only update 
-        if "LD_LIBRARY_PATH" in envvars.lists:
-            ld_paths = envvars.lists["LD_LIBRARY_PATH"].paths
-            final_paths = [p for p in paths if p not in ld_paths]
-            envvars.set_list("LD_LIBRARY_PATH", final_paths, EnvVarOp.PREPEND)
-        else:
-            envvars.set_list("LD_LIBRARY_PATH", paths, EnvVarOp.PREPEND)
+            if len(paths)>0:
+                if name in envvars.lists:
+                    ld_paths = envvars.lists[name].paths
+                    final_paths = [p for p in paths if p not in ld_paths]
+                    envvars.set_list(name, final_paths, EnvVarOp.PREPEND)
+                else:
+                    envvars.set_list(name, paths, EnvVarOp.PREPEND)
 
     json_path = os.path.join(root_path, "env.json")
     print(f"writing JSON data to {json_path}")
+    envvar_dict = { "version": 1, "values": envvars.as_dict() }
     with open(json_path, 'w') as fid:
-        envvar_dict = { "version": 1, "values": envvars.as_dict() }
-
-        # write the environment variable update to a json file
-        print(f"writing environment variable information to json: {json_path}")
-        with open(json_path, "w") as fid:
-            json.dump(envvar_dict, fid)
-            fid.write("\n")
+        json.dump(envvar_dict, fid)
+        fid.write("\n")
 
 
 
@@ -459,8 +473,8 @@ def meta_impl(args):
         exit(1)
 
     # parse the uenv meta data from file
-    meta_in_path = f"{args.mount}/meta/env.json.in"
-    meta_path = f"{args.mount}/meta/env.json"
+    meta_in_path = os.path.normpath(f"{args.mount}/meta/env.json.in")
+    meta_path = os.path.normpath(f"{args.mount}/meta/env.json")
     print(f"loading meta data to update: {meta_in_path}")
     with open(meta_in_path) as fid:
         meta = json.load(fid)
@@ -506,6 +520,7 @@ def meta_impl(args):
                 }
             }
         }
+
     if args.spack is not None:
         spack_url, spack_version = args.spack.split(',')
         spack_path = f"{args.mount}/config".replace("//", "/")
@@ -541,8 +556,12 @@ if __name__ == "__main__":
     view_parser = subparsers.add_parser("view",
             formatter_class=argparse.RawDescriptionHelpFormatter,
             help="generate env.json for a view")
-    view_parser.add_argument("root", help="root path of the view",type=str)
-    view_parser.add_argument("--set_ld_library_path", help="force setting of LD_LIBRARY_PATH", action="store_true")
+    view_parser.add_argument("root", help="root path of the view", type=str)
+    view_parser.add_argument("build_path", help="build_path", type=str)
+    view_parser.add_argument("--prefix_paths",
+                             help="a list of relative prefix path searchs of the form X=y:z,Y=p:q",
+                             default="",
+                             type=str)
     # only add compilers if this argument is passed
     view_parser.add_argument("--compilers",  help="path of the compilers.yaml file",  type=str, default=None)
 

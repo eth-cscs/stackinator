@@ -313,12 +313,14 @@ class Recipe:
                 # set some default values:
                 # vc["link"] = "roots"
                 # vc["uenv"]["add_compilers"] = True
-                # vc["uenv"]["set_ld_library_path"] = True
+                # vc["uenv"]["prefix_paths"] = {}
                 if vc is None: vc = {}
                 vc.setdefault("link", "roots")
                 vc.setdefault("uenv", {})
                 vc["uenv"].setdefault("add_compilers", True)
-                vc["uenv"].setdefault("set_ld_library_path", True)
+                vc["uenv"].setdefault("prefix_paths", {})
+                prefix_string = ','.join([f"{name}={':'.join(paths)}" for name, paths in vc["uenv"]["prefix_paths"].items()])
+                vc["uenv"]["prefix_string"] = prefix_string
                 # save a copy of the view configuration
                 env_name_map[name].append((view, vc))
 

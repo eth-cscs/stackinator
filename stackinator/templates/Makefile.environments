@@ -37,7 +37,7 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 {% else %}
 	$(SPACK) env activate --with-view --sh ./{{ env }} > $(STORE)/env/{{ config.view.name }}/activate.sh
 {% endif %}
-	$(BUILD_ROOT)/envvars.py view {% if config.view.extra.add_compilers %}--compilers=./{{ env }}/compilers.yaml {% endif %}{% if config.view.extra.set_ld_library_path %}--set_ld_library_path {% endif %} $(STORE)/env/{{ config.view.name }}
+	$(BUILD_ROOT)/envvars.py view {% if config.view.extra.add_compilers %}--compilers=./{{ env }}/compilers.yaml {% endif %} --prefix_paths="{{ config.view.extra.prefix_string }}" $(STORE)/env/{{ config.view.name }} $(BUILD_ROOT)
 {% endif %}
 	touch $@
 

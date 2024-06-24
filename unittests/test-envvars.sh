@@ -27,8 +27,9 @@ else
 fi
 
 echo "===== envvars view develop"
-../stackinator/etc/envvars.py view --set_ld_library_path ${mount_path}/env/develop
-../stackinator/etc/envvars.py view ${mount_path}/env/arbor
+../stackinator/etc/envvars.py view ${mount_path}/env/arbor /dev/shm/bcumming/arbor
+echo "===== envvars view arbor"
+../stackinator/etc/envvars.py view --prefix_paths="LD_LIBRARY_PATH=lib:lib64" ${mount_path}/env/develop /dev/shm/bcumming/arbor
 
 echo "===== all env.json files after running view meta generation"
 find $scratch_path -name env.json

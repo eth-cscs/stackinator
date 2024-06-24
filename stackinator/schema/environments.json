@@ -89,7 +89,15 @@
                                     "additionalPropertis": false,
                                     "properties": {
                                         "add_compilers": { "type": "boolean" },
-                                        "set_ld_library_path": { "type": "boolean" }
+                                        "prefix_paths": {
+                                            "type": "object",
+                                            "patternProperties": {
+                                                "\\w+": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"}
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
