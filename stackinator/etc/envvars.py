@@ -57,6 +57,9 @@ class ListEnvVarUpdate():
     def value(self):
         return self._value
 
+    def set_op(self, op: EnvVarOp):
+        self._op = op
+
     def __repr__(self):
         return f"envvar.ListEnvVarUpdate({self.value}, {self.op})"
 
@@ -86,6 +89,10 @@ class ListEnvVar(EnvVar):
 
     def concat(self, other: 'ListEnvVar'):
         self._updates += other.updates
+
+    def make_dirty(self):
+        if len(self._updates) > 0:
+            self._updates[0].set_op(EnvVarOp.PREPEND)
 
     @property
     def paths(self):
@@ -200,6 +207,10 @@ class EnvVarSet:
     @property
     def scalars(self):
         return self._scalars
+
+    def make_dirty(self):
+        for name in self._lists:
+            self._lists[name].make_dirty()
 
     def set_scalar(self, name: str, value: str):
         self._scalars[name] = ScalarEnvVar(name, value)
@@ -387,6 +398,8 @@ def view_impl(args):
         exit(1)
 
     envvars = read_activation_script(activate_path)
+    # force all prefix path style variables (list vars) to use PREPEND the first operation.
+    envvars.make_dirty()
 
     if args.compilers is not None:
         if not os.path.isfile(args.compilers):
