@@ -29,8 +29,13 @@ spack-setup: spack-version
 		exit 1; \
 	fi; \
 	printf "checking if spack concretizer works... "; \
-	$(SANDBOX) $(SPACK) spec zlib > /dev/null; \
-	printf "yup\n"
+	$(SANDBOX) $(SPACK_HELPER) -d spec zlib > $(BUILD_ROOT)/spack-bootstrap-output 2>&1; \
+	if [ "$$?" != "0" ]; then \
+		printf " failed, see %s\n" $(BUILD_ROOT)/spack-bootstrap-output; \
+		exit 1; \
+	fi; \
+	printf " success\n"; \
+	touch spack-setup
 
 pre-install: spack-setup
 	$(SANDBOX) $(STORE)/pre-install-hook
@@ -59,11 +64,13 @@ modules: environments generate-config
 
 post-install: generate-config environments{% if modules %} modules{% endif %}
 
+	{% if post_install_hook %}
 	$(SANDBOX) $(STORE)/post-install-hook
+	{% endif %}
 	touch post-install
 
 $(BUILD_ROOT)/store/meta/env.json: post-install
-	$(SANDBOX) envvars.py uenv {% if modules %}--modules{% endif %} --spack $(STORE)/meta/env.json.in $(STORE)/meta/env.json
+	$(SANDBOX) $(BUILD_ROOT)/envvars.py uenv {% if modules %}--modules{% endif %} --spack={{ spack_meta.url }},{{ spack_meta.commit }} $(STORE)
 
 # Create a squashfs file from the installed software.
 store.squashfs: $(BUILD_ROOT)/store/meta/env.json

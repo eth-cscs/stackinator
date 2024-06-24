@@ -2,6 +2,14 @@
 
 root=$(pwd)
 input_path=${root}/data/arbor-uenv
+for p in man misc aclocal lib64 lib64/pkgconfig bin lib lib/pkgconfig lib/python3.11 lib/python3.11/site-packages share share/pkgconfig
+do
+    mkdir -p $input_path/env/develop/$p
+done
+for p in man misc aclocal bin lib lib/pkgconfig lib/python3.11 lib/python3.11/site-packages share share/pkgconfig
+do
+    mkdir -p $input_path/env/arbor/$p
+done
 scratch_path=${root}/scratch
 mount_path=${scratch_path}/user-environment
 echo "===== setting up test mount path ${mount_path}"

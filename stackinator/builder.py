@@ -215,6 +215,20 @@ class Builder:
                 self._logger.debug(f'unable to change to the requested commit {spack["commit"]}')
                 capture.check_returncode()
 
+        # get the spack commit
+        git_commit_result = subprocess.run(
+            ['git', 'rev-parse', 'HEAD'],
+            cwd=spack_path,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+            text=True
+        )
+        spack_meta = {
+            "commit": git_commit_result.stdout.strip(),
+            "url": spack["repo"]
+        }
+
         # load the jinja templating environment
         template_path = self.root / "templates"
         jinja_env = jinja2.Environment(
@@ -235,6 +249,7 @@ class Builder:
                     pre_install_hook=recipe.pre_install_hook,
                     develop=self.spack_develop,
                     spack_version=spack_version,
+                    spack_meta=spack_meta,
                     verbose=False,
                 )
             )
