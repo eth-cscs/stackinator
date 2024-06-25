@@ -1,8 +1,8 @@
 import argparse
-from enum import Enum
 import json
 import os
-from typing import Optional, List
+from enum import Enum
+from typing import List, Optional
 
 
 class EnvVarOp(Enum):

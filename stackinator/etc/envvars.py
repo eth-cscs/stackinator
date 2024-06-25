@@ -1,11 +1,12 @@
 #!/usr/bin/python3
 
 import argparse
-from enum import Enum
 import json
 import os
+from enum import Enum
+from typing import List, Optional
+
 import yaml
-from typing import Optional, List
 
 
 class EnvVarOp(Enum):
