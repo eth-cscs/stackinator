@@ -243,7 +243,6 @@ class EnvVarSet:
     def set_list(self, name: str, value: List[str], op: EnvVarOp):
         var = ListEnvVar(name, value, op)
         if var.name in self._lists.keys():
-            old = self._lists[var.name]
             self._lists[var.name].concat(var)
         else:
             self._lists[var.name] = var
@@ -372,15 +371,15 @@ def read_activation_script(filename: str, env: Optional[EnvVarSet] = None) -> En
 
     with open(filename) as fid:
         for line in fid:
-            l = line.strip().rstrip(";")
+            ls = line.strip().rstrip(";")
             # skip empty lines and comments
-            if (len(l) == 0) or (l[0] == "#"):
+            if (len(ls) == 0) or (ls[0] == "#"):
                 continue
             # split on the first whitespace
             # this splits lines of the form
             # export Y
             # where Y is an arbitray string into ['export', 'Y']
-            fields = l.split(maxsplit=1)
+            fields = ls.split(maxsplit=1)
 
             # handle lines of the form 'export Y'
             if len(fields) > 1 and fields[0] == "export":
@@ -413,7 +412,8 @@ def read_activation_script(filename: str, env: Optional[EnvVarSet] = None) -> En
 
 def view_impl(args):
     print(
-        f"parsing view {args.root}\n  compilers {args.compilers}\n  prefix_paths '{args.prefix_paths}'\n  build_path '{args.build_path}'"
+        f"parsing view {args.root}\n  compilers {args.compilers}\n  prefix_paths '{args.prefix_paths}'\n  \
+        build_path '{args.build_path}'"
     )
 
     if not os.path.isdir(args.root):
