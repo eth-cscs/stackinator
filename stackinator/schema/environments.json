@@ -61,6 +61,7 @@
                  },
                  "views": {
                     "type": "object",
+                    "default": {},
                     "patternProperties": {
                         "\\w+": {
                             "additionalProperties": false,
