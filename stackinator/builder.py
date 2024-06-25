@@ -217,17 +217,14 @@ class Builder:
 
         # get the spack commit
         git_commit_result = subprocess.run(
-            ['git', 'rev-parse', 'HEAD'],
+            ["git", "rev-parse", "HEAD"],
             cwd=spack_path,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             check=True,
-            text=True
+            text=True,
         )
-        spack_meta = {
-            "commit": git_commit_result.stdout.strip(),
-            "url": spack["repo"]
-        }
+        spack_meta = {"commit": git_commit_result.stdout.strip(), "url": spack["repo"]}
 
         # load the jinja templating environment
         template_path = self.root / "templates"
@@ -410,7 +407,6 @@ class Builder:
             self._logger.debug(f"{repo_dst} exists ... deleting")
             shutil.rmtree(repo_dst)
 
-
         # create the repository step 1: create the repo directory
         pkg_dst = repo_dst / "packages"
         pkg_dst.mkdir(mode=0o755, parents=True)
@@ -420,7 +416,7 @@ class Builder:
         # configures the repo.
         with (repo_dst / "repo.yaml").open("w") as f:
             f.write(
-"""\
+                """\
 repo:
   namespace: alps
 """

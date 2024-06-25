@@ -7,28 +7,32 @@ import os
 import yaml
 from typing import Optional, List
 
-class EnvVarOp (Enum):
-    PREPEND=1
-    APPEND=2
-    SET=3
+
+class EnvVarOp(Enum):
+    PREPEND = 1
+    APPEND = 2
+    SET = 3
 
     def __str__(self):
         return self.name.lower()
 
-class EnvVarKind (Enum):
-    SCALAR=2
-    LIST=2
+
+class EnvVarKind(Enum):
+    SCALAR = 2
+    LIST = 2
+
 
 list_variables = {
-        "ACLOCAL_PATH",
-        "CMAKE_PREFIX_PATH",
-        "CPATH",
-        "LD_LIBRARY_PATH",
-        "LIBRARY_PATH",
-        "MANPATH",
-        "PATH",
-        "PKG_CONFIG_PATH",
-        }
+    "ACLOCAL_PATH",
+    "CMAKE_PREFIX_PATH",
+    "CPATH",
+    "LD_LIBRARY_PATH",
+    "LIBRARY_PATH",
+    "MANPATH",
+    "PATH",
+    "PKG_CONFIG_PATH",
+}
+
 
 class EnvVarError(Exception):
     """Exception raised when there is an error with environment variable manipulation."""
@@ -40,10 +44,12 @@ class EnvVarError(Exception):
     def __str__(self):
         return self.message
 
+
 def is_env_value_list(v):
     return isinstance(v, list) and all(isinstance(item, str) for item in v)
 
-class ListEnvVarUpdate():
+
+class ListEnvVarUpdate:
     def __init__(self, value: List[str], op: EnvVarOp):
         # clean up paths as they are inserted
         self._value = [os.path.normpath(p) for p in value]
@@ -63,13 +69,14 @@ class ListEnvVarUpdate():
     # remove all paths that have root as common root
     def remove_root(self, root: str):
         root = os.path.normpath(root)
-        self._value = [p for p in self._value if root!=os.path.commonprefix([root, p])]
+        self._value = [p for p in self._value if root != os.path.commonprefix([root, p])]
 
     def __repr__(self):
         return f"envvar.ListEnvVarUpdate({self.value}, {self.op})"
 
     def __str__(self):
         return f"({self.value}, {self.op})"
+
 
 class EnvVar:
     def __init__(self, name: str):
@@ -79,13 +86,14 @@ class EnvVar:
     def name(self):
         return self._name
 
+
 class ListEnvVar(EnvVar):
     def __init__(self, name: str, value: List[str], op: EnvVarOp):
         super().__init__(name)
 
         self._updates = [ListEnvVarUpdate(value, op)]
 
-    def update(self, value: List[str], op:EnvVarOp):
+    def update(self, value: List[str], op: EnvVarOp):
         self._updates.append(ListEnvVarUpdate(value, op))
 
     def remove_root(self, root: str):
@@ -96,7 +104,7 @@ class ListEnvVar(EnvVar):
     def updates(self):
         return self._updates
 
-    def concat(self, other: 'ListEnvVar'):
+    def concat(self, other: "ListEnvVar"):
         self._updates += other.updates
 
     def make_dirty(self):
@@ -114,40 +122,40 @@ class ListEnvVar(EnvVar):
     # current is None implies that the variable is not set
     #
     # dirty allows for not overriding the current value of the variable.
-    def get_value(self, current: Optional[str], dirty: bool=False):
+    def get_value(self, current: Optional[str], dirty: bool = False):
         v = current
 
         # if the variable is currently not set, first initialise it as empty.
         if v is None:
-            if len(self._updates)==0:
+            if len(self._updates) == 0:
                 return None
             v = ""
 
         first = True
         for update in self._updates:
             joined = ":".join(update.value)
-            if first and dirty and update.op==EnvVarOp.SET:
+            if first and dirty and update.op == EnvVarOp.SET:
                 op = EnvVarOp.PREPEND
             else:
                 op = update.op
 
-            if v == "" or op==EnvVarOp.SET:
+            if v == "" or op == EnvVarOp.SET:
                 v = joined
-            elif op==EnvVarOp.APPEND:
+            elif op == EnvVarOp.APPEND:
                 v = ":".join([v, joined])
-            elif op==EnvVarOp.PREPEND:
+            elif op == EnvVarOp.PREPEND:
                 v = ":".join([joined, v])
             else:
-                raise EnvVarError(f"Internal error: implement the operation {update.op}");
+                raise EnvVarError(f"Internal error: implement the operation {update.op}")
 
             first = False
             # strip any leading/trailing ":"
-            v = v.strip(':')
+            v = v.strip(":")
 
         return v
 
     def __repr__(self):
-        return f"envvars.ListEnvVar(\"{self.name}\", {self._updates})"
+        return f'envvars.ListEnvVar("{self.name}", {self._updates})'
 
     def __str__(self):
         return f"(\"{self.name}\": [{','.join([str(u) for u in self._updates])}])"
@@ -175,10 +183,11 @@ class ScalarEnvVar(EnvVar):
         return self._value
 
     def __repr__(self):
-        return f"envvars.ScalarEnvVar(\"{self.name}\", \"{self.value}\")"
+        return f'envvars.ScalarEnvVar("{self.name}", "{self.value}")'
 
     def __str__(self):
-        return f"(\"{self.name}\": \"{self.value}\")"
+        return f'("{self.name}": "{self.value}")'
+
 
 class Env:
     def __init__(self):
@@ -187,10 +196,12 @@ class Env:
     def apply(self, var: EnvVar):
         self._vars[var.name] = var
 
+
 # returns true if the environment variable with name is a list variable,
 # e.g. PATH, LD_LIBRARY_PATH, PKG_CONFIG_PATH, etc.
 def is_list_var(name: str) -> bool:
     return name in list_variables
+
 
 class EnvVarSet:
     """
@@ -237,7 +248,7 @@ class EnvVarSet:
             self._lists[var.name] = var
 
     def __repr__(self):
-        return f"envvars.EnvVarSet(\"{self.lists}\", \"{self.scalars}\")"
+        return f'envvars.EnvVarSet("{self.lists}", "{self.scalars}")'
 
     def __str__(self):
         s = "EnvVarSet:\n"
@@ -254,7 +265,7 @@ class EnvVarSet:
     # Update the environment variables using the values in another EnvVarSet.
     # This operation is used when environment variables are sourced from more
     # than one location, e.g. multiple activation scripts.
-    def update(self, other: 'EnvVarSet'):
+    def update(self, other: "EnvVarSet"):
         for name, var in other.scalars.items():
             self.set_scalar(name, var.value)
         for name, var in other.lists.items():
@@ -319,7 +330,7 @@ class EnvVarSet:
         for name, var in self.lists.items():
             ops = []
             for u in var.updates:
-                op = "set" if u.op == EnvVarOp.SET else ("prepend" if u.op==EnvVarOp.PREPEND else "append")
+                op = "set" if u.op == EnvVarOp.SET else ("prepend" if u.op == EnvVarOp.PREPEND else "append")
                 ops.append({"op": op, "value": u.value})
 
             d["list"][name] = ops
@@ -331,7 +342,7 @@ class EnvVarSet:
 
     # returns a string that represents the environment variable modifications
     # in json format
-    #{
+    # {
     #    "list": {
     #        "PATH": [
     #                {"op": "set", "value": "/user-environment/bin"},
@@ -346,14 +357,15 @@ class EnvVarSet:
     #        "CUDA_HOME": "/user-environment/env/default",
     #        "MPIF90": "/user-environment/env/default/bin/mpif90"
     #    }
-    #}
+    # }
     def as_json(self) -> str:
-        return json.dumps(self.as_dict(), separators=(',', ':'))
+        return json.dumps(self.as_dict(), separators=(",", ":"))
 
     def set_post(self, value: bool):
         self._generate_post = value
 
-def read_activation_script(filename: str, env: Optional[EnvVarSet]=None) -> EnvVarSet:
+
+def read_activation_script(filename: str, env: Optional[EnvVarSet] = None) -> EnvVarSet:
     if env is None:
         env = EnvVarSet()
 
@@ -361,7 +373,7 @@ def read_activation_script(filename: str, env: Optional[EnvVarSet]=None) -> EnvV
         for line in fid:
             l = line.strip().rstrip(";")
             # skip empty lines and comments
-            if (len(l)==0) or (l[0]=='#'):
+            if (len(l) == 0) or (l[0] == "#"):
                 continue
             # split on the first whitespace
             # this splits lines of the form
@@ -370,21 +382,21 @@ def read_activation_script(filename: str, env: Optional[EnvVarSet]=None) -> EnvV
             fields = l.split(maxsplit=1)
 
             # handle lines of the form 'export Y'
-            if len(fields)>1 and fields[0]=='export':
-                fields = fields[1].split('=', maxsplit=1)
+            if len(fields) > 1 and fields[0] == "export":
+                fields = fields[1].split("=", maxsplit=1)
                 # get the name of the environment variable
                 name = fields[0]
 
                 # if there was only one field, there was no = sign, so pass
-                if len(fields)<2:
+                if len(fields) < 2:
                     continue
                 # rhs the value that is assigned to the environment variable
                 rhs = fields[1]
                 if name in list_variables:
-                    fields = [f for f in rhs.split(":") if len(f.strip())>0]
+                    fields = [f for f in rhs.split(":") if len(f.strip()) > 0]
                     # look for $name as one of the fields (only works for append or prepend)
 
-                    if len(fields)==0:
+                    if len(fields) == 0:
                         env.set_list(name, fields, EnvVarOp.SET)
                     elif fields[0] == f"${name}":
                         env.set_list(name, fields[1:], EnvVarOp.APPEND)
@@ -397,8 +409,11 @@ def read_activation_script(filename: str, env: Optional[EnvVarSet]=None) -> EnvV
 
     return env
 
+
 def view_impl(args):
-    print(f"parsing view {args.root}\n  compilers {args.compilers}\n  prefix_paths '{args.prefix_paths}'\n  build_path '{args.build_path}'")
+    print(
+        f"parsing view {args.root}\n  compilers {args.compilers}\n  prefix_paths '{args.prefix_paths}'\n  build_path '{args.build_path}'"
+    )
 
     if not os.path.isdir(args.root):
         print(f"error - environment root path {args.root} does not exist")
@@ -437,10 +452,10 @@ def view_impl(args):
         # get the root path of the env
         print(f"prefix_paths: searching in {root_path}")
 
-        for p in args.prefix_paths.split(','):
-            name, value = p.split('=')
+        for p in args.prefix_paths.split(","):
+            name, value = p.split("=")
             paths = []
-            for path in [os.path.normpath(p) for p in value.split(':')]:
+            for path in [os.path.normpath(p) for p in value.split(":")]:
                 test_path = f"{root_path}/{path}"
                 if os.path.isdir(test_path):
                     paths.append(test_path)
@@ -449,7 +464,7 @@ def view_impl(args):
             for p in paths:
                 print(f"  {p}")
 
-            if len(paths)>0:
+            if len(paths) > 0:
                 if name in envvars.lists:
                     ld_paths = envvars.lists[name].paths
                     final_paths = [p for p in paths if p not in ld_paths]
@@ -459,11 +474,10 @@ def view_impl(args):
 
     json_path = os.path.join(root_path, "env.json")
     print(f"writing JSON data to {json_path}")
-    envvar_dict = { "version": 1, "values": envvars.as_dict() }
-    with open(json_path, 'w') as fid:
+    envvar_dict = {"version": 1, "values": envvars.as_dict()}
+    with open(json_path, "w") as fid:
         json.dump(envvar_dict, fid)
         fid.write("\n")
-
 
 
 def meta_impl(args):
@@ -507,22 +521,12 @@ def meta_impl(args):
             "env": {
                 "version": 1,
                 "type": "augment",
-                "values": {
-                    "list": {
-                        "MODULEPATH": [
-                            {
-                                "op": "prepend",
-                                "value": [module_path]
-                            }
-                        ]
-                    },
-                    "scalar": {}
-                }
-            }
+                "values": {"list": {"MODULEPATH": [{"op": "prepend", "value": [module_path]}]}, "scalar": {}},
+            },
         }
 
     if args.spack is not None:
-        spack_url, spack_version = args.spack.split(',')
+        spack_url, spack_version = args.spack.split(",")
         spack_path = f"{args.mount}/config".replace("//", "/")
         meta["views"]["spack"] = {
             "activate": "/dev/null",
@@ -536,10 +540,10 @@ def meta_impl(args):
                     "scalar": {
                         "UENV_SPACK_CONFIG_PATH": spack_path,
                         "UENV_SPACK_COMMIT": spack_version,
-                        "UENV_SPACK_URL": spack_url
-                    }
-                }
-            }
+                        "UENV_SPACK_URL": spack_url,
+                    },
+                },
+            },
         }
 
     # update the uenv meta data file with the new env. variable description
@@ -549,28 +553,32 @@ def meta_impl(args):
         fid.write("\n")
     print(f"wrote the uenv meta data {meta_path}")
 
+
 if __name__ == "__main__":
     # parse CLI arguments
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command")
-    view_parser = subparsers.add_parser("view",
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            help="generate env.json for a view")
+    view_parser = subparsers.add_parser(
+        "view", formatter_class=argparse.RawDescriptionHelpFormatter, help="generate env.json for a view"
+    )
     view_parser.add_argument("root", help="root path of the view", type=str)
     view_parser.add_argument("build_path", help="build_path", type=str)
-    view_parser.add_argument("--prefix_paths",
-                             help="a list of relative prefix path searchs of the form X=y:z,Y=p:q",
-                             default="",
-                             type=str)
+    view_parser.add_argument(
+        "--prefix_paths", help="a list of relative prefix path searchs of the form X=y:z,Y=p:q", default="", type=str
+    )
     # only add compilers if this argument is passed
-    view_parser.add_argument("--compilers",  help="path of the compilers.yaml file",  type=str, default=None)
+    view_parser.add_argument("--compilers", help="path of the compilers.yaml file", type=str, default=None)
 
-    uenv_parser = subparsers.add_parser("uenv",
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            help="generate meta.json meta data file for a uenv.")
-    uenv_parser.add_argument("mount",    help="mount point of the image",type=str)
+    uenv_parser = subparsers.add_parser(
+        "uenv",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        help="generate meta.json meta data file for a uenv.",
+    )
+    uenv_parser.add_argument("mount", help="mount point of the image", type=str)
     uenv_parser.add_argument("--modules", help="configure a module view", action="store_true")
-    uenv_parser.add_argument("--spack",  help="configure a spack view. Format is \"spack_url,git_commit\"",  type=str, default=None)
+    uenv_parser.add_argument(
+        "--spack", help='configure a spack view. Format is "spack_url,git_commit"', type=str, default=None
+    )
 
     args = parser.parse_args()
 
