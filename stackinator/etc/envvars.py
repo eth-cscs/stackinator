@@ -30,8 +30,10 @@ list_variables = {
     "LD_LIBRARY_PATH",
     "LIBRARY_PATH",
     "MANPATH",
+    "MODULEPATH",
     "PATH",
     "PKG_CONFIG_PATH",
+    "PYTHONPATH",
 }
 
 
