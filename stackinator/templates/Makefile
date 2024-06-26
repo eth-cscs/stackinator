@@ -1,3 +1,4 @@
+{% set pipejoiner = joiner('|') %}
 -include Make.user
 
 .PHONY: compilers environments generate-config clean spack-setup
@@ -88,7 +89,10 @@ cache-force: mirror-setup
 	$(warning ================================================================================)
 	$(SANDBOX) $(MAKE) -C generate-config
 	$(SANDBOX) $(SPACK) -C $(STORE)/config buildcache create --rebuild-index {% if not develop and (spack_version<"0.21") %}--allow-root{% endif %} --only=package alpscache \
-	$$($(SANDBOX) $(SPACK_HELPER) -C $(STORE)/config find --format '{/hash}')
+	$$($(SANDBOX) $(SPACK_HELPER) -C $(STORE)/config find --format '{name};{/hash};version={version}' \
+	| grep -v -E '^({% for p in exclude_from_cache %}{{ pipejoiner() }}{{ p }}{% endfor %});'\
+	| grep -v -E 'version=git\.'\
+	| cut -d ';' -f2)
 {% else %}
 	$(warning "pushing to the build cache is not enabled. See the documentation on how to add a key: https://eth-cscs.github.io/stackinator/build-caches/")
 {% endif %}

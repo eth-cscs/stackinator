@@ -242,6 +242,7 @@ class Builder:
                     develop=self.spack_develop,
                     spack_version=spack_version,
                     spack_meta=spack_meta,
+                    exclude_from_cache=["nvhpc", "cuda"],
                     verbose=False,
                 )
             )
