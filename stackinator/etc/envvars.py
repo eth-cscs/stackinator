@@ -389,9 +389,15 @@ def read_activation_script(filename: str, env: Optional[EnvVarSet] = None) -> En
                 # get the name of the environment variable
                 name = fields[0]
 
+                # ignore SPACK environment variables: setting these will interfere with downstream
+                # user spack configuration.
+                if name.startswith("SPACK_"):
+                    continue
+
                 # if there was only one field, there was no = sign, so pass
                 if len(fields) < 2:
                     continue
+
                 # rhs the value that is assigned to the environment variable
                 rhs = fields[1]
                 if name in list_variables:
