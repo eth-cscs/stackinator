@@ -217,10 +217,7 @@ class Builder:
 
         # get the spack commit
         git_commit_result = subprocess.run(
-            ["git", "-C", spack_path, "rev-parse", "HEAD"],
-            shell=False,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            ["git", "-C", spack_path, "rev-parse", "HEAD"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         spack_meta = {"commit": git_commit_result.stdout.strip(), "url": spack["repo"]}
 
