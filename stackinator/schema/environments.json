@@ -45,9 +45,9 @@
                              "properties": {
                                  "spec": {"type": "string"},
                                  "gpu":  {
-					 "enum": ["cuda", "rocm", null, false],
-					 "default": null
-				 }
+                                     "enum": ["cuda", "rocm", null, false],
+                                     "default": null
+                                 }
                              }
                          },
                          {"enum": [null, false]}
@@ -65,12 +65,12 @@
                     "patternProperties": {
                         "\\w+": {
                             "additionalProperties": false,
+                            "comment": "we can't set default values in such a construction, so they are set inside stackinator",
                             "properties": {
                                 "link": {
                                     "type": "string",
                                     "enum": ["roots", "all", "run"]
                                 },
-                                "link_type": {"type": "string"},
                                 "select": {
                                     "type": "array",
                                     "items": {"type": "string"}
@@ -83,6 +83,22 @@
                                     "type": "object",
                                     "patternProperties": {
                                         "all|\\w[\\w-]*": {"type": "string"}
+                                    }
+                                },
+                                "uenv": {
+                                    "type": "object",
+                                    "additionalPropertis": false,
+                                    "properties": {
+                                        "add_compilers": { "type": "boolean" },
+                                        "prefix_paths": {
+                                            "type": "object",
+                                            "patternProperties": {
+                                                "\\w+": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"}
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }

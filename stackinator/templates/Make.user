@@ -3,7 +3,7 @@
 # Copy this file to Make.user and set some variables.
 
 # This is the root of the software stack directory.
-SOFTWARE_STACK_PROJECT := {{ build_path }}
+BUILD_ROOT := {{ build_path }}
 
 # What Spack should we use?
 SPACK := spack
@@ -25,10 +25,10 @@ STORE := {{ store }}
 {% if no_bwrap %}
 SANDBOX :=
 {% else %}
-SANDBOX := $(SOFTWARE_STACK_PROJECT)/bwrap-mutable-root.sh $\
+SANDBOX := $(BUILD_ROOT)/bwrap-mutable-root.sh $\
 	--tmpfs ~ $\
-	--bind $(SOFTWARE_STACK_PROJECT)/tmp /tmp $\
-	--bind $(SOFTWARE_STACK_PROJECT)/store $(STORE)
+	--bind $(BUILD_ROOT)/tmp /tmp $\
+	--bind $(BUILD_ROOT)/store $(STORE)
 {% endif %}
 # Makes sure that make -Orecurse continues to print in color.
 export SPACK_COLOR := always
@@ -41,10 +41,10 @@ export SPACK_USER_CONFIG_PATH := /dev/null
 
 # Set up the system config scope that has the system packages we don't want
 # build, for example slurm, pmix, etc. Also should have the system compiler.
-export SPACK_SYSTEM_CONFIG_PATH := $(SOFTWARE_STACK_PROJECT)/config
+export SPACK_SYSTEM_CONFIG_PATH := $(BUILD_ROOT)/config
 
 # Put clingo and friends here...
-export SPACK_USER_CACHE_PATH := $(SOFTWARE_STACK_PROJECT)/cache
+export SPACK_USER_CACHE_PATH := $(BUILD_ROOT)/cache
 
 # Output the full build log to stdout.
 {% if verbose %}

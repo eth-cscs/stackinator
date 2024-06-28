@@ -1,0 +1,35 @@
+arbor:
+  compiler:
+      - toolchain: gcc
+        spec: gcc@13.2
+  unify: true
+  specs:
+  # arbor
+  - arbor@0.9 +python -mpi
+  # build tools
+  - cmake
+  - googletest
+  - ninja
+  - python@3.11
+  # C++ dependencies
+  - fmt
+  - pugixml
+  - nlohmann-json
+  - random123
+  # python packages
+  - py-numpy
+  - py-pip
+  - py-pybind11
+  # etc
+  packages:
+  - diffutils
+  - gettext
+  - gmake
+  - libxml2
+  - perl
+  views:
+    arbor:
+      link: roots
+    develop:
+      link: roots
+      exclude: [arbor]

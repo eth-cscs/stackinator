@@ -215,6 +215,12 @@ class Builder:
                 self._logger.debug(f'unable to change to the requested commit {spack["commit"]}')
                 capture.check_returncode()
 
+        # get the spack commit
+        git_commit_result = subprocess.run(
+            ["git", "-C", spack_path, "rev-parse", "HEAD"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        spack_meta = {"commit": git_commit_result.stdout.strip(), "url": spack["repo"]}
+
         # load the jinja templating environment
         template_path = self.root / "templates"
         jinja_env = jinja2.Environment(
@@ -235,6 +241,7 @@ class Builder:
                     pre_install_hook=recipe.pre_install_hook,
                     develop=self.spack_develop,
                     spack_version=spack_version,
+                    spack_meta=spack_meta,
                     verbose=False,
                 )
             )
@@ -253,7 +260,7 @@ class Builder:
             f.write("\n")
 
         etc_path = self.root / "etc"
-        for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "add-compiler-links.py"]:
+        for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "envvars.py"]:
             shutil.copy2(etc_path / f_etc, self.path / f_etc)
 
         # used to configure both pre and post install hooks, if they are provided.
@@ -395,13 +402,32 @@ class Builder:
             self._logger.debug(f"{repo_dst} exists ... deleting")
             shutil.rmtree(repo_dst)
 
+        # create the repository step 1: create the repo directory
+        pkg_dst = repo_dst / "packages"
+        pkg_dst.mkdir(mode=0o755, parents=True)
+        self._logger.debug(f"created the repo packages path {pkg_dst}")
+
+        # create the repository step 2: create the repo.yaml file that
+        # configures the repo.
+        with (repo_dst / "repo.yaml").open("w") as f:
+            f.write(
+                """\
+repo:
+  namespace: alps
+"""
+            )
+
+        # create the repository step 2: create the repos.yaml file in build_path/config
+        repos_yaml_template = jinja_env.get_template("repos.yaml")
+        with (config_path / "repos.yaml").open("w") as f:
+            repo_path = recipe.mount / "repo"
+            f.write(repos_yaml_template.render(repo_path=repo_path.as_posix(), verbose=False))
+            f.write("\n")
+
         # Iterate over the source repositories copying their contents to the consolidated repo in the uenv.
         # Do overwrite packages that have been copied from an earlier source repo, enforcing a descending
         # order of precidence.
         if len(repos) > 0:
-            pkg_dst = repo_dst / "packages"
-            pkg_dst.mkdir(mode=0o755, parents=True)
-            self._logger.debug(f"created the repo packages path {pkg_dst}")
             for repo_src in repos:
                 self._logger.debug(f"installing repo {repo_src}")
                 packages_path = repo_src / "packages"
@@ -412,21 +438,6 @@ class Builder:
                         install(pkg_path, dst)
                     elif dst.exists():
                         self._logger.debug(f"  NOT installing package {pkg_path}")
-            # create the repo.yaml file that configures the repo.
-            with (repo_dst / "repo.yaml").open("w") as f:
-                f.write(
-                    """\
-repo:
-  namespace: alps
-"""
-                )
-
-        # Create a repos.yaml file in build_path/config
-        repos_yaml_template = jinja_env.get_template("repos.yaml")
-        with (config_path / "repos.yaml").open("w") as f:
-            repo_path = recipe.mount / "repo"
-            f.write(repos_yaml_template.render(repo_path=repo_path.as_posix(), verbose=False))
-            f.write("\n")
 
         # Generate the makefile and spack.yaml files that describe the compilers
         compiler_files = recipe.compiler_files
@@ -490,7 +501,7 @@ repo:
             f.write("\n")
 
         # write a json file with the environment view meta data
-        with (meta_path / "env.json").open("w") as f:
+        with (meta_path / "env.json.in").open("w") as f:
             # default serialisation is str to serialise the pathlib.PosixPath
             f.write(json.dumps(self.environment_meta, sort_keys=True, indent=2, default=str))
             f.write("\n")

@@ -1,0 +1,32 @@
+{
+  "cluster": "unknown",
+  "host": {
+    "machine": "x86_64",
+    "node": "arapiles",
+    "processor": "",
+    "release": "6.9.3-arch1-1",
+    "system": "Linux",
+    "version": "#1 SMP PREEMPT_DYNAMIC Fri, 31 May 2024 15:14:45 +0000"
+  },
+  "mount": "/user-environment",
+  "spack": {
+    "commit": "releases/v0.21",
+    "repo": "https://github.com/spack/spack.git"
+  },
+  "stackinator": {
+    "args": [
+      "/home/bcumming/software/uenv-dev/stackinator/bin/stack-config",
+      "-s",
+      "./arapiles",
+      "-r",
+      "./recipes/arbor",
+      "-b",
+      "/dev/shm/bcumming/arbor",
+      "-c",
+      "./cache.yaml"
+    ],
+    "python": "/usr/bin/python3",
+    "version": "4.1.0-dev"
+  },
+  "time": "20240611 12:06:38"
+}
