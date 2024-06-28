@@ -78,8 +78,8 @@ def main():
         root_logger.info(f"cd {builder.path}")
         root_logger.info(
             'env --ignore-environment http_proxy="$http_proxy" https_proxy="$https_proxy" no_proxy="$no_proxy"'
-            "PATH=/usr/bin:/bin:`pwd`"
-            "/spack/bin HOME=$HOME make store.squashfs -j32"
+            " PATH=/usr/bin:/bin:`pwd`"
+            " /spack/bin HOME=$HOME make store.squashfs -j32"
         )
         return 0
     except Exception as e:
