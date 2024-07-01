@@ -18,9 +18,11 @@ spack:
     all:
 {% set separator = joiner(', ') %}
       compiler: [{% for c in config.compiler %}{{ separator() }}'{{ c.spec }}'{% endfor %}]
+{% if config.toolchain_constraints %}
       require:
 {% set separator = joiner(', ') %}
       - one_of: [{% for c in config.toolchain_constraints %}{{ separator() }}'{{ c }}'{% endfor %}]
+{% endif %}
     {% if config.variants %}
 {% set separator = joiner(', ') %}
       variants: [{% for v in config.variants %}{{ separator() }}'{{ v }}'{% endfor %}]
