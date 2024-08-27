@@ -252,6 +252,7 @@ class Builder:
         with (self.path / "Make.user").open("w") as f:
             f.write(
                 make_user_template.render(
+                    develop=self.spack_develop,
                     build_path=self.path,
                     store=recipe.mount,
                     no_bwrap=recipe.no_bwrap,
