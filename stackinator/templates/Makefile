@@ -60,21 +60,26 @@ generate-config: compilers
 environments: compilers
 	$(SANDBOX) $(MAKE) -C $@
 
-modules: environments generate-config
+{% if modules %}
+modules-done: environments generate-config
 	$(SANDBOX) $(SPACK) -C $(BUILD_ROOT)/modules module tcl refresh --upstream-modules --delete-tree --yes-to-all
+	touch modules-done
+{% endif %}
 
-post-install: generate-config environments{% if modules %} modules{% endif %}
 
+env-meta: generate-config environments{% if modules %} modules-done{% endif %}
+
+	$(SANDBOX) $(BUILD_ROOT)/envvars.py uenv {% if modules %}--modules{% endif %} --spack={{ spack_meta.url }},{{ spack_meta.commit }} $(STORE)
+	touch env-meta
+
+post-install: env-meta
 	{% if post_install_hook %}
 	$(SANDBOX) $(STORE)/post-install-hook
 	{% endif %}
 	touch post-install
 
-$(BUILD_ROOT)/store/meta/env.json: post-install
-	$(SANDBOX) $(BUILD_ROOT)/envvars.py uenv {% if modules %}--modules{% endif %} --spack={{ spack_meta.url }},{{ spack_meta.commit }} $(STORE)
-
 # Create a squashfs file from the installed software.
-store.squashfs: $(BUILD_ROOT)/store/meta/env.json
+store.squashfs: post-install
 	# clean up the __pycache__ paths in the repo
 	$(SANDBOX) find $(STORE)/repo -type d -name __pycache__ -exec rm -r {} +
 	$(SANDBOX) env -u SOURCE_DATE_EPOCH "$$($(SANDBOX) $(SPACK_HELPER) -e ./compilers/bootstrap find --format='{prefix}' squashfs | head -n1)/bin/mksquashfs" $(STORE) $@ -all-root -all-time $$(date +%s) -no-recovery -noappend -Xcompression-level 3
@@ -104,6 +109,6 @@ build.tar.gz: spack-version Make.user Make.inc Makefile | environments
 
 # Clean generate files, does *not* remove installed software.
 clean:
-	rm -rf -- $(wildcard */*/spack.lock) $(wildcard */*/.spack-env) $(wildcard */*/Makefile) $(wildcard */*/generated) $(wildcard cache) $(wildcard compilers/*/config.yaml) $(wildcard compilers/*/packages.yaml) $(wildcard compilers/*/compilers.yaml) $(wildcard environments/*/config.yaml) $(wildcard environments/*/packages.yaml) $(wildcard environments/*/compilers.yaml)
+	rm -rf -- $(wildcard */*/spack.lock) $(wildcard */*/.spack-env) $(wildcard */*/Makefile) $(wildcard */*/generated) $(wildcard cache) $(wildcard compilers/*/config.yaml) $(wildcard compilers/*/packages.yaml) $(wildcard compilers/*/compilers.yaml) $(wildcard environments/*/config.yaml) $(wildcard environments/*/packages.yaml) $(wildcard environments/*/compilers.yaml) post-install modules-done env-meta store.squashfs 
 
 include Make.inc
