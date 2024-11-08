@@ -215,11 +215,19 @@ class Builder:
                 self._logger.debug(f'unable to change to the requested commit {spack["commit"]}')
                 capture.check_returncode()
 
+        # the default branch is develop: find the exact commit
+        if not spack["commit"] or spack["commit"] == "develop":
+            git_commit_result = subprocess.run(
+                ["git", "-C", spack_path, "rev-parse", "HEAD"],
+                shell=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            spack["commit"] = git_commit_result.stdout.strip()
+
         # get the spack commit
-        git_commit_result = subprocess.run(
-            ["git", "-C", spack_path, "rev-parse", "HEAD"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        spack_meta = {"commit": git_commit_result.stdout.strip(), "url": spack["repo"]}
+        spack_meta = {"commit": spack["commit"], "url": spack["repo"]}
+        print(f"==== {spack_meta}")
 
         # load the jinja templating environment
         template_path = self.root / "templates"
