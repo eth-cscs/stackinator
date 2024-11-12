@@ -189,7 +189,7 @@ class Builder:
 
             # clone the repository
             capture = subprocess.run(
-                ["git", "clone", spack["repo"], spack_path],
+                ["git", "clone", "--filter=tree:0", spack["repo"], spack_path],
                 shell=False,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -198,6 +198,21 @@ class Builder:
 
             if capture.returncode != 0:
                 self._logger.error(f'error cloning the repository {spack["repo"]}')
+                capture.check_returncode()
+
+        # Fetch the specific branch
+        if spack["commit"]:
+            self._logger.info(f'spack: fetch branch/commit {spack["commit"]}')
+            capture = subprocess.run(
+                ["git", "-C", spack_path, "fetch", "origin", spack["commit"]],
+                shell=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+            self._logger.debug(capture.stdout.decode("utf-8"))
+
+            if capture.returncode != 0:
+                self._logger.debug(f'unable to change to the fetch {spack["commit"]}')
                 capture.check_returncode()
 
         # Check out a branch or commit if one was specified
