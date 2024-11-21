@@ -535,7 +535,7 @@ def meta_impl(args):
         }
 
     if args.spack is not None:
-        spack_url, spack_version = args.spack.split(",")
+        spack_url, spack_commit_literal, spack_version = args.spack.split(",")
         spack_path = f"{args.mount}/config".replace("//", "/")
         meta["views"]["spack"] = {
             "activate": "/dev/null",
@@ -548,6 +548,7 @@ def meta_impl(args):
                     "list": {},
                     "scalar": {
                         "UENV_SPACK_CONFIG_PATH": spack_path,
+                        "UENV_SPACK_COMMIT_LITERAL": spack_commit_literal,
                         "UENV_SPACK_COMMIT": spack_version,
                         "UENV_SPACK_URL": spack_url,
                     },
@@ -586,7 +587,10 @@ if __name__ == "__main__":
     uenv_parser.add_argument("mount", help="mount point of the image", type=str)
     uenv_parser.add_argument("--modules", help="configure a module view", action="store_true")
     uenv_parser.add_argument(
-        "--spack", help='configure a spack view. Format is "spack_url,git_commit"', type=str, default=None
+        "--spack",
+        help='configure a spack view. Format is "spack_url,git_commit_literal,git_commit"',
+        type=str,
+        default=None,
     )
 
     args = parser.parse_args()
