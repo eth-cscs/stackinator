@@ -548,6 +548,7 @@ repo:
                     mount_path=recipe.mount,
                     build_path=str(self.path),
                     use_bwrap=not recipe.no_bwrap,
+                    develop=self.spack_develop,
                     verbose=False,
                 )
             )
