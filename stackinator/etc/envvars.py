@@ -535,7 +535,7 @@ def meta_impl(args):
         }
 
     if args.spack is not None:
-        spack_url, spack_commit_literal, spack_version = args.spack.split(",")
+        spack_url, spack_commit_literal, spack_commit = args.spack.split(",")
         spack_path = f"{args.mount}/config".replace("//", "/")
         meta["views"]["spack"] = {
             "activate": "/dev/null",
@@ -549,7 +549,7 @@ def meta_impl(args):
                     "scalar": {
                         "UENV_SPACK_CONFIG_PATH": spack_path,
                         "UENV_SPACK_COMMIT_LITERAL": spack_commit_literal,
-                        "UENV_SPACK_COMMIT": spack_version,
+                        "UENV_SPACK_COMMIT": spack_commit,
                         "UENV_SPACK_URL": spack_url,
                     },
                 },
