@@ -235,7 +235,7 @@ class Builder:
             ["git", "-C", spack_path, "rev-parse", "HEAD"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         spack_meta = {
-            "commit_literal": spack["commit"],
+            "ref": spack["commit"],
             "commit": git_commit_result.stdout.strip().decode("utf-8"),
             "url": spack["repo"],
         }
