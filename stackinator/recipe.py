@@ -38,9 +38,6 @@ class Recipe:
         self._logger = root_logger
         self._logger.debug("Generating recipe")
 
-        # Optionally support breaking changes in Spack develop
-        self.spack_develop = args.develop
-
         self.no_bwrap = args.no_bwrap
 
         # set the system configuration path
@@ -123,6 +120,13 @@ class Recipe:
         else:
             self._logger.debug("no pre install hook provided")
 
+        # determine the version of spack being used:
+        # --develop flag implies the next release of spack
+        # --spack_version option explicitly sets the version
+        # otherwise the name of the commit provided in the config.yaml file is inspected
+        self.spack_version = self.find_spack_version(args.develop, args.spack_version)
+
+
     # Returns:
     #   Path: if the recipe contains a spack package repository
     #   None: if there is the recipe contains no repo
@@ -204,22 +208,44 @@ class Recipe:
             schema.config_validator.validate(raw)
             self._config = raw
 
-    @property
-    def spack_version(self):
+    def find_spack_version(self, develop, spack_version)
         # determine the "major" version, if it can be inferred.
-        # one of "0.20", "0.21", "develop" or "unknown".
+        # one of "0.21", "0.22", "0.23", "0.24" or "unknown".
+        # "0.24" implies the latest features in develop that will
+        # are being developed for the next version of spack
+
+        # the user has explicitly requested develop:
+        if develop:
+            return "0.24"
+
+        if spack_version is not None:
+            return spack_version
+
+        # infer from the branch name
+        # Note: this could be improved by first downloading
+        # the requested spack version/tag/commit, then checking
+        # the version returned by `spack --version`
+        #
+        # this would require defering this decision until after
+        # the repo is cloned in build.py... a lot of work.
         commit = self.config["spack"]["commit"]
         if commit is None or commit == "develop":
-            return "develop"
+            return "0.24"
         # currently supported
-        if commit.find("0.20") >= 0:
-            return "0.20"
+        if commit.find("0.24") >= 0:
+            return "0.24"
+        # currently supported
+        if commit.find("0.23") >= 0:
+            return "0.23"
+        # currently supported
+        if commit.find("0.22") >= 0:
+            return "0.22"
         # currently supported
         if commit.find("0.21") >= 0:
             return "0.21"
-        # branches that contain wip for the next v0.22 release
-        if commit.find("0.22") >= 0:
-            return "0.22"
+        # currently supported
+        if commit.find("0.20") >= 0:
+            raise ValueError(f"spack minimum version is v0.21 - recipe uses {commit}")
 
         return "unknown"
 
@@ -489,7 +515,6 @@ class Recipe:
         files["makefile"] = makefile_template.render(
             compilers=self.compilers,
             push_to_cache=push_to_cache,
-            develop=self.spack_develop,
             spack_version=self.spack_version,
         )
 
@@ -517,7 +542,6 @@ class Recipe:
         files["makefile"] = makefile_template.render(
             environments=self.environments,
             push_to_cache=push_to_cache,
-            develop=self.spack_develop,
             spack_version=self.spack_version,
         )
 

@@ -18,7 +18,7 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 {% for env, config in environments.items() %}
 {{ env }}/generated/build_cache: {{ env }}/generated/view_config
 {% if push_to_cache %}
-	$(SPACK) -e ./{{ env }} buildcache create --rebuild-index {% if not develop and (spack_version<"0.21") %}--allow-root{% endif %} --only=package alpscache \
+	$(SPACK) -e ./{{ env }} buildcache create --rebuild-index --only=package alpscache \
 	$$($(SPACK_HELPER) -e ./{{ env }} find --format '{name};{/hash};version={version}' \
 	| grep -v -E '^({% for p in config.exclude_from_cache %}{{ pipejoiner() }}{{ p }}{% endfor %});'\
 	| grep -v -E 'version=git\.'\
@@ -32,11 +32,7 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 {% for env, config in environments.items() %}
 {{ env }}/generated/view_config: {{ env }}/generated/env
 {% if config.view %}
-{% if develop or (spack_version>="0.21") %}
 	$(SPACK) env activate --with-view default --sh ./{{ env }} > $(STORE)/env/{{ config.view.name }}/activate.sh
-{% else %}
-	$(SPACK) env activate --with-view --sh ./{{ env }} > $(STORE)/env/{{ config.view.name }}/activate.sh
-{% endif %}
 	$(BUILD_ROOT)/envvars.py view {% if config.view.extra.add_compilers %}--compilers=./{{ env }}/compilers.yaml {% endif %} --prefix_paths="{{ config.view.extra.prefix_string }}" $(STORE)/env/{{ config.view.name }} $(BUILD_ROOT)
 {% endif %}
 	touch $@
