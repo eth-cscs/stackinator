@@ -171,7 +171,7 @@ class Builder:
 
         # check out the version of spack
         spack_version = recipe.spack_version
-        self._logger.debug(f'spack version for templates: {spack_version}')
+        self._logger.debug(f"spack version for templates: {spack_version}")
         spack = recipe.config["spack"]
         spack_path = self.path / "spack"
 

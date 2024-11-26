@@ -126,7 +126,6 @@ class Recipe:
         # otherwise the name of the commit provided in the config.yaml file is inspected
         self.spack_version = self.find_spack_version(args.develop, args.spack_version)
 
-
     # Returns:
     #   Path: if the recipe contains a spack package repository
     #   None: if there is the recipe contains no repo
