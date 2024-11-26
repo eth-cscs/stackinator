@@ -208,7 +208,7 @@ class Recipe:
             schema.config_validator.validate(raw)
             self._config = raw
 
-    def find_spack_version(self, develop, spack_version)
+    def find_spack_version(self, develop, spack_version):
         # determine the "major" version, if it can be inferred.
         # one of "0.21", "0.22", "0.23", "0.24" or "unknown".
         # "0.24" implies the latest features in develop that will
