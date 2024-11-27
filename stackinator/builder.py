@@ -86,9 +86,6 @@ class Builder:
         self.path = path
         self.root = pathlib.Path(__file__).parent.resolve()
 
-        # Optionally support breaking changes in Spack develop
-        self.spack_develop = args.develop
-
     @property
     def configuration_meta(self):
         """Meta data about the configuration and build"""
@@ -174,6 +171,7 @@ class Builder:
 
         # check out the version of spack
         spack_version = recipe.spack_version
+        self._logger.debug(f"spack version for templates: {spack_version}")
         spack = recipe.config["spack"]
         spack_path = self.path / "spack"
 
@@ -258,7 +256,6 @@ class Builder:
                     modules=recipe.config["modules"],
                     post_install_hook=recipe.post_install_hook,
                     pre_install_hook=recipe.pre_install_hook,
-                    develop=self.spack_develop,
                     spack_version=spack_version,
                     spack_meta=spack_meta,
                     exclude_from_cache=["nvhpc", "cuda"],
@@ -271,7 +268,7 @@ class Builder:
         with (self.path / "Make.user").open("w") as f:
             f.write(
                 make_user_template.render(
-                    develop=self.spack_develop,
+                    spack_version=spack_version,
                     build_path=self.path,
                     store=recipe.mount,
                     no_bwrap=recipe.no_bwrap,
@@ -552,7 +549,7 @@ repo:
                     mount_path=recipe.mount,
                     build_path=str(self.path),
                     use_bwrap=not recipe.no_bwrap,
-                    develop=self.spack_develop,
+                    spack_version=spack_version,
                     verbose=False,
                 )
             )

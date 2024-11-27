@@ -93,7 +93,7 @@ cache-force: mirror-setup
 	$(warning likely have to start a fresh build (but that's okay, because build caches FTW))
 	$(warning ================================================================================)
 	$(SANDBOX) $(MAKE) -C generate-config
-	$(SANDBOX) $(SPACK) -C $(STORE)/config buildcache create --rebuild-index {% if not develop and (spack_version<"0.21") %}--allow-root{% endif %} --only=package alpscache \
+	$(SANDBOX) $(SPACK) -C $(STORE)/config buildcache create --rebuild-index --only=package alpscache \
 	$$($(SANDBOX) $(SPACK_HELPER) -C $(STORE)/config find --format '{name};{/hash};version={version}' \
 	| grep -v -E '^({% for p in exclude_from_cache %}{{ pipejoiner() }}{{ p }}{% endfor %});'\
 	| grep -v -E 'version=git\.'\
