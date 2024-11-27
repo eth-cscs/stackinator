@@ -122,7 +122,7 @@ class Recipe:
 
         # determine the version of spack being used:
         # --develop flag implies the next release of spack
-        # --spack_version option explicitly sets the version
+        # --spack-version option explicitly sets the version
         # otherwise the name of the commit provided in the config.yaml file is inspected
         self.spack_version = self.find_spack_version(args.develop, args.spack_version)
 

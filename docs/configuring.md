@@ -17,8 +17,8 @@ The following flags are required:
 The following flags are optional:
 
 * `-c/--cache`: configure the [build cache](build-caches.md).
-* `--develop`: introduce compatibility with Spack's `develop` branch (see below).
-* `--spack_version`: explicitly set the Spack version used for template configuration (see below).
+* `--develop`: introduce compatibility with Spack's `develop` branch (can't be used with `--spack-version`, see below).
+* `--spack-version`: explicitly set the Spack version used for template configuration (can't be used with `--develop`, see below).
 * `-m/--mount`: override the [mount point](installing.md) where the stack will be installed.
 * `--version`: print the stackinator version.
 * `-h/--help`: print help message.
@@ -36,9 +36,9 @@ By default, Stackinator will inspect the name of the `spack:commit` field in the
 This default can be overriden the:
 
 * `--develop` flag, which sets `spack_version` to the version of the next release.
-* the `--spack_version` option, through which the version can be set explicitly.
+* the `--spack-version` option, through which the version can be set explicitly.
 
-Explicitly setting the Spack version using either `--develop` or `--spack_version` is recommended when using a commit or branch of Spack from which it is not possible for `stack-config` to infer the correct version.
+Explicitly setting the Spack version using either `--develop` or `--spack-version` is recommended when using a commit or branch of Spack from which it is not possible for `stack-config` to infer the correct version.
 
 
 ```bash
@@ -47,10 +47,10 @@ Explicitly setting the Spack version using either `--develop` or `--spack_versio
 stack-config --build $BUILD_PATH --recipe $RECIPE_PATH --system $SYSTEM_CONFIG_PATH --develop
 
 # configure the templates for compatibility with Spack v0.23
-stack-config --build $BUILD_PATH --recipe $RECIPE_PATH --system $SYSTEM_CONFIG_PATH --spack_version=0.23
+stack-config --build $BUILD_PATH --recipe $RECIPE_PATH --system $SYSTEM_CONFIG_PATH --spack-version=0.23
 
 # v0.24 is the next version of Spack, so this is equivalent to using the --develop flag
-stack-config --build $BUILD_PATH --recipe $RECIPE_PATH --system $SYSTEM_CONFIG_PATH --spack_version=0.24
+stack-config --build $BUILD_PATH --recipe $RECIPE_PATH --system $SYSTEM_CONFIG_PATH --spack-version=0.24
 ```
 
 !!! note
