@@ -49,7 +49,7 @@ stack-config --build $BUILD_PATH --recipe $RECIPE_PATH --system $SYSTEM_CONFIG_P
 # configure the templates for compatibility with Spack v0.23
 stack-config --build $BUILD_PATH --recipe $RECIPE_PATH --system $SYSTEM_CONFIG_PATH --spack_version=0.23
 
-# v0.24 is the next version of Spack, so this is equivalent to using the --develop flat
+# v0.24 is the next version of Spack, so this is equivalent to using the --develop flag
 stack-config --build $BUILD_PATH --recipe $RECIPE_PATH --system $SYSTEM_CONFIG_PATH --spack_version=0.24
 ```
 
