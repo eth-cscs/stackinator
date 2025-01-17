@@ -82,7 +82,7 @@ post-install: env-meta
 store.squashfs: post-install
 	# clean up the __pycache__ paths in the repo
 	$(SANDBOX) find $(STORE)/repo -type d -name __pycache__ -exec rm -r {} +
-  $(SANDBOX) chmod -R a+rX $(STORE)
+	$(SANDBOX) chmod -R a+rX $(STORE)
 	$(SANDBOX) env -u SOURCE_DATE_EPOCH "$$($(SANDBOX) $(SPACK_HELPER) -e ./compilers/bootstrap find --format='{prefix}' squashfs | head -n1)/bin/mksquashfs" $(STORE) $@ -all-root -all-time $$(date +%s) -no-recovery -noappend -Xcompression-level 3
 
 # Force push all built packages to the build cache
