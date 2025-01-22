@@ -2,6 +2,7 @@ name: Stackinator CI
 
 on: [push, pull_request]
 
+jobs:
   unittestpy36:
     runs-on: ubuntu-20.04
     strategy:
