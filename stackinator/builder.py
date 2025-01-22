@@ -258,7 +258,7 @@ class Builder:
                     pre_install_hook=recipe.pre_install_hook,
                     spack_version=spack_version,
                     spack_meta=spack_meta,
-                    exclude_from_cache=["nvhpc", "cuda"],
+                    exclude_from_cache=["nvhpc", "cuda", "perl"],
                     verbose=False,
                 )
             )

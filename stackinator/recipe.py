@@ -278,7 +278,7 @@ class Recipe:
 
         # enumerate large binary packages that should not be pushed to binary caches
         for _, config in environments.items():
-            config["exclude_from_cache"] = ["cuda"]
+            config["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
 
         # check the environment descriptions and ammend where features are missing
         for name, config in environments.items():
@@ -433,7 +433,7 @@ class Recipe:
             f"{bootstrap_spec} languages=c,c++",
             "squashfs default_compression=zstd",
         ]
-        bootstrap["exclude_from_cache"] = []
+        bootstrap["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
         compilers["bootstrap"] = bootstrap
 
         gcc = {}
@@ -460,7 +460,7 @@ class Recipe:
         }
         gcc["specs"] = raw["gcc"]["specs"]
         gcc["requires"] = bootstrap_spec
-        gcc["exclude_from_cache"] = []
+        gcc["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
         compilers["gcc"] = gcc
         if raw["llvm"] is not None:
             llvm = {}
@@ -474,7 +474,7 @@ class Recipe:
                     llvm["specs"].append(f"{spec} +clang targets=x86 ~gold ^ninja@kitware")
 
             llvm["requires"] = raw["llvm"]["requires"]
-            llvm["exclude_from_cache"] = ["nvhpc"]
+            llvm["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
             compilers["llvm"] = llvm
 
         self.compilers = compilers
