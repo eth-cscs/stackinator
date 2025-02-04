@@ -313,6 +313,22 @@ will configure two views:
 * `default`: a view of all the software in the environment using the default settings of Spack.
 * `no-python`: everything in the default view, except any versions of `python`.
 
+Stackinator provides some additional options that are not provided by Spack, to fine tune the view, that can be set in the `uenv:` field:
+
+```yaml
+cuda-env:
+  views:
+    uenv:
+      add_compilers: true
+      prefix_paths:
+        LD_LIBRARY_PATH: [lib, lib64]
+```
+
+* `add_compilers` (default `true`): by default Spack will not add compilers to the `PATH` variable. Stackinator automatically adds the `gcc` and/or `nvhpc` to path. This option can be used to explicitly disable or enable this feature.
+* `prefix_paths` (default empty): this option can be used to customise prefix style environment variables (`PATH`, `LD_LIBRARY_PATH`, `PKG_CONFIG_PATH`, `PYTHONPATH`, etc).
+    * the key is the environment variable, and the value is a list of paths to search for in the environment view. All paths that match an entry in the list will be prepended to the prefix path environment variable.
+    * the main use for this feature is to opt-in to setting `LD_LIBRARY_PATH`. By default Spack does not add `lib` and `lib64` to `LD_LIBRARY_PATH` because that can break system installed applications that depend on `LD_LIBRARY_PATH` or finding their dependencies in standard locations like `/usr/lib`.
+
 See the [interfaces documentation](interfaces.md#environment-views) for more information about how the environment views are provided to users of a stack.
 
 ## Modules
