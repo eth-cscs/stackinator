@@ -57,8 +57,13 @@
                                      "enum": ["cuda", "rocm", null, false],
                                      "default": null
                                  },
-                                 "xspec": {"type": "string"}
-                             }
+                                 "xspec": {"type": "string"},
+                                 "depends": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                    "default": []
+                                }
+                            }
                          },
                          {"enum": [null, false]}
                      ],
@@ -119,4 +124,3 @@
          }
      }
 }
-
