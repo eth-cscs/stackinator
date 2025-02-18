@@ -56,7 +56,8 @@
                                  "gpu":  {
                                      "enum": ["cuda", "rocm", null, false],
                                      "default": null
-                                 }
+                                 },
+                                 "xspec": {"type": "string"}
                              }
                          },
                          {"enum": [null, false]}
