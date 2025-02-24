@@ -402,7 +402,7 @@ class Recipe:
         self.environments = environments
 
     # creates the self.compilers field that describes the full specifications
-    # for all of teh compilers from the raw compilers.yaml input
+    # for all of the compilers from the raw compilers.yaml input
     def generate_compiler_specs(self, raw):
         compilers = {}
 
