@@ -33,7 +33,8 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 {{ env }}/generated/view_config: {{ env }}/generated/env
 {% if config.view %}
 	$(SPACK) env activate --with-view default --sh ./{{ env }} > $(STORE)/env/{{ config.view.name }}/activate.sh
-	$(BUILD_ROOT)/envvars.py view {% if config.view.extra.add_compilers %}--compilers=./{{ env }}/compilers.yaml {% endif %} --prefix_paths="{{ config.view.extra.prefix_string }}" $(STORE)/env/{{ config.view.name }} $(BUILD_ROOT)
+	$(BUILD_ROOT)/envvars.py view --prefix_paths="{{ config.view.extra.prefix_string }}" $(STORE)/env/{{ config.view.name }} $(BUILD_ROOT)
+	$(BUILD_ROOT)/gen_packages_yaml.py --view=$(STORE)/env/{{ config.view.name }} --env=./{{ env }} --lock-file=./{{ env }}/spack.lock
 {% endif %}
 	touch $@
 
@@ -42,15 +43,16 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 
 {% for env in environments %}{{ env }}/config.yaml {% endfor %}: | store
 	$(SPACK) config --scope=user add config:install_tree:root:$(STORE)
+	{# $(SPACK) config --scope=user add config:install_tree:padded_length:128 #}
 
-# Create the compilers.yaml configuration for each environment
-{% for env, config in environments.items() %}
-{{ env }}_PREFIX = {% for C in config.compiler %} $$($(SPACK_HELPER) -e ../compilers/{{ C.toolchain }} find --format '{prefix}' {{ C.spec }}){% endfor %}
+{# # Create the compilers.yaml configuration for each environment #}
+{# {% for env, config in environments.items() %} #}
+{# {{ env }}_PREFIX = {% for C in config.compiler %} $$($(SPACK_HELPER) -e ../compilers/{{ C.toolchain }} find --format '{prefix}' {{ C.spec }}){% endfor %} #}
 
-{{ env }}/compilers.yaml:
-	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $({{ env }}_PREFIX))
+{# {{ env }}/compilers.yaml: #}
+{# 	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $({{ env }}_PREFIX)) #}
 
-{% endfor %}
+{# {% endfor %} #}
 
 # Configure external system dependencies for each compiler toolchain
 {% for env, config in environments.items() %}

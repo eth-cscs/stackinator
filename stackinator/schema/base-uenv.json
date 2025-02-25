@@ -1,0 +1,91 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Modular Uenv",
+    "description": "Schema for modular sqfs",
+    "type": "object",
+    "required": ["compilers"],
+    "defs": {
+        "image": {
+            "type": "object",
+            "properties": {
+                "sha256": {
+                    "type": "string",
+                    "description": "SHA256 hash of the image",
+                    "pattern": "^[0-9a-f]{64}$"
+                },
+                "file": {
+                    "type": "string",
+                    "description": "File path or name of the image"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "uenv spec"
+                },
+                "prefix_path": {
+                    "type": "string",
+                    "description": "mount point"
+                }
+            },
+            "anyOf": [{
+                    "required": ["name"]
+                },
+                {
+                    "required": ["sha256"]
+                }
+            ],
+            "additionalProperties": false
+        }
+    },
+    "properties": {
+        "compilers": {
+            "type": "array",
+            "description": "List of compiler configurations",
+            "minItems": 1,
+            "items": {
+                "type": "object",
+                "required": ["type", "version", "image"],
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": ["gcc", "llvm", "nvhpc"],
+                        "description": "Type of the compiler"
+                    },
+                    "image": {
+                        "$ref": "#/defs/image"
+                    }
+                }
+            }
+        },
+        "root": {
+            "type": "object",
+            "properties": {
+                "image": {
+                    "$ref": "#/defs/image"
+                }
+            },
+            "description": "The root sqfs image"
+        },
+        "gpu": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "rocm",
+                        "cuda"
+                    ],
+                    "description": "type of the gpu backend"
+                },
+                "image": {
+                    "$ref": "#/defs/image",
+                    "description": "TOOD"
+                },
+                "required": [
+                    "type",
+                    "image"
+                ]
+            },
+            "additionalProperties": false
+        }
+    }
+}

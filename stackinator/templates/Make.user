@@ -1,3 +1,4 @@
+{% set spacejoiner = joiner(' ') %}
 # vim: filetype=make
 
 # Copy this file to Make.user and set some variables.
@@ -15,6 +16,10 @@ SPACK_HELPER := $(SPACK) --color=never
 # The Spack installation root.
 STORE := {{ store }}
 
+# export as env vars (required by bwrap scripts)
+export STORE := $(STORE)
+export BUILD_ROOT := $(BUILD_ROOT)
+
 # When already building inside a sandbox, use `SANDBOX :=` (empty string)
 # Without a sandbox, make sure to hide sensitive data such as ~/.ssh through bubblewrap.
 # Also bind the directories `./tmp -> /tmp` and `./store -> $(STORE)`, so that
@@ -22,13 +27,22 @@ STORE := {{ store }}
 # put the project itself in-memory, or use a flag like --bind /dev/shm/store
 # $(STORE). Use `bwrap-mutable-root.sh` in case you need to create a new
 # directory at the root /.
+SQFS_MOUNT := $(BUILD_ROOT)/squashfs-mount-wrapper.sh --build-root=$(BUILD_ROOT) --sqfs-images="{% for item in base_uenv %}{{ spacejoiner() }}{{ item.file }}:{{item.prefix_path}}{% endfor %}"
 {% if no_bwrap %}
-SANDBOX :=
+SANDBOX := $SQFS_MOUNT --
 {% else %}
-SANDBOX := $(BUILD_ROOT)/bwrap-mutable-root.sh $\
+SANDBOX := $(SQFS_MOUNT) -- $(BUILD_ROOT)/bwrap-mutable-root.sh $\
 	--tmpfs ~ $\
 	--bind $(BUILD_ROOT)/tmp /tmp $\
-	--bind $(BUILD_ROOT)/store $(STORE)
+  --bind $(BUILD_ROOT)/store $(STORE) $\
+{% for item in base_uenv %}
+	--bind $(BUILD_ROOT)/tmp/mounts/{{item.prefix_path}} {{item.prefix_path}} $\
+{% endfor %}
+
+SANDBOX_NO_BASE := $(BUILD_ROOT)/bwrap-mutable-root.sh $\
+	--tmpfs ~ $\
+	--bind $(BUILD_ROOT)/tmp /tmp $\
+  -- $(BUILD_ROOT)/bwrap-store.sh
 {% endif %}
 # Makes sure that make -Orecurse continues to print in color.
 export SPACK_COLOR := always

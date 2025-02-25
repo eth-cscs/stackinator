@@ -41,14 +41,15 @@ all:{% for compiler in compilers %} {{ compiler }}/generated/build_cache{% endfo
 
 {% endif %}
 {% endfor %}
-# Configure dependencies between compilers
-gcc/compilers.yaml: bootstrap/generated/env
-	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK_HELPER) -e ./bootstrap find --format '{prefix}' {{ compilers.gcc.requires }}))
+# # Configure dependencies between compilers
+# # TODO: remove this and write compilers.yaml from cluster config
+# gcc/compilers.yaml: bootstrap/generated/env
+# 	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK_HELPER) -e ./bootstrap find --format '{prefix}' {{ compilers.gcc.requires }}))
 
-{% if compilers.llvm %}
-llvm/compilers.yaml: gcc/generated/env
-	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK_HELPER) -e ./gcc find --format '{prefix}' {{ compilers.llvm.requires }}))
-{% endif %}
+# {% if compilers.llvm %}
+# llvm/compilers.yaml: gcc/generated/env
+# 	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK_HELPER) -e ./gcc find --format '{prefix}' {{ compilers.llvm.requires }}))
+# {% endif %}
 
 
 include ../Make.inc
@@ -57,11 +58,11 @@ include ../Make.inc
 # specify the order here by conditionally including them, when the dependent exists.
 ifeq (,$(filter clean,$(MAKECMDGOALS)))
 
-include bootstrap/Makefile
+# include bootstrap/Makefile
 
-ifneq (,$(wildcard bootstrap/Makefile))
-include gcc/Makefile
-endif
+# ifneq (,$(wildcard bootstrap/Makefile))
+# include gcc/Makefile
+# endif
 
 {% if compilers.llvm %}
 ifneq (,$(wildcard gcc/Makefile))

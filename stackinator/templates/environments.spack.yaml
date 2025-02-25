@@ -3,7 +3,6 @@ spack:
 {% if config.packages %}
   - packages.yaml
 {% endif %}
-  - compilers.yaml
   - config.yaml
   config:
     deprecated: {{ config.deprecated }}
@@ -14,23 +13,25 @@ spack:
 {% for spec in config.specs %}
   - '{{ spec }}'
 {% endfor %}
+{% if config.toolchain_constraints or config.variants or config.mpi.spec %}
   packages:
+  {% if config.toolchain_constraints or config.variants %}
     all:
-{% set separator = joiner(', ') %}
-      compiler: [{% for c in config.compiler %}{{ separator() }}'{{ c.spec }}'{% endfor %}]
+  {% endif %}
 {% if config.toolchain_constraints %}
       require:
 {% set separator = joiner(', ') %}
       - one_of: [{% for c in config.toolchain_constraints %}{{ separator() }}'{{ c }}'{% endfor %}]
 {% endif %}
-    {% if config.variants %}
+{% if config.variants %}
 {% set separator = joiner(', ') %}
       variants: [{% for v in config.variants %}{{ separator() }}'{{ v }}'{% endfor %}]
-    {% endif %}
-    {% if config.mpi.spec %}
+{% endif %}
+{% if config.mpi.spec %}
     mpi:
       require: '{{ config.mpi.spec }}'
-    {% endif %}
+{% endif %}
+{% endif %}
 {% if config.view %}
   view:
     default:
