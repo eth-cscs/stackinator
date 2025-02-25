@@ -490,13 +490,11 @@ repo:
         generate_config_path.mkdir(exist_ok=True)
 
         # write generate-config/Makefile
-        all_compilers = [x for x in recipe.compilers.keys()]
-        release_compilers = [x for x in all_compilers if x != "bootstrap"]
+        release_compilers = [x for x in recipe.compilers.keys()]
         with (generate_config_path / "Makefile").open("w") as f:
             f.write(
                 make_config_template.render(
                     build_path=self.path.as_posix(),
-                    all_compilers=all_compilers,
                     release_compilers=release_compilers,
                     verbose=False,
                 )
