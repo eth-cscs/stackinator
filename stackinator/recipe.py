@@ -406,35 +406,35 @@ class Recipe:
     def generate_compiler_specs(self, raw):
         compilers = {}
 
-        bootstrap = {}
-        bootstrap["packages"] = {
-            "external": [
-                "perl",
-                "m4",
-                "autoconf",
-                "automake",
-                "libtool",
-                "gawk",
-                "python",
-                "texinfo",
-                "gawk",
-            ],
-            "variants": {
-                "gcc": "[build_type=Release ~bootstrap +strip]",
-                "mpc": "[libs=static]",
-                "gmp": "[libs=static]",
-                "mpfr": "[libs=static]",
-                "zstd": "[libs=static]",
-                "zlib": "[~shared]",
-            },
-        }
-        bootstrap_spec = raw["bootstrap"]["spec"]
-        bootstrap["specs"] = [
-            f"{bootstrap_spec} languages=c,c++",
-            "squashfs default_compression=zstd",
-        ]
-        bootstrap["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
-        compilers["bootstrap"] = bootstrap
+        # bootstrap = {}
+        # bootstrap["packages"] = {
+        #     "external": [
+        #         "perl",
+        #         "m4",
+        #         "autoconf",
+        #         "automake",
+        #         "libtool",
+        #         "gawk",
+        #         "python",
+        #         "texinfo",
+        #         "gawk",
+        #     ],
+        #     "variants": {
+        #         "gcc": "[build_type=Release ~bootstrap +strip]",
+        #         "mpc": "[libs=static]",
+        #         "gmp": "[libs=static]",
+        #         "mpfr": "[libs=static]",
+        #         "zstd": "[libs=static]",
+        #         "zlib": "[~shared]",
+        #     },
+        # }
+        # bootstrap_spec = raw["bootstrap"]["spec"]
+        # bootstrap["specs"] = [
+        #     f"{bootstrap_spec} languages=c,c++",
+        #     "squashfs default_compression=zstd",
+        # ]
+        # bootstrap["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
+        # compilers["bootstrap"] = bootstrap
 
         gcc = {}
         gcc["packages"] = {
@@ -459,7 +459,7 @@ class Recipe:
             },
         }
         gcc["specs"] = raw["gcc"]["specs"]
-        gcc["requires"] = bootstrap_spec
+        # gcc["requires"] = bootstrap_spec
         gcc["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
         compilers["gcc"] = gcc
         if raw["llvm"] is not None:

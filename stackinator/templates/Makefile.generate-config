@@ -4,7 +4,7 @@ CONFIG_DIR = $(STORE)/config
 MODULE_DIR = $(BUILD_ROOT)/modules
 
 # These will be the prefixes of the GCCs, LLVMs and NVHPCs in the respective environments.
-ALL_COMPILER_PREFIXES ={% for compiler in all_compilers %} $$($(SPACK_HELPER) -e ../compilers/{{ compiler }} find --format='{prefix}' gcc llvm nvhpc){% endfor %}
+# ALL_COMPILER_PREFIXES ={% for compiler in all_compilers %} $$($(SPACK_HELPER) -e ../compilers/{{ compiler }} find --format='{prefix}' gcc llvm nvhpc){% endfor %}
 
 
 COMPILER_PREFIXES ={% for compiler in release_compilers %} $$($(SPACK_HELPER) -e ../compilers/{{ compiler }} find --format='{prefix}' gcc llvm nvhpc){% endfor %}
@@ -30,8 +30,8 @@ $(CONFIG_DIR)/repos.yaml: $(CONFIG_DIR)/compilers.yaml
 # Generate a configuration used to generate the module files
 # The configuration in CONFIG_DIR can't be used for this purpose, because a compilers.yaml
 # that includes the bootstrap compiler is required to build the modules.
-$(MODULE_DIR)/compilers.yaml:
-	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $(ALL_COMPILER_PREFIXES))
+# $(MODULE_DIR)/compilers.yaml:
+# 	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $(ALL_COMPILER_PREFIXES))
 
 $(MODULE_DIR)/upstreams.yaml:
 	$(SPACK) config --scope=user add upstreams:system:install_tree:$(STORE)

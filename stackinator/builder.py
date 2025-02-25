@@ -496,7 +496,7 @@ repo:
             f.write(
                 make_config_template.render(
                     build_path=self.path.as_posix(),
-                    all_compilers=all_compilers,
+                    # all_compilers=all_compilers,
                     release_compilers=release_compilers,
                     verbose=False,
                 )
