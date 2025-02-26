@@ -459,6 +459,8 @@ class Recipe:
             },
         }
         gcc["specs"] = raw["gcc"]["specs"]
+        # add squashfs so it can be used in the end to compress the image
+        gcc["specs"].append("squashfs default_compression=zstd")
         # gcc["requires"] = bootstrap_spec
         gcc["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
         compilers["gcc"] = gcc
