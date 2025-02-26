@@ -34,14 +34,6 @@
         }
     },
     "properties": {
-        "bootstrap": {
-            "type": "object",
-            "properties": {
-                "spec": {"$ref": "#/defs/gcc_version_spec"}
-            },
-            "additionalProperties": false,
-            "required": ["spec"]
-        },
         "gcc": {
             "type": "object",
             "properties": {
