@@ -439,15 +439,15 @@ class Recipe:
         gcc = {}
         gcc["packages"] = {
             "external": [
-                "perl",
-                "m4",
-                "autoconf",
-                "automake",
-                "libtool",
-                "gawk",
-                "python",
-                "texinfo",
-                "gawk",
+                # "perl",
+                # "m4",
+                # "autoconf",
+                # "automake",
+                # "libtool",
+                # "gawk",
+                # "python",
+                # "texinfo",
+                # "gawk",
             ],
             "variants": {
                 "gcc": "[build_type=Release +profiled +strip]",
