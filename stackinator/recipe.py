@@ -59,11 +59,11 @@ class Recipe:
         if not self.mount.is_dir():
             raise FileNotFoundError(f"the mount point '{self.mount}' must exist")
 
-        # required compiler.yaml file
+        # required compilers.yaml file
         compiler_path = self.path / "compilers.yaml"
         self._logger.debug(f"opening {compiler_path}")
         if not compiler_path.is_file():
-            raise FileNotFoundError(f"The recipe path '{compiler_path}' does " f"not contain compilers.yaml")
+            raise FileNotFoundError(f"The recipe path '{compiler_path}' does not contain compilers.yaml")
 
         with compiler_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
@@ -74,7 +74,7 @@ class Recipe:
         environments_path = self.path / "environments.yaml"
         self._logger.debug(f"opening {environments_path}")
         if not environments_path.is_file():
-            raise FileNotFoundError(f"The recipe path '{environments_path}' does " f" not contain environments.yaml")
+            raise FileNotFoundError(f"The recipe path '{environments_path}' does not contain environments.yaml")
 
         with environments_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
@@ -102,7 +102,7 @@ class Recipe:
         mirrors_path = self.path / "mirrors.yaml"
         if mirrors_path.is_file():
             self._logger.warning(
-                "mirrors.yaml have been removed from recipes," " use the --cache option on stack-config instead."
+                "mirrors.yaml have been removed from recipes, use the --cache option on stack-config instead."
             )
             raise RuntimeError("Unsupported mirrors.yaml file in recipe.")
 
@@ -200,7 +200,7 @@ class Recipe:
     def config(self, config_path):
         self._logger.debug(f"opening {config_path}")
         if not config_path.is_file():
-            raise FileNotFoundError(f"The recipe path '{config_path}' does not contain compilers.yaml")
+            raise FileNotFoundError(f"The recipe path '{config_path}' does not contain config.yaml")
 
         with config_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
@@ -378,7 +378,7 @@ class Recipe:
             environments[name]["view"] = None
             for i in range(numviews):
                 # pick a name for the environment
-                cname = name if i == 0 else name + f"-{i+1}__"
+                cname = name if i == 0 else name + f"-{i + 1}__"
                 if i > 0:
                     environments[cname] = copy.deepcopy(base)
 
