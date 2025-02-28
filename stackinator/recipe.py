@@ -419,14 +419,6 @@ class Recipe:
                 "texinfo",
                 "gawk",
             ],
-            "variants": {
-                "gcc": "[build_type=Release ~bootstrap +strip]",
-                "mpc": "[libs=static]",
-                "gmp": "[libs=static]",
-                "mpfr": "[libs=static]",
-                "zstd": "[libs=static]",
-                "zlib": "[~shared]",
-            },
         }
         bootstrap_spec = raw["bootstrap"]["spec"]
         bootstrap["specs"] = [
@@ -449,14 +441,6 @@ class Recipe:
                 "texinfo",
                 "gawk",
             ],
-            "variants": {
-                "gcc": "[build_type=Release +profiled +strip]",
-                "mpc": "[libs=static]",
-                "gmp": "[libs=static]",
-                "mpfr": "[libs=static]",
-                "zstd": "[libs=static]",
-                "zlib": "[~shared]",
-            },
         }
         gcc["specs"] = raw["gcc"]["specs"]
         gcc["requires"] = bootstrap_spec
