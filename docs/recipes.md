@@ -150,7 +150,7 @@ For example, in the recipe below, only `netcdf-fortran` will be built with the `
 
 Stackinator can configure cray-mpich (CUDA, ROCM, or non-GPU aware) or OpenMPI (with or without CUDA) (on a per-environment basis, by setting the `mpi` field in an environment.
 
-!!! note Note (on non default MPI veresions)
+!!! note
     Future versions of Stackinator will fully support OpenMPI, MPICH and MVAPICH when (and if) they develop robust support for HPE SlingShot 11 interconnect.
 
     Current OpenMPI support has been tested lightly and is not guaranteed to be production ready - only OpenMPI@5.x.x is supported (default is @5.0.6 at the time of writing - 2025.03.04) - CUDA is supported, ROCM has not yet been tested.
@@ -215,7 +215,7 @@ openmpi-cxi-env:
     depends: [libfabric@main]
     # on release of libfabric@2, we recommended using @2 in preference to @main ...
 ```
-!!! note Note (on openmpi performance)
+!!! note
     Currently the performance of OpenMPI on Alps clusters might not be optimal and work is ongoing to fine tune it especially for intra-node performance.
 
 #### Custom MPI builds
@@ -238,7 +238,7 @@ In this example, we must tell spack to fetch our custom git branch from a repo t
       git: https://github.com/your-username/ompi
 ```
 
-!!! note Note (git tags)
+!!! note
     To build using a specific git commit, use the syntax
     ```
     spec: openmpi@git.9a4079916dd13d4190fe224102b57757789c13da=main
