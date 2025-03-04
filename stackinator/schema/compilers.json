@@ -3,7 +3,7 @@
     "title": "Schema for Spack Stack compilers.yaml recipe file",
     "type": "object",
     "additionalProperties": false,
-    "required": ["bootstrap", "gcc"],
+    "required": ["gcc"],
     "defs": {
         "gcc_version_spec": {
             "type": "string",
