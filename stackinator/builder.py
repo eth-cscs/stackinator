@@ -272,13 +272,14 @@ class Builder:
                     build_path=self.path,
                     store=recipe.mount,
                     no_bwrap=recipe.no_bwrap,
+                    base_uenv=recipe.base_uenv['compilers'],
                     verbose=False,
                 )
             )
             f.write("\n")
 
         etc_path = self.root / "etc"
-        for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "envvars.py"]:
+        for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "envvars.py", "squashfs-mount-wrapper.sh"]:
             shutil.copy2(etc_path / f_etc, self.path / f_etc)
 
         # used to configure both pre and post install hooks, if they are provided.
@@ -480,6 +481,7 @@ repo:
         for name, yml in environment_files["config"].items():
             env_config_path = environments_path / name
             env_config_path.mkdir(exist_ok=True)
+            # packages.yaml is added in the makefile from the base uenv
             with (env_config_path / "spack.yaml").open(mode="w") as f:
                 f.write(yml)
 

@@ -3,6 +3,7 @@ import pathlib
 
 import jinja2
 import yaml
+import json
 
 from . import cache, root_logger, schema, spack_util
 
@@ -80,6 +81,18 @@ class Recipe:
             raw = yaml.load(fid, Loader=yaml.Loader)
             schema.environments_validator.validate(raw)
             self.generate_environment_specs(raw)
+
+        # required base-uenv.json file
+        base_uenv_path = self.path / "base-uenv.json"
+        self._logger.debug(f"opening {base_uenv_path}")
+        if not base_uenv_path.is_file():
+            raise FileNotFoundError(f"The recipe path '{base_uenv_path}' does " f" not contain base-uenv.json")
+
+        with base_uenv_path.open() as fid:
+            raw = json.load(fid)
+            schema.base_uenv_validator.validate(raw)
+            print(raw)
+            self.base_uenv = raw
 
         # optional modules.yaml file
         modules_path = self.path / "modules.yaml"
@@ -548,5 +561,11 @@ class Recipe:
         for env, config in self.environments.items():
             spack_yaml_template = jenv.get_template("environments.spack.yaml")
             files["config"][env] = spack_yaml_template.render(config=config, name=env, store=self.mount)
-
+            # add base uenv upstream
+            for compiler in self.base_uenv["compilers"]:
+                tmp = yaml.safe_load(files["config"][env])
+                tmp["spack"]["include"] += [
+                    pathlib.Path(compiler["prefix_path"]) / compiler["version"] / "compilers.yaml"
+                ]
+                files["config"][env] = yaml.dump(tmp)
         return files

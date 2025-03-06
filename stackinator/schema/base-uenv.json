@@ -1,0 +1,58 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Compiler Configuration",
+    "description": "Schema for compiler configuration with mandatory gcc and optional llvm and nvhpc compilers",
+    "type": "object",
+    "required": ["compilers"],
+    "properties": {
+        "compilers": {
+            "type": "array",
+            "description": "List of compiler configurations",
+            "minItems": 1,
+            "items": {
+                "type": "object",
+                "required": ["type", "version", "prefix_path", "file"],
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": ["gcc", "llvm", "nvhpc"],
+                        "description": "Type of the compiler"
+                    },
+                    "version": {
+                        "type": "string",
+                        "description": "Version of the compiler"
+                    },
+                    "uarch": {
+                        "type": "string",
+                        "description": "uarch",
+                        "enum": ["x86_64", "aarch64"]
+                    },
+                    "prefix_path": {
+                        "type": "string",
+                        "description": "Installation path prefix for the compiler"
+                    },
+                    "file": {
+                        "type": "string",
+                        "description": "path to the sqfs file"
+                    }
+                }
+            }
+        }
+    },
+    "allOf": [{
+        "description": "At least one gcc compiler must be present",
+        "properties": {
+            "compilers": {
+                "contains": {
+                    "type": "object",
+                    "required": ["type"],
+                    "properties": {
+                        "type": {
+                            "const": "gcc"
+                        }
+                    }
+                }
+            }
+        }
+    }]
+}
