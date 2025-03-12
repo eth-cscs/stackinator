@@ -91,7 +91,6 @@ class Recipe:
         with base_uenv_path.open() as fid:
             raw = json.load(fid)
             schema.base_uenv_validator.validate(raw)
-            print(raw)
             self.base_uenv = raw
 
         # optional modules.yaml file

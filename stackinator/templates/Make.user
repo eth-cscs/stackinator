@@ -1,3 +1,4 @@
+{% set spacejoiner = joiner(' ') %}
 # vim: filetype=make
 
 # Copy this file to Make.user and set some variables.
@@ -22,7 +23,7 @@ STORE := {{ store }}
 # put the project itself in-memory, or use a flag like --bind /dev/shm/store
 # $(STORE). Use `bwrap-mutable-root.sh` in case you need to create a new
 # directory at the root /.
-SQFS_MOUNT := $(BUILD_ROOT)/squashfs-mount-wrapper.sh --build-root=$(BUILD_ROOT) --sqfs-images="{% for item in base_uenv %} {{item.file}}:{{item.prefix_path}}{% endfor %}"
+SQFS_MOUNT := $(BUILD_ROOT)/squashfs-mount-wrapper.sh --build-root=$(BUILD_ROOT) --sqfs-images="{% for item in base_uenv %}{{ spacejoiner() }}{{ item.file }}:{{item.prefix_path}}{% endfor %}"
 {% if no_bwrap %}
 SANDBOX := $SQFS_MOUNT --
 {% else %}
