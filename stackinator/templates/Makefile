@@ -81,9 +81,10 @@ post-install: env-meta
 # Create a squashfs file from the installed software.
 store.squashfs: post-install
 	# clean up the __pycache__ paths in the repo
-	$(SANDBOX) find $(STORE)/repo -type d -name __pycache__ -exec rm -r {} +
-	$(SANDBOX) chmod -R a+rX $(STORE)
-	$(SANDBOX) env -u SOURCE_DATE_EPOCH "$$($(SANDBOX) $(SPACK_HELPER) -e ./compilers/bootstrap find --format='{prefix}' squashfs | head -n1)/bin/mksquashfs" $(STORE) $@ -all-root -all-time $$(date +%s) -no-recovery -noappend -Xcompression-level 3
+	$(SANDBOX_NO_BASE) find $(STORE)/repo -type d -name __pycache__ -exec rm -r {} +
+  # TODO skip mounted base uenvs
+	$(SANDBOX_NO_BASE) chmod -R a+rX $(STORE)
+	$(SANDBOX_NO_BASE) env -u SOURCE_DATE_EPOCH "$$($(SANDBOX) $(SPACK_HELPER) -e ./compilers/bootstrap find --format='{prefix}' squashfs | head -n1)/bin/mksquashfs" $(STORE) $@ -all-root -all-time $$(date +%s) -no-recovery -noappend -Xcompression-level 3
 
 # Force push all built packages to the build cache
 cache-force: mirror-setup
