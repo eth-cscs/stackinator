@@ -80,18 +80,15 @@ class Recipe:
         with environments_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
             schema.environments_validator.validate(raw)
+            print(raw)
             # insert utils env (squashfs)
-            raw.append(
-                {
-                    "_internal_utils": {
-                        "compiler": {"toolchain": "gcc", "spec": "gcc"},
-                        "unify": True,
-                        "mpi": None,
-                        "specs": ["squashfs default_compression=zstd"],
-                        "views": {"_internal_utils": {"link": "roots"}},
-                    }
-                }
-            )
+            raw["_internal_utils"] = {
+                "compiler": {"toolchain": "gcc", "spec": "gcc"},
+                "unify": True,
+                "mpi": None,
+                "specs": ["squashfs default_compression=zstd"],
+                "views": {"_internal_utils": {"link": "roots"}},
+            }
 
             self.generate_environment_specs(raw)
 
