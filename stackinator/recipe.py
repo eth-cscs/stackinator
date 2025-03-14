@@ -94,13 +94,11 @@ class Recipe:
         # required base-uenv.json file
         base_uenv_path = self.path / "base-uenv.json"
         self._logger.debug(f"opening {base_uenv_path}")
-        if not base_uenv_path.is_file():
-            raise FileNotFoundError(f"The recipe path '{base_uenv_path}' does " f" not contain base-uenv.json")
-
-        with base_uenv_path.open() as fid:
-            raw = json.load(fid)
-            schema.base_uenv_validator.validate(raw)
-            self.base_uenv = raw
+        if base_uenv_path.is_file():
+            with base_uenv_path.open() as fid:
+                raw = json.load(fid)
+                schema.base_uenv_validator.validate(raw)
+                self.base_uenv = raw
 
         # optional modules.yaml file
         modules_path = self.path / "modules.yaml"
