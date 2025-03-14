@@ -79,7 +79,7 @@ post-install: env-meta
 	touch post-install
 
 spack-squashfs: post-install
-	$(SANDBOX) $(SPACK_HELPER) -c config:install_tree:root:/tmp/install_tree install squashfs default_compression=zstd
+	$(SANDBOX) $(SPACK_HELPER) -L -d -c config:install_tree:root:/tmp/install_tree install squashfs default_compression=zstd
 
 # Create a squashfs file from the installed software.
 store.squashfs: post-install spack-squashfs
