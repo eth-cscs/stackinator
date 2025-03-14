@@ -99,6 +99,8 @@ class Recipe:
                 raw = json.load(fid)
                 schema.base_uenv_validator.validate(raw)
                 self.base_uenv = raw
+        else:
+            self.base_uenv = {"compilers": []}
 
         # optional modules.yaml file
         modules_path = self.path / "modules.yaml"
