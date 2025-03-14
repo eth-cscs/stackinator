@@ -51,13 +51,13 @@ mirror-setup: spack-setup{% if pre_install_hook %} pre-install{% endif %}
 	{% endif %}
 	touch mirror-setup
 
-compilers: mirror-setup
+# compilers: mirror-setup
+# 	$(SANDBOX) $(MAKE) -C $@
+
+generate-config: mirror-setup
 	$(SANDBOX) $(MAKE) -C $@
 
-generate-config: compilers
-	$(SANDBOX) $(MAKE) -C $@
-
-environments: compilers
+environments: mirror-setup
 	$(SANDBOX) $(MAKE) -C $@
 
 {% if modules %}
