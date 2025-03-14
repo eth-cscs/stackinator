@@ -29,11 +29,11 @@ SANDBOX := $SQFS_MOUNT --
 {% else %}
 SANDBOX := $(SQFS_MOUNT) -- $(BUILD_ROOT)/bwrap-mutable-root.sh $\
 	--tmpfs ~ $\
+	--bind $(BUILD_ROOT)/tmp /tmp $\
+	--bind $(BUILD_ROOT)/store $(STORE) \$
 {% for item in base_uenv %}
 	--bind $(BUILD_ROOT)/tmp/mounts/{{item.prefix_path}} {{item.prefix_path}} $\
 {% endfor %}
-	--bind $(BUILD_ROOT)/tmp /tmp $\
-	--bind $(BUILD_ROOT)/store $(STORE)
 {% endif %}
 # Makes sure that make -Orecurse continues to print in color.
 export SPACK_COLOR := always
