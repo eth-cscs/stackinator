@@ -56,9 +56,9 @@ class Recipe:
         if args.mount:
             self.config["store"] = args.mount
 
-        # ensure that the requested mount point exists
-        if not self.mount.is_dir():
-            raise FileNotFoundError(f"the mount point '{self.mount}' must exist")
+        # # ensure that the requested mount point exists
+        # if not self.mount.is_dir():
+        #     raise FileNotFoundError(f"the mount point '{self.mount}' must exist")
 
         # required compiler.yaml file
         compiler_path = self.path / "compilers.yaml"
