@@ -30,7 +30,7 @@ SANDBOX := $SQFS_MOUNT --
 SANDBOX := $(SQFS_MOUNT) -- $(BUILD_ROOT)/bwrap-mutable-root.sh $\
 	--tmpfs ~ $\
 	--bind $(BUILD_ROOT)/tmp /tmp $\
-	--bind $(BUILD_ROOT)/store $(STORE) \$
+	--bind $(BUILD_ROOT)/store $(STORE) $\
 {% for item in base_uenv %}
 	--bind $(BUILD_ROOT)/tmp/mounts/{{item.prefix_path}} {{item.prefix_path}} $\
 {% endfor %}
