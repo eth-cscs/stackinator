@@ -16,8 +16,6 @@ if [ $? -ne 0 ]; then
 	  usage
 fi
 
-echo "TEMP: $TEMP"
-
 # Reset the positional parameters to the short options
 eval set -- "$TEMP"
 
