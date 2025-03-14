@@ -47,8 +47,8 @@ if [ -z "$BUILD_ROOT" ]; then
 fi
 
 if [ -z "$SQFS_IMAGES" ]; then
-	  echo "Error: --sqfs-images is required" >&2
-    usage
+    # no images to mount, skip squashfs-mount
+    exec "$@"
 fi
 
 read -ra array <<<"$SQFS_IMAGES"
