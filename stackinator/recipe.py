@@ -564,7 +564,7 @@ class Recipe:
             for compiler in self.base_uenv["compilers"]:
                 tmp = yaml.safe_load(files["config"][env])
                 tmp["spack"]["include"] += [
-                    str(pathlib.Path(compiler["prefix_path"]) / compiler["version"] / "compilers.yaml")
+                    str(pathlib.Path(compiler["prefix_path"]) / compiler["version"] / "config/compilers.yaml")
                 ]
                 files["config"][env] = yaml.dump(tmp)
         return files
