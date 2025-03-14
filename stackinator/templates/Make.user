@@ -27,7 +27,7 @@ SQFS_MOUNT := $(BUILD_ROOT)/squashfs-mount-wrapper.sh --build-root=$(BUILD_ROOT)
 {% if no_bwrap %}
 SANDBOX := $SQFS_MOUNT --
 {% else %}
-SANDBOX := $(SQFS_MOUNT) -- $(BUILD_ROOT)/bwrap-mutable-root.sh $\
+SANDBOX := $(SQFS_MOUNT) -- $(BUILD_ROOT)/bwrap-mutable-root.sh \$
 	--tmpfs ~ $\
 	--bind $(BUILD_ROOT)/tmp /tmp $\
 	--bind $(BUILD_ROOT)/store $(STORE) \$
