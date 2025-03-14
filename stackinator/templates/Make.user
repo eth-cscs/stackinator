@@ -37,7 +37,7 @@ SANDBOX := $(SQFS_MOUNT) -- $(BUILD_ROOT)/bwrap-mutable-root.sh $\
 
 SANDBOX_NO_BASE := $(BUILD_ROOT)/bwrap-mutable-root.sh $\
 	--tmpfs ~ $\
-  --bind $(BUILD_ROOT)/tmp /tmp $\
+	--bind $(BUILD_ROOT)/tmp /tmp $\
 	--bind $(BUILD_ROOT)/store $(STORE)
 {% endif %}
 # Makes sure that make -Orecurse continues to print in color.
