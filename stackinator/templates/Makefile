@@ -78,8 +78,11 @@ post-install: env-meta
 	{% endif %}
 	touch post-install
 
+spack-squashfs:
+	$(SANDBOX) $(SPACK_HELPER) -C $(STORE)/config install squashfs default_compression=zstd
+
 # Create a squashfs file from the installed software.
-store.squashfs: post-install
+store.squashfs: post-install spack-squashfs
 	# clean up the __pycache__ paths in the repo
 	$(SANDBOX_NO_BASE) find $(STORE)/repo -type d -name __pycache__ -exec rm -r {} +
   # TODO skip mounted base uenvs
