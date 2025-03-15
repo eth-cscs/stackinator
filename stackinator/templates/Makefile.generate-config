@@ -30,6 +30,7 @@ $(CONFIG_DIR)/repos.yaml:
 # 	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $(ALL_COMPILER_PREFIXES))
 
 $(MODULE_DIR)/upstreams.yaml:
-	$(SPACK) config --scope=user add upstreams:system:install_tree:$(STORE)
+	$(SPACK) config --scope=user add upstreams:system:install_tree:root:$(STORE)
+	$(SPACK) config --scope=user add upstreams:system:install_tree:padded_length:128
 
 include ../Make.inc
