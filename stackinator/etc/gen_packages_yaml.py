@@ -10,7 +10,7 @@ import yaml
 def gen_packages_impl(lock_file, env_path):
     spack_lock = json.load(open(lock_file, "r"))
 
-    packages = []
+    packages = {"packages": {}}
 
     for dd in spack_lock["roots"]:
         hash = dd["hash"]
@@ -31,7 +31,7 @@ def gen_packages_impl(lock_file, env_path):
         prefix = spack_find_prefix.stdout.strip().decode("utf-8")
         spec = spack_find_spec.stdout.strip().decode("utf-8")
 
-        packages.append({spec: {"externals": [{"spec": spec, "prefix": prefix}]}})
+        packages[spec] = {"externals": [{"spec": spec, "prefix": prefix}]}
 
         return packages
 
