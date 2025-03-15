@@ -32,7 +32,7 @@ def gen_packages_impl(lock_file, env_path):
 
         packages["packages"][name] = {
             "buildable": False,
-            "externals": [{"spec": "{name} {variants}", "prefix": prefix}],
+            "externals": [{"spec": f"{name} {variants}", "prefix": prefix}],
         }
 
         return packages
