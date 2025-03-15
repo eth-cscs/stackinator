@@ -2,7 +2,6 @@
 
 set -euo pipefail
 
-echo "creating $STORE"
 mkdir -p $STORE
 
 bwrap --dev-bind / / \
