@@ -22,17 +22,18 @@ def gen_packages_impl(lock_file, env_path):
             stderr=subprocess.PIPE,
         )
         spack_find_spec = subprocess.run(
-            ["spack", "--color=never", "-e", env_path, "find", "--format={name} {variants}", f"/{hash}"],
+            ["spack", "--color=never", "-e", env_path, "find", "--format={name}|{variants}", f"/{hash}"],
             shell=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-
+        name, variants = spack_find_spec.stdout.strip().decode("utf-8").split("|", 1)
         prefix = spack_find_prefix.stdout.strip().decode("utf-8")
-        spec = spack_find_spec.stdout.strip().decode("utf-8")
 
-        packages[spec] = {"buildable": False,
-                          "externals": [{"spec": spec, "prefix": prefix}]}
+        packages["packages"][name] = {
+            "buildable": False,
+            "externals": [{"spec": "{name} {variants}", "prefix": prefix}],
+        }
 
         return packages
 
