@@ -31,7 +31,8 @@ def gen_packages_impl(lock_file, env_path):
         prefix = spack_find_prefix.stdout.strip().decode("utf-8")
         spec = spack_find_spec.stdout.strip().decode("utf-8")
 
-        packages[spec] = {"externals": [{"spec": spec, "prefix": prefix}]}
+        packages[spec] = {"buildable": False,
+                          "externals": [{"spec": spec, "prefix": prefix}]}
 
         return packages
 
