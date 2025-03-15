@@ -34,6 +34,7 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 {% if config.view %}
 	$(SPACK) env activate --with-view default --sh ./{{ env }} > $(STORE)/env/{{ config.view.name }}/activate.sh
 	$(BUILD_ROOT)/envvars.py view --prefix_paths="{{ config.view.extra.prefix_string }}" $(STORE)/env/{{ config.view.name }} $(BUILD_ROOT)
+	$(BUILD_ROOT)/gen_packages_yaml.py --view=$(STORE)/env/{{ config.view.name }} --env=./{{ env }} --lock-file=./{{ env }}/spack.lock
 {% endif %}
 	touch $@
 

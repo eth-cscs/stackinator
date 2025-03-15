@@ -272,14 +272,21 @@ class Builder:
                     build_path=self.path,
                     store=recipe.mount,
                     no_bwrap=recipe.no_bwrap,
-                    base_uenv=recipe.base_uenv['compilers'],
+                    base_uenv=recipe.base_uenv["compilers"],
                     verbose=False,
                 )
             )
             f.write("\n")
 
         etc_path = self.root / "etc"
-        for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "bwrap-store.sh", "envvars.py", "squashfs-mount-wrapper.sh"]:
+        for f_etc in [
+            "Make.inc",
+            "bwrap-mutable-root.sh",
+            "bwrap-store.sh",
+            "envvars.py",
+            "gen_packages_yaml.py",
+            "squashfs-mount-wrapper.sh",
+        ]:
             shutil.copy2(etc_path / f_etc, self.path / f_etc)
 
         # used to configure both pre and post install hooks, if they are provided.
