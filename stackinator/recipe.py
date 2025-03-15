@@ -127,7 +127,7 @@ class Recipe:
             )
             raise RuntimeError("Unsupported mirrors.yaml file in recipe.")
 
-        self.mirror = (args.cache, self.mount)
+        self.mirror = (args.cache)
 
         # optional post install hook
         if self.post_install_hook is not None:
