@@ -42,7 +42,7 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 
 {% for env in environments %}{{ env }}/config.yaml {% endfor %}: | store
 	$(SPACK) config --scope=user add config:install_tree:root:$(STORE)
-	$(SPACK) config --scope=user add config:install_tree:padded_length:128
+	{# $(SPACK) config --scope=user add config:install_tree:padded_length:128 #}
 
 {# # Create the compilers.yaml configuration for each environment #}
 {# {% for env, config in environments.items() %} #}
