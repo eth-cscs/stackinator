@@ -13,17 +13,16 @@ def gen_packages_impl(lock_file, env_path):
     packages = []
 
     for dd in spack_lock["roots"]:
-        dd["hash"]
-        dd["spec"]
+        hash = dd["hash"]
         # call subprocess to find install dir
         spack_find_prefix = subprocess.run(
-            ["spack", "-e", env_path, "find", "--format={prefix}", f"/{dd["hash"]}"],
+            ["spack", "-e", env_path, "find", "--format={prefix}", f"/{hash}"],
             shell=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
         spack_find_spec = subprocess.run(
-            ["spack", "-e", env_path, "find", "--format={name} {variants}", f"/{dd["hash"]}"],
+            ["spack", "-e", env_path, "find", "--format={name} {variants}", f"/{hash}"],
             shell=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
