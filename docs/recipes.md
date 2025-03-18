@@ -220,6 +220,7 @@ openmpi-cxi-env:
     Currently the performance of OpenMPI on Alps clusters might not be optimal and work is ongoing to fine tune it especially for intra-node performance.
 
 #### Custom MPI builds
+
 If an experimental version of OpenMPI is required, the yaml syntax supports additional options to enable this. the `xspec` tag may be used to supply extra spack `spec` options.
 To illustrate usage, consider this example: a build of openmpi using a particular git branch named `mpi-continue-5.0.6` which in this case has a variant `+continuations` that is not available on the `main` or released branches.
 The `xspec` tag allows the user to supply arbitrary spack variants and options that replace the defaults used by stackinator in its absence.
