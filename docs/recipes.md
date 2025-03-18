@@ -248,6 +248,7 @@ In this example, we must tell spack to fetch our custom git branch from a repo t
 It is therefore possible to build arbitrary versions of MPI using custom options/branches etc using these combinations of settings.
 
 ### Version info
+
 !!! alps
 
     As new versions of cray-mpich are released with CPE, they are provided on Alps vClusters, via the Spack package repo in the [CSCS cluster configuration repo](https://github.com/eth-cscs/alps-cluster-config/tree/main/site/spack_repo/alps).
