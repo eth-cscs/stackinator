@@ -163,7 +163,7 @@ serial-env:
 ```
 
 To configure MPI without GPU support, set the `spec` field with an optional version:
-```yaml title="environments.yaml: Cray-mpich without GPU support"
+```yaml title="environments.yaml: Cray MPICH without GPU support"
 host-env:
   mpi:
     spec: cray-mpich@8.1.23
