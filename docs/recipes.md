@@ -195,6 +195,7 @@ ompi-cuda-env:
   # ...
 ```
 #### Experimental libfabric 2.x support with cray-mpich
+
 HPE has open-sourced the libfabric/cxi provider (and related drivers) and these can be built into cray-mpich by adding a dependency to a newer version of libfabric.
 The system default is libfabric@1.15.2 - which can be changed by adding a `depends` field to the yaml. A non default version (newer than 1.15.2) will trigger a build of libfabric using libcxi, cxi-driver, cassini-headers).
 
