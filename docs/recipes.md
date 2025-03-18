@@ -148,7 +148,7 @@ For example, in the recipe below, only `netcdf-fortran` will be built with the `
 
 ### MPI
 
-Stackinator can configure cray-mpich (CUDA, ROCM, or non-GPU aware) or OpenMPI (with or without CUDA) (on a per-environment basis, by setting the `mpi` field in an environment.
+Stackinator can configure cray-mpich (CUDA, ROCM, or non-GPU aware) or OpenMPI (with or without CUDA) on a per-environment basis, by setting the `mpi` field in an environment.
 
 !!! note
     Future versions of Stackinator will fully support OpenMPI, MPICH and MVAPICH when (and if) they develop robust support for HPE SlingShot 11 interconnect.
