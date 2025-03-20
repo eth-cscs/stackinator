@@ -442,10 +442,16 @@ class Recipe:
                 "gawk",
             ],
         }
-        gcc["specs"] = raw["gcc"]["specs"]
+
+        if isinstance(raw["gcc"]["specs"], str):
+            gcc["specs"] = raw["gcc"]["specs"] + " +bootstrap"
+        elif isinstance(raw["gcc"]["specs"], list):
+            gcc["specs"] = list(map(lambda x: x + " +bootstrap", raw["gcc"]["specs"]))
+
         gcc["requires"] = bootstrap_spec
         gcc["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
         compilers["gcc"] = gcc
+
         if raw["llvm"] is not None:
             llvm = {}
             llvm["packages"] = False
