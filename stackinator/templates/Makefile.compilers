@@ -32,16 +32,11 @@ all:{% for compiler in compilers %} {{ compiler }}/generated/build_cache{% endfo
 {% for compiler in compilers %}{{ compiler }}/config.yaml {% endfor %}: | store
 	$(SPACK) config --scope=user add config:install_tree:root:$(STORE)
 
-# Configure the install location.
-{% for compiler in compilers %}{{ compiler }}/config.yaml {% endfor %}: | store
-	$(SPACK) config --scope=user add config:install_tree:root:$(STORE)
-
 # Configure external system dependencies for each compiler toolchain
 {% for compiler, config in compilers.items() %}
 {% if config.packages and config.packages.external %}
 {{ compiler }}/packages.yaml:
 	$(SPACK) external find --scope=user {% for package in config.packages.external %} {{package}}{% endfor %}
-
 
 {% endif %}
 {% endfor %}
