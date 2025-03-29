@@ -19,7 +19,7 @@ cd stackinator
 !!! warning
     The `main` branch of Stackinator includes features for Spack v1.0, and may break older recipes.
 
-    For existing recipes use Spack v0.23 and earlier, use [version 5][ref-index-versions]:
+    For existing recipes use Spack v0.23 and earlier, use [version 5](#versions):
 
     ```bash
     git clone --branch=releases/v5 https://github.com/eth-cscs/stackinator.git
@@ -45,7 +45,6 @@ pip install stackinator
     The PyPi package is only updated for releases, so you will likely be missing the latest and greatest features.
     Let us know if you need more regular PyPi updates.
 
-[](){#ref-index-versions}
 ### Versions
 
 Stackinator version 6 will be the first release of Stackinator to support Spack 1.0, when it is released in June 2025.

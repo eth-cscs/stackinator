@@ -235,7 +235,7 @@ cuda-env:
     Use `unify:true` when possible, then `unify:when_possible`, and finally `unify:false`.
 
 !!! warning
-    Don't provide a spec for MPI or Compilers, which are configured in the [`mpi:`](recipes.md#mpi) and [`compilers`](recipes.compilers) fields respecively.
+    Don't provide a spec for MPI or Compilers, which are configured in the [`mpi:`](recipes.md#mpi) and [`compilers`](recipes.md#compilers) fields respecively.
 
 !!! warning
     Stackinator does not support "spec matrices", and likely won't, because they use multiple compiler toolchains in a manner that is contrary to the Stackinator "keep it simple" principle.
