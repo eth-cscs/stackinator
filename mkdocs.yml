@@ -20,6 +20,7 @@ theme:
     primary: deep orange
     accent: deep orange
 markdown_extensions:
+  - attr_lists # for internal links
   - admonition
   - pymdownx.details
   - pymdownx.superfences
