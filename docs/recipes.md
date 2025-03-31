@@ -144,10 +144,12 @@ For example, in the recipe below, only `netcdf-fortran` will be built with the `
 
 ### MPI
 
-Stackinator can configure cray-mpich (CUDA, ROCM, or non-GPU aware) on a per-environment basis, by setting the `mpi` field in an environment.
+Stackinator can configure cray-mpich (CUDA, ROCM, or non-GPU aware) or OpenMPI (with or without CUDA) on a per-environment basis, by setting the `mpi` field in an environment.
 
 !!! note
-    Future versions of Stackinator will support OpenMPI, MPICH and MVAPICH when (and if) they develop robust support for HPE SlingShot 11 interconnect.
+    Future versions of Stackinator will fully support OpenMPI, MPICH and MVAPICH when (and if) they develop robust support for HPE SlingShot 11 interconnect.
+
+    Current OpenMPI support has been tested lightly and is not guaranteed to be production ready - only OpenMPI@5.x.x is supported (default is @5.0.6 at the time of writing - 2025.03.04) - CUDA is supported, ROCM has not yet been tested.
 
 If the `mpi` field is not set, or is set to `null`, MPI will not be configured in an environment:
 ```yaml title="environments.yaml: no MPI"
@@ -157,10 +159,16 @@ serial-env:
 ```
 
 To configure MPI without GPU support, set the `spec` field with an optional version:
-```yaml title="environments.yaml: MPI without GPU support"
+```yaml title="environments.yaml: Cray MPICH without GPU support"
 host-env:
   mpi:
     spec: cray-mpich@8.1.23
+  # ...
+```
+```yaml title="environments.yaml: OpenMPI without GPU support"
+host-env:
+  mpi:
+    spec: openmpi
   # ...
 ```
 
@@ -176,7 +184,66 @@ rocm-env:
     spec: cray-mpich
     gpu: rocm
   # ...
+ompi-cuda-env:
+  mpi:
+    spec: openmpi
+    gpu: cuda
+  # ...
 ```
+#### Experimental libfabric 2.x support with cray-mpich
+
+HPE has open-sourced the libfabric/cxi provider (and related drivers) and these can be built into cray-mpich by adding a dependency to a newer version of libfabric.
+The system default is libfabric@1.15.2 - which can be changed by adding a `depends` field to the yaml. A non default version (newer than 1.15.2) will trigger a build of libfabric using libcxi, cxi-driver, cassini-headers).
+
+This syntax appplies to both mpich and openmpi builds.
+```yaml title="environments1.yaml: cray-mpich using new libfabric/cxi stack"
+mpich-cxi-env:
+  mpi:
+    spec: cray-mpich
+    gpu: cuda
+    depends: [libfabric@main]
+    # on release of libfabric@2, we recommended using @2 in preference to @main ...
+```
+```yaml title="environments2.yaml: openmpi using new libfabric/cxi stack"
+openmpi-cxi-env:
+  mpi:
+    spec: openmpi
+    gpu: cuda
+    depends: [libfabric@main]
+    # on release of libfabric@2, we recommended using @2 in preference to @main ...
+```
+!!! note
+    Currently the performance of OpenMPI on Alps clusters might not be optimal and work is ongoing to fine tune it especially for intra-node performance.
+
+#### Custom MPI builds
+
+If an experimental version of OpenMPI is required, the yaml syntax supports additional options to enable this. the `xspec` tag may be used to supply extra spack `spec` options.
+To illustrate usage, consider this example: a build of openmpi using a particular git branch named `mpi-continue-5.0.6` which in this case has a variant `+continuations` that is not available on the `main` or released branches.
+The `xspec` tag allows the user to supply arbitrary spack variants and options that replace the defaults used by stackinator in its absence.
+```yaml title="custom-openmpi.yaml: custom build of openmpi"
+openmpi-custom-env:
+  mpi:
+    spec: openmpi@git.mpi-continue-5.0.6=main
+    xspec: +continuations +internal-pmix fabrics=cma,ofi,xpmem schedulers=slurm +cray-xpmem
+    gpu: cuda
+    depends: ["libfabric@main"]
+```
+In this example, we must tell spack to fetch our custom git branch from a repo that is different from the default openmpi github version, by adding the following to our recipe `packages.yaml`
+```yaml title="custom-packages.yaml: custom repo for openmpi"
+  # mpi-continue-5.0.6 branch available from here
+  openmpi:
+    package_attributes:
+      git: https://github.com/your-username/ompi
+```
+
+!!! note
+    To build using a specific git commit, use the syntax
+    ```
+    spec: openmpi@git.9a4079916dd13d4190fe224102b57757789c13da=main
+    ```
+It is therefore possible to build arbitrary versions of MPI using custom options/branches etc using these combinations of settings.
+
+### Version info
 
 !!! alps
 
@@ -207,7 +274,7 @@ The list of software packages to install is configured in the `spec:` field of a
 The `deprecated: ` field controls if Spack should consider versions marked as deprecated, and can be set to `true` or `false` (for considering or not considering deprecated versions, respectively).
 
 The `unify:` field controls the Spack concretiser, and can be set to three values `true`, `false` or `when_possible`.
-The 
+The
 
 ```yaml
 cuda-env:
