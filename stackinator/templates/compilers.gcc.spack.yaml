@@ -2,7 +2,6 @@ spack:
   include:
   - packages.yaml
   - config.yaml
-  - compilers.yaml
   specs:
 {% for spec in config.specs %}
   - {{ spec }}
@@ -13,7 +12,7 @@ spack:
     reuse: false
   packages:
     gcc:
-      variants: [build_type=Release +bootstrap +strip]
+      variants: [build_type=Release +bootstrap +profiled +strip]
     mpc:
       variants: [libs=static]
     gmp:
