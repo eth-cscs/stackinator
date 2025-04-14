@@ -245,7 +245,7 @@ class EnvVarSet:
     def set_scalar(self, name: str, value: str):
         self._scalars[name] = ScalarEnvVar(name, value)
 
-    def set_list(self, name: str, value: List[str], op: EnvVarOp, concat: bool=True):
+    def set_list(self, name: str, value: List[str], op: EnvVarOp, concat: bool = True):
         var = ListEnvVar(name, value, op)
         if var.name in self._lists.keys():
             if concat:
