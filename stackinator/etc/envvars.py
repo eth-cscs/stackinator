@@ -444,6 +444,7 @@ def view_impl(args):
 
     # force all prefix path style variables (list vars) to use PREPEND the first operation.
     envvars.make_dirty()
+    # remove all paths that refer to the build directory of the uenv
     envvars.remove_root(args.build_path)
 
     if args.compilers is not None:
@@ -455,15 +456,15 @@ def view_impl(args):
             data = yaml.safe_load(file)
         compilers = [c["compiler"] for c in data["compilers"]]
 
-        compiler_paths = []
         for c in compilers:
-            local_paths = set([os.path.dirname(v) for _, v in c["paths"].items() if v is not None])
-            compiler_paths += local_paths
-            print(f'adding compiler {c["spec"]} -> {[p for p in local_paths]}')
-
-        # we want to ensure that the /bin path in the view is _before_ the compiler
-        # paths in the $PATH variable. This is achieved by setting concat=False below.
-        envvars.set_list("PATH", compiler_paths, EnvVarOp.PREPEND, concat=False)
+            source_paths = list(set([os.path.abspath(v) for _, v in c["paths"].items() if v is not None]))
+            target_paths = [os.path.join(os.path.join(root_path, 'bin'), os.path.basename(f)) for f in source_paths]
+            for src, dst in zip(source_paths, target_paths):
+                print(f'creating compiler symlink: {src} -> {dst}')
+                if os.path.exists(dst):
+                    print(f'  first removing {dst}')
+                    os.remove(dst)
+                os.symlink(src, dst)
 
     if args.prefix_paths:
         # get the root path of the env
