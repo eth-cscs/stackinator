@@ -110,6 +110,9 @@ class ListEnvVar(EnvVar):
     def concat(self, other: "ListEnvVar"):
         self._updates += other.updates
 
+    def prepend(self, other: "ListEnvVar"):
+        self._updates = other.updates + self._updates
+
     def make_dirty(self):
         if len(self._updates) > 0:
             self._updates[0].set_op(EnvVarOp.PREPEND)
@@ -242,10 +245,13 @@ class EnvVarSet:
     def set_scalar(self, name: str, value: str):
         self._scalars[name] = ScalarEnvVar(name, value)
 
-    def set_list(self, name: str, value: List[str], op: EnvVarOp):
+    def set_list(self, name: str, value: List[str], op: EnvVarOp, concat: bool = True):
         var = ListEnvVar(name, value, op)
         if var.name in self._lists.keys():
-            self._lists[var.name].concat(var)
+            if concat:
+                self._lists[var.name].concat(var)
+            else:
+                self._lists[var.name].prepend(var)
         else:
             self._lists[var.name] = var
 
@@ -455,7 +461,9 @@ def view_impl(args):
             compiler_paths += local_paths
             print(f'adding compiler {c["spec"]} -> {[p for p in local_paths]}')
 
-        envvars.set_list("PATH", compiler_paths, EnvVarOp.PREPEND)
+        # we want to ensure that the /bin path in the view is _before_ the compiler
+        # paths in the $PATH variable. This is achieved by setting concat=False below.
+        envvars.set_list("PATH", compiler_paths, EnvVarOp.PREPEND, concat=False)
 
     if args.prefix_paths:
         # get the root path of the env
