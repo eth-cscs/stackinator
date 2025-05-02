@@ -100,19 +100,19 @@ In the following sections, we will explore each of the environment configuration
 The `compiler` field describes a list compilers to use to build the software stack.
 Each compiler toolchain is specified using toolchain and spec
 
-```yaml title="compile all packages with gcc@11.3"
+```yaml title="compile all packages with gcc@11"
   compiler:
   - toolchain: gcc
-    spec: gcc@11.3
+    spec: gcc@11
 ```
 
 Sometimes two compiler toolchains are required, for example when using the `nvhpc` compilers, there are often dependencies that can't be built using the NVIDIA, or are better being built with GCC (for example `cmake`, `perl` and `netcdf-c`).
-The example below uses the `nvhpc` compilers with gcc@11.3.
+The example below uses the `nvhpc` compilers with `gcc@11`.
 
-```yaml title="compile all packages with gcc@11.3"
+```yaml title="compile all packages with gcc@11"
   compiler:
   - toolchain: gcc
-    spec: gcc@11.3
+    spec: gcc@11
   - toolchain: llvm
     spec: nvhpc@22.7
 ```
@@ -123,11 +123,14 @@ The example below uses the `nvhpc` compilers with gcc@11.3.
 !!! warning
     Stackinator does not test or support using two versions of gcc in the same toolchain.
 
+!!! note
+    It is generally advisable not to overspecify compiler version, so whenever possible constrain at most the major version.
+
 The order of the compilers is significant. The first compiler is the default, and the other compilers will only be used to build packages when explicitly added to a spec.
 For example, in the recipe below, only `netcdf-fortran` will be built with the `nvhpc` toolchain, while the root specs `cmake` and `netcdf-c` and all dependencies will be built using the `gcc` toolchain.
 
 
-```yaml title="compile all packages with gcc@11.3"
+```yaml title="compile all packages with gcc@11"
   compiler:
   - toolchain: gcc
     spec: gcc
