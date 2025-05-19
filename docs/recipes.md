@@ -235,7 +235,7 @@ cuda-env:
     Use `unify:true` when possible, then `unify:when_possible`, and finally `unify:false`.
 
 !!! warning
-    Don't provide a spec for MPI or Compilers, which are configured in the [`mpi:`](recipes.md#mpi) and [`compilers`](recipes.compilers) fields respecively.
+    Don't provide a spec for MPI or Compilers, which are configured in the [`mpi:`](recipes.md#mpi) and [`compilers`](recipes.md#compilers) fields respecively.
 
 !!! warning
     Stackinator does not support "spec matrices", and likely won't, because they use multiple compiler toolchains in a manner that is contrary to the Stackinator "keep it simple" principle.
@@ -357,6 +357,22 @@ repo
 Additional custom packages can be provided as part of the cluster configuration, as well as additional site packages.
 These packages are all optional, and will be installed together in a single Spack package repository that is made available to downstream users of the generated uenv stack.
 See the documentation for [cluster configuration](cluster-config.md) for more detail.
+
+!!! note
+    If you need to backport a spack package from a more recent spack version, you can do it by using an already checked out spack repository like this
+
+    (disclaimer: the package might need adjustments due to spack directives changes)
+
+    ```
+    # ensure to have the folder for custom packages in your recipe
+    mkdir -p stackinator-recipe/repo/packages
+    # switch to the already checked out spack repository
+    cd $SPACK_ROOT
+    # use git to extract package files into your "custom packages" section of the stackinator recipe
+    git archive origin/develop `spack location -p fmt` | tar -x --strip-components=5 -C stackinator-recipe/repo/packages
+    ```
+
+    In the above case, the package `fmt` is backported from `origin/develop` into the `stackinator-recipe`.
 
 !!! alps
     All packages are installed under a single spack package repository called `alps`.
