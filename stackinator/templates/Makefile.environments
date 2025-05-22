@@ -33,7 +33,7 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 {{ env }}/generated/view_config: {{ env }}/generated/env
 {% if config.view %}
 	$(SPACK) env activate --with-view default --sh ./{{ env }} > $(STORE)/env/{{ config.view.name }}/activate.sh
-	$(BUILD_ROOT)/envvars.py view {% if config.view.extra.add_compilers %}--compilers=./{{ env }}/compilers.yaml {% endif %} --prefix_paths="{{ config.view.extra.prefix_string }}" $(STORE)/env/{{ config.view.name }} $(BUILD_ROOT)
+	$(BUILD_ROOT)/envvars.py view {% if config.view.extra.add_compilers %}--compilers=./{{ env }}/packages.yaml {% endif %} --prefix_paths="{{ config.view.extra.prefix_string }}" $(STORE)/env/{{ config.view.name }} $(BUILD_ROOT)
 {% endif %}
 	touch $@
 

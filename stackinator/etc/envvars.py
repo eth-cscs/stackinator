@@ -447,13 +447,19 @@ def view_impl(args):
 
         with open(args.compilers, "r") as file:
             data = yaml.safe_load(file)
-        compilers = [c["compiler"] for c in data["compilers"]]
+
+        compilers = []
+        for p in data["packages"].values():
+            for e in p["externals"]:
+                c = e["extra_attributes"]["compilers"]
+                if c is not None:
+                    compilers.append(c)
 
         compiler_paths = []
         for c in compilers:
-            local_paths = set([os.path.dirname(v) for _, v in c["paths"].items() if v is not None])
+            local_paths = set([os.path.dirname(v) for _, v in c.items() if v is not None])
             compiler_paths += local_paths
-            print(f'adding compiler {c["spec"]} -> {[p for p in local_paths]}')
+            print(f'adding compiler {c} -> {[p for p in local_paths]}')
 
         envvars.set_list("PATH", compiler_paths, EnvVarOp.PREPEND)
 
@@ -577,7 +583,7 @@ if __name__ == "__main__":
         "--prefix_paths", help="a list of relative prefix path searchs of the form X=y:z,Y=p:q", default="", type=str
     )
     # only add compilers if this argument is passed
-    view_parser.add_argument("--compilers", help="path of the compilers.yaml file", type=str, default=None)
+    view_parser.add_argument("--compilers", help="path of the packages.yaml file", type=str, default=None)
 
     uenv_parser = subparsers.add_parser(
         "uenv",
