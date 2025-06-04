@@ -4,10 +4,10 @@ CONFIG_DIR = $(STORE)/config
 MODULE_DIR = $(BUILD_ROOT)/modules
 
 # These will be the prefixes of the GCCs, LLVMs and NVHPCs in the respective environments.
-ALL_COMPILER_PREFIXES ={% for compiler in all_compilers %} $$($(SPACK_HELPER) -e ../compilers/{{ compiler }} find --format='{prefix}' gcc llvm nvhpc){% endfor %}
+ALL_COMPILER_PREFIXES ={% for compiler in all_compilers %} $$($(SPACK_HELPER) -e ../compilers/{{ compiler }} find --explicit --format='{prefix}' gcc llvm nvhpc){% endfor %}
 
 
-COMPILER_PREFIXES ={% for compiler in release_compilers %} $$($(SPACK_HELPER) -e ../compilers/{{ compiler }} find --format='{prefix}' gcc llvm nvhpc){% endfor %}
+COMPILER_PREFIXES ={% for compiler in release_compilers %} $$($(SPACK_HELPER) -e ../compilers/{{ compiler }} find --explicit --format='{prefix}' gcc llvm nvhpc){% endfor %}
 
 
 all: $(CONFIG_DIR)/upstreams.yaml $(CONFIG_DIR)/packages.yaml $(CONFIG_DIR)/repos.yaml $(MODULE_DIR)/upstreams.yaml $(MODULE_DIR)/compilers.yaml
