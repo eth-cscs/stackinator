@@ -1,11 +1,19 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#   "jinja2",
+#   "jsonschema",
+#   "pytest",
+#   "pyYAML",
+# ]
+# ///
 
 import pathlib
 import sys
 
 prefix = pathlib.Path(__file__).parent.resolve()
-external = prefix / "external"
-sys.path = [prefix.as_posix(), external.as_posix()] + sys.path
+sys.path = [prefix.as_posix()] + sys.path
 
 import pytest  # noqa: E402
 
