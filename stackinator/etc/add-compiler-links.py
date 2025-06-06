@@ -69,7 +69,7 @@ paths = []
 for c in compilers:
     local_paths = set([os.path.dirname(v) for k, v in c["paths"].items() if v is not None])
     paths += local_paths
-    print(f'adding compiler {c["spec"]} -> {[p for p in local_paths]}')
+    print(f"adding compiler {c['spec']} -> {[p for p in local_paths]}")
 
 # find unique paths and concatenate them
 pathstring = ":".join(set(paths))

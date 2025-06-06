@@ -2,13 +2,11 @@
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.black]
-line-length = 120
-
-[tool.isort]
-profile = "black"
-skip = ["external/"]
-
 [tool.ruff]
 line-length = 120
 extend-exclude = ["external/", "unittests/recipes"]
+exclude = ["unittests/recipes/with-repo/repo/packages"]
+
+[tool.ruff.lint]
+select = ["E", "F"]
+ignore = ["E203"]
