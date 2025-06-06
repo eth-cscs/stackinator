@@ -54,9 +54,7 @@ def make_argparser():
     parser.add_argument("-d", "--debug", action="store_true")
     parser.add_argument("-m", "--mount", required=False, type=str)
     parser.add_argument("-c", "--cache", required=False, type=str)
-    spack_version_group = parser.add_mutually_exclusive_group()
-    spack_version_group.add_argument("--develop", action="store_true", required=False)
-    spack_version_group.add_argument("--spack-version", required=False, type=str)
+    parser.add_argument("--develop", action="store_true", required=False)
 
     return parser
 
