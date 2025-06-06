@@ -164,7 +164,7 @@ class ListEnvVar(EnvVar):
         return f'envvars.ListEnvVar("{self.name}", {self._updates})'
 
     def __str__(self):
-        return f"(\"{self.name}\": [{','.join([str(u) for u in self._updates])}])"
+        return f'("{self.name}": [{",".join([str(u) for u in self._updates])}])'
 
 
 class ScalarEnvVar(EnvVar):
