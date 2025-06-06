@@ -161,7 +161,7 @@ class ListEnvVar(EnvVar):
         return f'envvars.ListEnvVar("{self.name}", {self._updates})'
 
     def __str__(self):
-        return f"(\"{self.name}\": [{','.join([str(u) for u in self._updates])}])"
+        return f'("{self.name}": [{",".join([str(u) for u in self._updates])}])'
 
 
 class ScalarEnvVar(EnvVar):
@@ -453,7 +453,7 @@ def view_impl(args):
         for c in compilers:
             local_paths = set([os.path.dirname(v) for _, v in c["paths"].items() if v is not None])
             compiler_paths += local_paths
-            print(f'adding compiler {c["spec"]} -> {[p for p in local_paths]}')
+            print(f"adding compiler {c['spec']} -> {[p for p in local_paths]}")
 
         envvars.set_list("PATH", compiler_paths, EnvVarOp.PREPEND)
 

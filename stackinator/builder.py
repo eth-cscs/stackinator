@@ -183,7 +183,7 @@ class Builder:
 
         # Clone the spack repository if it has not already been checked out
         if not (spack_path / ".git").is_dir():
-            self._logger.info(f'spack: clone repository {spack["repo"]}')
+            self._logger.info(f"spack: clone repository {spack['repo']}")
 
             # clone the repository
             capture = subprocess.run(
@@ -195,12 +195,12 @@ class Builder:
             self._logger.debug(capture.stdout.decode("utf-8"))
 
             if capture.returncode != 0:
-                self._logger.error(f'error cloning the repository {spack["repo"]}')
+                self._logger.error(f"error cloning the repository {spack['repo']}")
                 capture.check_returncode()
 
         # Fetch the specific branch
         if spack["commit"]:
-            self._logger.info(f'spack: fetch branch/commit {spack["commit"]}')
+            self._logger.info(f"spack: fetch branch/commit {spack['commit']}")
             capture = subprocess.run(
                 ["git", "-C", spack_path, "fetch", "origin", spack["commit"]],
                 shell=False,
@@ -210,12 +210,12 @@ class Builder:
             self._logger.debug(capture.stdout.decode("utf-8"))
 
             if capture.returncode != 0:
-                self._logger.debug(f'unable to change to the fetch {spack["commit"]}')
+                self._logger.debug(f"unable to change to the fetch {spack['commit']}")
                 capture.check_returncode()
 
         # Check out a branch or commit if one was specified
         if spack["commit"]:
-            self._logger.info(f'spack: checkout branch/commit {spack["commit"]}')
+            self._logger.info(f"spack: checkout branch/commit {spack['commit']}")
             capture = subprocess.run(
                 ["git", "-C", spack_path, "checkout", spack["commit"]],
                 shell=False,
@@ -225,7 +225,7 @@ class Builder:
             self._logger.debug(capture.stdout.decode("utf-8"))
 
             if capture.returncode != 0:
-                self._logger.debug(f'unable to change to the requested commit {spack["commit"]}')
+                self._logger.debug(f"unable to change to the requested commit {spack['commit']}")
                 capture.check_returncode()
 
         # get the spack commit

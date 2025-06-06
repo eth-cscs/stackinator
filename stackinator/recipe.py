@@ -1,5 +1,4 @@
 import copy
-from os import walk
 import pathlib
 
 import jinja2
@@ -57,7 +56,7 @@ class Recipe:
             rversion = self.config["version"]
             if rversion == 1:
                 self._logger.error(
-                    f"\nThe recipe is an old version 1 recipe for Spack v0.23 and earlier.\n"
+                    "\nThe recipe is an old version 1 recipe for Spack v0.23 and earlier.\n"
                     "This version of Stackinator supports Spack 1.0, and has deprecated support for Spack v0.23.\n"
                     "Use version 5 of stackinator, which can be accessed via the releases/v5 branch:\n"
                     "    git switch releases/v5\n\n"
