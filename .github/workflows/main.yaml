@@ -3,7 +3,7 @@ name: Stackinator CI
 on: [push, pull_request]
 
 jobs:
-  unittestpy
+  unittestpy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
