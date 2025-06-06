@@ -458,11 +458,11 @@ def view_impl(args):
 
         for c in compilers:
             source_paths = list(set([os.path.abspath(v) for _, v in c["paths"].items() if v is not None]))
-            target_paths = [os.path.join(os.path.join(root_path, 'bin'), os.path.basename(f)) for f in source_paths]
+            target_paths = [os.path.join(os.path.join(root_path, "bin"), os.path.basename(f)) for f in source_paths]
             for src, dst in zip(source_paths, target_paths):
-                print(f'creating compiler symlink: {src} -> {dst}')
+                print(f"creating compiler symlink: {src} -> {dst}")
                 if os.path.exists(dst):
-                    print(f'  first removing {dst}')
+                    print(f"  first removing {dst}")
                     os.remove(dst)
                 os.symlink(src, dst)
 

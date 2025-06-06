@@ -52,15 +52,15 @@ class Recipe:
         self.config = self.path / "config.yaml"
 
         # check the version of the recipe
-        if self.config["version"] != 2:
+        if self.config["version"] != 1:
             rversion = self.config["version"]
-            if rversion == 1:
+            if rversion == 2:
                 self._logger.error(
-                    "\nThe recipe is an old version 1 recipe for Spack v0.23 and earlier.\n"
-                    "This version of Stackinator supports Spack 1.0, and has deprecated support for Spack v0.23.\n"
-                    "Use version 5 of stackinator, which can be accessed via the releases/v5 branch:\n"
-                    "    git switch releases/v5\n\n"
-                    "If this recipe is to be used with Spack 1.0, then please add the field 'version: 2' to\n"
+                    "\nThe recipe is an new version 2 recipe for Spack v1.0 and later.\n"
+                    "This version of Stackinator supports Spack v0.23 and earlier.\n"
+                    "Use the main branch of stackinator:\n"
+                    "    git switch main\n\n"
+                    "If this recipe is to be used with Spack v0.23, then please add the field 'version: 1' to\n"
                     "config.yaml in your recipe.\n\n"
                     "For more information: https://eth-cscs.github.io/stackinator/recipes/#configuration\n"
                 )
