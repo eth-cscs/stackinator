@@ -51,7 +51,29 @@ class Recipe:
         # required config.yaml file
         self.config = self.path / "config.yaml"
 
-        # set the recipe-defined mount point
+        # check the version of the recipe
+        if self.config["version"] != 1:
+            rversion = self.config["version"]
+            if rversion == 2:
+                self._logger.error(
+                    "\nThe recipe is an new version 2 recipe for Spack v1.0 and later.\n"
+                    "This version of Stackinator supports Spack v0.23 and earlier.\n"
+                    "Use the main branch of stackinator:\n"
+                    "    git switch main\n\n"
+                    "If this recipe is to be used with Spack v0.23, then please add the field 'version: 1' to\n"
+                    "config.yaml in your recipe.\n\n"
+                    "For more information: https://eth-cscs.github.io/stackinator/recipes/#configuration\n"
+                )
+                raise RuntimeError("incompatible uenv recipe version")
+            else:
+                self._logger.error(
+                    f"\nThe config.yaml file sets an unknown recipe version={rversion}.\n"
+                    "This version of Stackinator supports version 2 recipes.\n\n"
+                    "For more information: https://eth-cscs.github.io/stackinator/recipes/#configuration\n"
+                )
+                raise RuntimeError("incompatible uenv recipe version")
+
+        # override the mount point if defined as a CLI argument
         if args.mount:
             self.config["store"] = args.mount
 

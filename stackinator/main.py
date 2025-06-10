@@ -14,7 +14,7 @@ from .recipe import Recipe
 
 def generate_logfile_name(name=""):
     idstr = f"{time.localtime()}{os.getpid}{platform.uname()}"
-    return f'log{name}_{hashlib.md5(idstr.encode("utf-8")).hexdigest()}'
+    return f"log{name}_{hashlib.md5(idstr.encode('utf-8')).hexdigest()}"
 
 
 def configure_logging(logfile):
@@ -45,7 +45,7 @@ def log_header(args):
 
 
 def make_argparser():
-    parser = argparse.ArgumentParser(description=("Generate a build configuration for a spack stack from " "a recipe."))
+    parser = argparse.ArgumentParser(description=("Generate a build configuration for a spack stack from a recipe."))
     parser.add_argument("--version", action="version", version=f"stackinator version {VERSION}")
     parser.add_argument("-b", "--build", required=True, type=str)
     parser.add_argument("--no-bwrap", action="store_true", required=False)
@@ -76,7 +76,7 @@ def main():
 
         builder.generate(recipe)
 
-        root_logger.info("\nConfiguration finished, run the following to build the " "environment:\n")
+        root_logger.info("\nConfiguration finished, run the following to build the environment:\n")
         root_logger.info(f"cd {builder.path}")
         root_logger.info(
             'env --ignore-environment http_proxy="$http_proxy" https_proxy="$https_proxy" no_proxy="$no_proxy"'

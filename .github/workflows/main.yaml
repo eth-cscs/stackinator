@@ -3,20 +3,13 @@ name: Stackinator CI
 on: [push, pull_request]
 
 jobs:
-  unittestpy36:
-    runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        python-version: ['3.6']
+  unittestpy:
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Bootstrap
+    - name: Install uv
       run: |
-        ./bootstrap.sh
+        curl -LsSf https://astral.sh/uv/install.sh | sh
     - name: Generic Unittests
       run: |
         ./test_stackinator.py

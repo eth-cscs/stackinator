@@ -25,6 +25,7 @@ spack:
     commit: releases/v0.20
 modules: true
 description: "HPC development tools for building MPI applications with the GNU compiler toolchain"
+version: 2
 ```
 
 * `name`: a plain text name for the environment
@@ -32,6 +33,24 @@ description: "HPC development tools for building MPI applications with the GNU c
 * `spack`: which spack repository to use for installation.
 * `modules`: _optional_ enable/diasble module file generation (default `true`).
 * `description`: _optional_ a string that describes the environment (default empty).
+* `version`:  _default = 1_ the version of the uenv recipe (see below)
+
+!!! note "uenv recipe versions"
+    Stackinator 6 introduces breaking changes to the uenv recipe format, introduced to support Spack v1.0.
+
+    We have started versioning uenv recipes:
+
+    * **version 1**: original uenv recipes for Spack v0.23 and earlier, supported by Stackinator version 5.
+    * **version 2**: uenv recipes for Spack v1.0 and later, supported by Stackinator version 6.
+
+    The default version is 1, so that old recipes that do not set a version are supported.
+
+    !!! warning "You must set version 2 explicitly to use Spack v1.0"
+
+    !!! warning "Version 1 recipes must be configured using Stackinator v5"
+        Version 5 of Stackinator is maintained in the `releases/v5` branch of stackinator.
+
+        You must also use the `releases/v5` branch of [Alps cluster config](https://github.com/eth-cscs/alps-cluster-config).
 
 ## Compilers
 
