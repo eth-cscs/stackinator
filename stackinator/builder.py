@@ -504,9 +504,10 @@ repo:
         repos_yaml_template = jinja_env.get_template("repos.yaml")
         with (config_path / "repos.yaml").open("w") as f:
             repo_path = recipe.mount / "repo"
+            builtin_repo_path = recipe.mount / "spack-packages"
             f.write(
                 repos_yaml_template.render(
-                    repo_path=repo_path.as_posix(), builtin_repo_path=spack_packages_path.as_posix(), verbose=False
+                    repo_path=repo_path.as_posix(), builtin_repo_path=builtin_repo_path.as_posix(), verbose=False
                 )
             )
             f.write("\n")
