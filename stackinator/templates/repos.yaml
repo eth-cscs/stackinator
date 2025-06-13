@@ -1,3 +1,5 @@
 repos:
   alps: {{ repo_path }}
-  builtin: {{ builtin_repo_path }}
+  builtin:
+    destination: {{ builtin_repo_path }}
+    git: {{ builtin_repo_git_repo }}

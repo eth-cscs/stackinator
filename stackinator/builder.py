@@ -172,7 +172,7 @@ class Builder:
         ##################
         # check out the version of spack-packages
         spack_packages = recipe.config["spack_packages"]
-        spack_packages_path = self.path / "spack-packages"
+        spack_packages_path = store_path / "spack-packages"
 
         # Clone the spack-packages repository if it has not already been checked
         # out
@@ -507,7 +507,7 @@ repo:
             builtin_repo_path = recipe.mount / "spack-packages"
             f.write(
                 repos_yaml_template.render(
-                    repo_path=repo_path.as_posix(), builtin_repo_path=builtin_repo_path.as_posix(), verbose=False
+                    repo_path=repo_path.as_posix(), builtin_repo_path=builtin_repo_path.as_posix(), builtin_repo_git_repo=spack_packages["repo"], verbose=False
                 )
             )
             f.write("\n")
