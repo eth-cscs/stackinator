@@ -440,6 +440,11 @@ def view_impl(args):
         print(f"error - activation script {activate_path} does not exist")
         exit(1)
 
+    bin_path = os.path.join(root_path, "bin")
+    # ensure that the bin path exists
+    if not os.path.exists(bin_path):
+        os.makedirs(bin_path)
+
     envvars = read_activation_script(activate_path)
 
     # force all prefix path style variables (list vars) to use PREPEND the first operation.
@@ -458,7 +463,7 @@ def view_impl(args):
 
         for c in compilers:
             source_paths = list(set([os.path.abspath(v) for _, v in c["paths"].items() if v is not None]))
-            target_paths = [os.path.join(os.path.join(root_path, "bin"), os.path.basename(f)) for f in source_paths]
+            target_paths = [os.path.join(bin_path, os.path.basename(f)) for f in source_paths]
             for src, dst in zip(source_paths, target_paths):
                 print(f"creating compiler symlink: {src} -> {dst}")
                 if os.path.exists(dst):
