@@ -208,7 +208,7 @@ class Builder:
                 capture.check_returncode()
 
         # Check out a branch or commit if one was specified
-        if spack["commit"]:
+        if spack_packages["commit"]:
             self._logger.info(f'spack-packages: checkout branch/commit {spack_packages["commit"]}')
             capture = subprocess.run(
                 ["git", "-C", spack_packages_path, "checkout", spack_packages["commit"]],
