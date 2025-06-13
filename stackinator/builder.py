@@ -169,6 +169,68 @@ class Builder:
         store_path.mkdir(exist_ok=True)
         tmp_path.mkdir(exist_ok=True)
 
+        ##################
+        # check out the version of spack-packages
+        spack_packages = recipe.config["spack_packages"]
+        spack_packages_path = self.path / "spack-packages"
+
+        # Clone the spack-packages repository if it has not already been checked
+        # out
+        if not (spack_packages_path / ".git").is_dir():
+            self._logger.info(f'spack-packages: clone repository {spack_packages["repo"]}')
+
+            # clone the repository
+            capture = subprocess.run(
+                ["git", "clone", "--filter=tree:0", spack_packages["repo"], spack_packages_path],
+                shell=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+            self._logger.debug(capture.stdout.decode("utf-8"))
+
+            if capture.returncode != 0:
+                self._logger.error(f'error cloning the repository {spack_packages["repo"]}')
+                capture.check_returncode()
+
+        # Fetch the specific branch
+        if spack_packages["commit"]:
+            self._logger.info(f'spack-packages: fetch branch/commit {spack_packages["commit"]}')
+            capture = subprocess.run(
+                ["git", "-C", spack_packages_path, "fetch", "origin", spack_packages["commit"]],
+                shell=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+            self._logger.debug(capture.stdout.decode("utf-8"))
+
+            if capture.returncode != 0:
+                self._logger.debug(f'unable to change to the fetch {spack_packages["commit"]}')
+                capture.check_returncode()
+
+        # Check out a branch or commit if one was specified
+        if spack["commit"]:
+            self._logger.info(f'spack-packages: checkout branch/commit {spack_packages["commit"]}')
+            capture = subprocess.run(
+                ["git", "-C", spack_packages_path, "checkout", spack_packages["commit"]],
+                shell=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+            self._logger.debug(capture.stdout.decode("utf-8"))
+
+            if capture.returncode != 0:
+                self._logger.debug(f'unable to change to the requested commit {spack_packages["commit"]}')
+                capture.check_returncode()
+
+        # get the spack commit
+        spack_packages_git_commit_result = subprocess.run(
+            ["git", "-C", spack_packages_path, "rev-parse", "HEAD"],
+            shell=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        ##################
+
         # check out the version of spack
         spack_version = recipe.spack_version
         self._logger.debug(f"spack version for templates: {spack_version}")
@@ -229,13 +291,16 @@ class Builder:
                 capture.check_returncode()
 
         # get the spack commit
-        git_commit_result = subprocess.run(
+        spack_git_commit_result = subprocess.run(
             ["git", "-C", spack_path, "rev-parse", "HEAD"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         spack_meta = {
             "ref": spack["commit"],
-            "commit": git_commit_result.stdout.strip().decode("utf-8"),
+            "commit": spack_git_commit_result.stdout.strip().decode("utf-8"),
             "url": spack["repo"],
+            "packages_ref": spack_packages["commit"],
+            "packages_commit": spack_packages_git_commit_result.stdout.strip().decode("utf-8"),
+            "packages_url": spack_packages["repo"],
         }
 
         # load the jinja templating environment
@@ -415,7 +480,7 @@ class Builder:
         # Delete the store/repo path, if it already exists.
         # Do this so that incremental builds (though not officially supported) won't break if a repo is updated.
         repo_dst = store_path / "repo"
-        self._logger.debug(f"creating the stack spack prepo in {repo_dst}")
+        self._logger.debug(f"creating the stack spack repo in {repo_dst}")
         if repo_dst.exists():
             self._logger.debug(f"{repo_dst} exists ... deleting")
             shutil.rmtree(repo_dst)
@@ -439,7 +504,11 @@ repo:
         repos_yaml_template = jinja_env.get_template("repos.yaml")
         with (config_path / "repos.yaml").open("w") as f:
             repo_path = recipe.mount / "repo"
-            f.write(repos_yaml_template.render(repo_path=repo_path.as_posix(), verbose=False))
+            f.write(
+                repos_yaml_template.render(
+                    repo_path=repo_path.as_posix(), builtin_repo_path=spack_packages_path.as_posix(), verbose=False
+                )
+            )
             f.write("\n")
 
         # Iterate over the source repositories copying their contents to the consolidated repo in the uenv.
