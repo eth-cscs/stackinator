@@ -89,9 +89,7 @@ class Recipe:
         environments_path = self.path / "environments.yaml"
         self._logger.debug(f"opening {environments_path}")
         if not environments_path.is_file():
-            raise FileNotFoundError(
-                f"The recipe path '{environments_path}' does not contain environments.yaml"
-            )
+            raise FileNotFoundError(f"The recipe path '{environments_path}' does not contain environments.yaml")
 
         with environments_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
@@ -121,9 +119,7 @@ class Recipe:
         modules_path = self.path / "modules.yaml"
         self._logger.debug(f"opening {modules_path}")
         if not modules_path.is_file():
-            modules_path = (
-                pathlib.Path(args.build) / "spack/etc/spack/defaults/modules.yaml"
-            )
+            modules_path = pathlib.Path(args.build) / "spack/etc/spack/defaults/modules.yaml"
             self._logger.debug(f"no modules.yaml provided - using the {modules_path}")
 
         self.modules = modules_path
@@ -225,13 +221,9 @@ class Recipe:
         if file is not None:
             mirror_config_path = pathlib.Path(file)
             if not mirror_config_path.is_file():
-                raise FileNotFoundError(
-                    f"The cache configuration '{file}' is not a file"
-                )
+                raise FileNotFoundError(f"The cache configuration '{file}' is not a file")
 
-            self._mirror = cache.configuration_from_file(
-                mirror_config_path, pathlib.Path(mount)
-            )
+            self._mirror = cache.configuration_from_file(mirror_config_path, pathlib.Path(mount))
 
     @property
     def config(self):
@@ -241,9 +233,7 @@ class Recipe:
     def config(self, config_path):
         self._logger.debug(f"opening {config_path}")
         if not config_path.is_file():
-            raise FileNotFoundError(
-                f"The recipe path '{config_path}' does not contain config.yaml"
-            )
+            raise FileNotFoundError(f"The recipe path '{config_path}' does not contain config.yaml")
 
         with config_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
@@ -274,9 +264,7 @@ class Recipe:
     def modules_yaml(self):
         with self.modules.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            raw["modules"]["default"]["roots"]["tcl"] = (
-                pathlib.Path(self.mount) / "modules"
-            ).as_posix()
+            raw["modules"]["default"]["roots"]["tcl"] = (pathlib.Path(self.mount) / "modules").as_posix()
             return yaml.dump(raw)
 
     # creates the self.environments field that describes the full specifications
@@ -357,9 +345,7 @@ class Recipe:
             env_name_map[name] = []
             for view, vc in config["views"].items():
                 if view in env_names:
-                    raise Exception(
-                        f"An environment view with the name '{view}' already exists."
-                    )
+                    raise Exception(f"An environment view with the name '{view}' already exists.")
                 # set some default values:
                 # vc["link"] = "roots"
                 # vc["uenv"]["add_compilers"] = True
@@ -371,10 +357,7 @@ class Recipe:
                 vc["uenv"].setdefault("add_compilers", True)
                 vc["uenv"].setdefault("prefix_paths", {})
                 prefix_string = ",".join(
-                    [
-                        f"{name}={':'.join(paths)}"
-                        for name, paths in vc["uenv"]["prefix_paths"].items()
-                    ]
+                    [f"{name}={':'.join(paths)}" for name, paths in vc["uenv"]["prefix_paths"].items()]
                 )
                 vc["uenv"]["prefix_string"] = prefix_string
                 # save a copy of the view configuration
@@ -431,9 +414,7 @@ class Recipe:
             system_path = pathlib.Path.cwd() / system_path
 
         if not system_path.is_dir():
-            raise FileNotFoundError(
-                f"The system configuration path '{system_path}' does not exist"
-            )
+            raise FileNotFoundError(f"The system configuration path '{system_path}' does not exist")
 
         self._system_path = system_path
 
@@ -463,25 +444,17 @@ class Recipe:
         files["config"] = {}
         for env, config in self.environments.items():
             spack_yaml_template = jenv.get_template("environments.spack.yaml")
-            files["config"][env] = spack_yaml_template.render(
-                config=config, name=env, store=self.mount
-            )
+            files["config"][env] = spack_yaml_template.render(config=config, name=env, store=self.mount)
             files_config_env = yaml.safe_load(files["config"][env])
             # add base uenv upstream
             for compiler in self.base_uenv["compilers"]:
                 files_config_env["spack"]["include"] += [
-                    str(
-                        pathlib.Path(compiler["image"]["prefix_path"])
-                        / "env/default/packages.yaml"
-                    )
+                    str(pathlib.Path(compiler["image"]["prefix_path"]) / "env/default/packages.yaml")
                 ]
             # add gpu base uenv
             if "gpu" in self.base_uenv:
                 files_config_env["spack"]["include"] += [
-                    str(
-                        pathlib.Path(self.base_uenv["gpu"]["image"]["prefix_path"])
-                        / "env/default/packages.yaml"
-                    )
+                    str(pathlib.Path(self.base_uenv["gpu"]["image"]["prefix_path"]) / "env/default/packages.yaml")
                 ]
             files["config"][env] = yaml.dump(files_config_env)
         return files
