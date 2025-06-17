@@ -56,6 +56,10 @@
                 {"type" : "null"}
             ],
             "default": null
+        },
+        "version" : {
+            "type": "number",
+            "default": 1
         }
     }
 }

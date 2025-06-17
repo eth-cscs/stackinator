@@ -76,7 +76,7 @@
                                 },
                                 "uenv": {
                                     "type": "object",
-                                    "additionalPropertis": false,
+                                    "additionalProperties": false,
                                     "properties": {
                                         "add_compilers": { "type": "boolean" },
                                         "prefix_paths": {

@@ -51,12 +51,7 @@ export SPACK_COLOR := always
 # config files in ~/.spack. Note that our recommended bwrap setup already puts
 # a tmpfs in the home folder, but when bwrap isn't used, this also helps a bit
 # with reproducibility.
-{% if spack_version>="0.22" %}
-# spack after 0.22.1 chokes on /dev/null
 export SPACK_USER_CONFIG_PATH := ~
-{% else %}
-export SPACK_USER_CONFIG_PATH := /dev/null
-{% endif %}
 
 # Set up the system config scope that has the system packages we don't want
 # build, for example slurm, pmix, etc. Also should have the system compiler.

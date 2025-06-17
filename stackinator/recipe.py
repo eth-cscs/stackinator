@@ -16,7 +16,10 @@ class Recipe:
             "3.0a",
             "+xpmem fabrics=ch4ofi ch4_max_vcis=4 process_managers=slurm",
         ),
-        "openmpi": ("5", "+internal-pmix +legacylaunchers +orterunprefix fabrics=cma,ofi,xpmem schedulers=slurm"),
+        "openmpi": (
+            "5",
+            "+internal-pmix +legacylaunchers +orterunprefix fabrics=cma,ofi,xpmem schedulers=slurm",
+        ),
     }
 
     @property
@@ -52,19 +55,43 @@ class Recipe:
         # required config.yaml file
         self.config = self.path / "config.yaml"
 
-        # set the recipe-defined mount point
+        # check the version of the recipe
+        if self.config["version"] != 2:
+            rversion = self.config["version"]
+            if rversion == 1:
+                self._logger.error(
+                    "\nThe recipe is an old version 1 recipe for Spack v0.23 and earlier.\n"
+                    "This version of Stackinator supports Spack 1.0, and has deprecated support for Spack v0.23.\n"
+                    "Use version 5 of stackinator, which can be accessed via the releases/v5 branch:\n"
+                    "    git switch releases/v5\n\n"
+                    "If this recipe is to be used with Spack 1.0, then please add the field 'version: 2' to\n"
+                    "config.yaml in your recipe.\n\n"
+                    "For more information: https://eth-cscs.github.io/stackinator/recipes/#configuration\n"
+                )
+                raise RuntimeError("incompatible uenv recipe version")
+            else:
+                self._logger.error(
+                    f"\nThe config.yaml file sets an unknown recipe version={rversion}.\n"
+                    "This version of Stackinator supports version 2 recipes.\n\n"
+                    "For more information: https://eth-cscs.github.io/stackinator/recipes/#configuration\n"
+                )
+                raise RuntimeError("incompatible uenv recipe version")
+
+        # override the mount point if defined as a CLI argument
         if args.mount:
             self.config["store"] = args.mount
 
-        # # ensure that the requested mount point exists
-        # if not self.mount.is_dir():
-        #     raise FileNotFoundError(f"the mount point '{self.mount}' must exist")
+        # ensure that the requested mount point exists
+        if not self.mount.is_dir():
+            raise FileNotFoundError(f"the mount point '{self.mount}' must exist")
 
         # required environments.yaml file
         environments_path = self.path / "environments.yaml"
         self._logger.debug(f"opening {environments_path}")
         if not environments_path.is_file():
-            raise FileNotFoundError(f"The recipe path '{environments_path}' does " f" not contain environments.yaml")
+            raise FileNotFoundError(
+                f"The recipe path '{environments_path}' does not contain environments.yaml"
+            )
 
         with environments_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
@@ -94,7 +121,9 @@ class Recipe:
         modules_path = self.path / "modules.yaml"
         self._logger.debug(f"opening {modules_path}")
         if not modules_path.is_file():
-            modules_path = pathlib.Path(args.build) / "spack/etc/spack/defaults/modules.yaml"
+            modules_path = (
+                pathlib.Path(args.build) / "spack/etc/spack/defaults/modules.yaml"
+            )
             self._logger.debug(f"no modules.yaml provided - using the {modules_path}")
 
         self.modules = modules_path
@@ -111,7 +140,7 @@ class Recipe:
         mirrors_path = self.path / "mirrors.yaml"
         if mirrors_path.is_file():
             self._logger.warning(
-                "mirrors.yaml have been removed from recipes," " use the --cache option on stack-config instead."
+                "mirrors.yaml have been removed from recipes, use the --cache option on stack-config instead."
             )
             raise RuntimeError("Unsupported mirrors.yaml file in recipe.")
 
@@ -130,10 +159,9 @@ class Recipe:
             self._logger.debug("no pre install hook provided")
 
         # determine the version of spack being used:
-        # --develop flag implies the next release of spack
-        # --spack-version option explicitly sets the version
-        # otherwise the name of the commit provided in the config.yaml file is inspected
-        self.spack_version = self.find_spack_version(args.develop, args.spack_version)
+        # currently this just returns 1.0... develop is ignored
+        # --develop flag will imply the next release of spack after 1.0 is supported properly
+        self.spack_version = self.find_spack_version(args.develop)
 
     # Returns:
     #   Path: if the recipe contains a spack package repository
@@ -197,9 +225,13 @@ class Recipe:
         if file is not None:
             mirror_config_path = pathlib.Path(file)
             if not mirror_config_path.is_file():
-                raise FileNotFoundError(f"The cache configuration '{file}' is not a file")
+                raise FileNotFoundError(
+                    f"The cache configuration '{file}' is not a file"
+                )
 
-            self._mirror = cache.configuration_from_file(mirror_config_path, pathlib.Path(mount))
+            self._mirror = cache.configuration_from_file(
+                mirror_config_path, pathlib.Path(mount)
+            )
 
     @property
     def config(self):
@@ -209,53 +241,19 @@ class Recipe:
     def config(self, config_path):
         self._logger.debug(f"opening {config_path}")
         if not config_path.is_file():
-            raise FileNotFoundError(f"The recipe path '{config_path}' does not contain compilers.yaml")
+            raise FileNotFoundError(
+                f"The recipe path '{config_path}' does not contain config.yaml"
+            )
 
         with config_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
             schema.config_validator.validate(raw)
             self._config = raw
 
-    def find_spack_version(self, develop, spack_version):
-        # determine the "major" version, if it can be inferred.
-        # one of "0.21", "0.22", "0.23", "0.24" or "unknown".
-        # "0.24" implies the latest features in develop that will
-        # are being developed for the next version of spack
-
-        # the user has explicitly requested develop:
-        if develop:
-            return "0.24"
-
-        if spack_version is not None:
-            return spack_version
-
-        # infer from the branch name
-        # Note: this could be improved by first downloading
-        # the requested spack version/tag/commit, then checking
-        # the version returned by `spack --version`
-        #
-        # this would require defering this decision until after
-        # the repo is cloned in build.py... a lot of work.
-        commit = self.config["spack"]["commit"]
-        if commit is None or commit == "develop":
-            return "0.24"
-        # currently supported
-        if commit.find("0.24") >= 0:
-            return "0.24"
-        # currently supported
-        if commit.find("0.23") >= 0:
-            return "0.23"
-        # currently supported
-        if commit.find("0.22") >= 0:
-            return "0.22"
-        # currently supported
-        if commit.find("0.21") >= 0:
-            return "0.21"
-        # currently supported
-        if commit.find("0.20") >= 0:
-            raise ValueError(f"spack minimum version is v0.21 - recipe uses {commit}")
-
-        return "unknown"
+    # In Stackinator 6 we replaced logic required to determine the
+    # pre 1.0 Spack version.
+    def find_spack_version(self, develop):
+        return "1.0"
 
     @property
     def environment_view_meta(self):
@@ -276,7 +274,9 @@ class Recipe:
     def modules_yaml(self):
         with self.modules.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            raw["modules"]["default"]["roots"]["tcl"] = (pathlib.Path(self.mount) / "modules").as_posix()
+            raw["modules"]["default"]["roots"]["tcl"] = (
+                pathlib.Path(self.mount) / "modules"
+            ).as_posix()
             return yaml.dump(raw)
 
     # creates the self.environments field that describes the full specifications
@@ -357,7 +357,9 @@ class Recipe:
             env_name_map[name] = []
             for view, vc in config["views"].items():
                 if view in env_names:
-                    raise Exception(f"An environment view with the name '{view}' already exists.")
+                    raise Exception(
+                        f"An environment view with the name '{view}' already exists."
+                    )
                 # set some default values:
                 # vc["link"] = "roots"
                 # vc["uenv"]["add_compilers"] = True
@@ -369,7 +371,10 @@ class Recipe:
                 vc["uenv"].setdefault("add_compilers", True)
                 vc["uenv"].setdefault("prefix_paths", {})
                 prefix_string = ",".join(
-                    [f"{name}={':'.join(paths)}" for name, paths in vc["uenv"]["prefix_paths"].items()]
+                    [
+                        f"{name}={':'.join(paths)}"
+                        for name, paths in vc["uenv"]["prefix_paths"].items()
+                    ]
                 )
                 vc["uenv"]["prefix_string"] = prefix_string
                 # save a copy of the view configuration
@@ -387,7 +392,7 @@ class Recipe:
             environments[name]["view"] = None
             for i in range(numviews):
                 # pick a name for the environment
-                cname = name if i == 0 else name + f"-{i+1}__"
+                cname = name if i == 0 else name + f"-{i + 1}__"
                 if i > 0:
                     environments[cname] = copy.deepcopy(base)
 
@@ -406,7 +411,11 @@ class Recipe:
                 # it separately for configuring the envvars.py helper during the uenv build.
                 extra = view_config.pop("uenv")
 
-                environments[cname]["view"] = {"name": view_name, "config": view_config, "extra": extra}
+                environments[cname]["view"] = {
+                    "name": view_name,
+                    "config": view_config,
+                    "extra": extra,
+                }
 
         self.environments = environments
 
@@ -422,7 +431,9 @@ class Recipe:
             system_path = pathlib.Path.cwd() / system_path
 
         if not system_path.is_dir():
-            raise FileNotFoundError(f"The system configuration path '{system_path}' does not exist")
+            raise FileNotFoundError(
+                f"The system configuration path '{system_path}' does not exist"
+            )
 
         self._system_path = system_path
 
@@ -452,17 +463,25 @@ class Recipe:
         files["config"] = {}
         for env, config in self.environments.items():
             spack_yaml_template = jenv.get_template("environments.spack.yaml")
-            files["config"][env] = spack_yaml_template.render(config=config, name=env, store=self.mount)
+            files["config"][env] = spack_yaml_template.render(
+                config=config, name=env, store=self.mount
+            )
             files_config_env = yaml.safe_load(files["config"][env])
             # add base uenv upstream
             for compiler in self.base_uenv["compilers"]:
                 files_config_env["spack"]["include"] += [
-                    str(pathlib.Path(compiler["image"]["prefix_path"]) / "env/default/packages.yaml")
+                    str(
+                        pathlib.Path(compiler["image"]["prefix_path"])
+                        / "env/default/packages.yaml"
+                    )
                 ]
             # add gpu base uenv
             if "gpu" in self.base_uenv:
                 files_config_env["spack"]["include"] += [
-                    str(pathlib.Path(self.base_uenv["gpu"]["image"]["prefix_path"]) / "env/default/packages.yaml")
+                    str(
+                        pathlib.Path(self.base_uenv["gpu"]["image"]["prefix_path"])
+                        / "env/default/packages.yaml"
+                    )
                 ]
             files["config"][env] = yaml.dump(files_config_env)
         return files
