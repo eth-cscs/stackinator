@@ -8,9 +8,6 @@ MODULE_DIR = $(BUILD_ROOT)/modules
 
 all: $(CONFIG_DIR)/upstreams.yaml $(CONFIG_DIR)/packages.yaml $(CONFIG_DIR)/repos.yaml $(MODULE_DIR)/upstreams.yaml 
 
-# # Generate the upstream configuration that will be provided by the mounted image
-# $(CONFIG_DIR)/compilers.yaml:
-# 	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $(COMPILER_PREFIXES))
 
 $(CONFIG_DIR)/upstreams.yaml:
 	$(SPACK) config --scope=user add upstreams:system:install_tree:$(STORE)

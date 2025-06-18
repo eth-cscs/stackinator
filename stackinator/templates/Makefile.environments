@@ -43,16 +43,6 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 
 {% for env in environments %}{{ env }}/config.yaml {% endfor %}: | store
 	$(SPACK) config --scope=user add config:install_tree:root:$(STORE)
-	{# $(SPACK) config --scope=user add config:install_tree:padded_length:128 #}
-
-{# # Create the compilers.yaml configuration for each environment #}
-{# {% for env, config in environments.items() %} #}
-{# {{ env }}_PREFIX = {% for C in config.compiler %} $$($(SPACK_HELPER) -e ../compilers/{{ C.toolchain }} find --format '{prefix}' {{ C.spec }}){% endfor %} #}
-
-{# {{ env }}/compilers.yaml: #}
-{# 	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $({{ env }}_PREFIX)) #}
-
-{# {% endfor %} #}
 
 # Configure external system dependencies for each compiler toolchain
 {% for env, config in environments.items() %}
