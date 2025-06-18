@@ -6,7 +6,7 @@
     "patternProperties": {
          "\\w[\\w-]*": {
              "type": "object",
-             "required": ["compiler", "specs"],
+             "required": ["specs"],
              "additionalProperties": false,
              "properties": {
                  "deprecated": {
@@ -16,17 +16,6 @@
                  "unify": {
                      "enum": ["when_possible", true, false],
                      "default": true
-                 },
-                 "compiler": {
-                     "type": "array",
-                     "items": {
-                         "type": "object",
-                         "additionalProperties": false,
-                         "properties": {
-                             "toolchain": {"type": "string"},
-                             "spec":      {"type": "string"}
-                         }
-                     }
                  },
                  "specs": {
                      "type": "array",

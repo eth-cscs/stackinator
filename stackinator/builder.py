@@ -266,19 +266,30 @@ class Builder:
 
         make_user_template = jinja_env.get_template("Make.user")
         with (self.path / "Make.user").open("w") as f:
+            base_uenvs = [e["image"] for e in recipe.base_uenv["compilers"]]
+            if "gpu" in recipe.base_uenv:
+                base_uenvs += [recipe.base_uenv["gpu"]["image"]]
             f.write(
                 make_user_template.render(
                     spack_version=spack_version,
                     build_path=self.path,
                     store=recipe.mount,
                     no_bwrap=recipe.no_bwrap,
+                    base_uenv=base_uenvs,
                     verbose=False,
                 )
             )
             f.write("\n")
 
         etc_path = self.root / "etc"
-        for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "envvars.py"]:
+        for f_etc in [
+            "Make.inc",
+            "bwrap-mutable-root.sh",
+            "bwrap-store.sh",
+            "envvars.py",
+            "gen_packages_yaml.py",
+            "squashfs-mount-wrapper.sh",
+        ]:
             shutil.copy2(etc_path / f_etc, self.path / f_etc)
 
         # used to configure both pre and post install hooks, if they are provided.
@@ -414,7 +425,7 @@ class Builder:
 
         # Delete the store/repo path, if it already exists.
         # Do this so that incremental builds (though not officially supported) won't break if a repo is updated.
-        repo_dst = store_path / "repo"
+        repo_dst = store_path / "spack_repo/alps"
         self._logger.debug(f"creating the stack spack prepo in {repo_dst}")
         if repo_dst.exists():
             self._logger.debug(f"{repo_dst} exists ... deleting")
@@ -432,13 +443,14 @@ class Builder:
                 """\
 repo:
   namespace: alps
+  api: v2.0
 """
             )
 
         # create the repository step 2: create the repos.yaml file in build_path/config
         repos_yaml_template = jinja_env.get_template("repos.yaml")
         with (config_path / "repos.yaml").open("w") as f:
-            repo_path = recipe.mount / "repo"
+            repo_path = recipe.mount / "spack_repo/alps"
             f.write(repos_yaml_template.render(repo_path=repo_path.as_posix(), verbose=False))
             f.write("\n")
 
@@ -457,19 +469,6 @@ repo:
                     elif dst.exists():
                         self._logger.debug(f"  NOT installing package {pkg_path}")
 
-        # Generate the makefile and spack.yaml files that describe the compilers
-        compiler_files = recipe.compiler_files
-        compiler_path = self.path / "compilers"
-        compiler_path.mkdir(exist_ok=True)
-        with (compiler_path / "Makefile").open(mode="w") as f:
-            f.write(compiler_files["makefile"])
-
-        for name, yml in compiler_files["config"].items():
-            compiler_config_path = compiler_path / name
-            compiler_config_path.mkdir(exist_ok=True)
-            with (compiler_config_path / "spack.yaml").open(mode="w") as f:
-                f.write(yml)
-
         # generate the makefile and spack.yaml files that describe the environments
         environment_files = recipe.environment_files
         environments_path = self.path / "environments"
@@ -480,6 +479,7 @@ repo:
         for name, yml in environment_files["config"].items():
             env_config_path = environments_path / name
             env_config_path.mkdir(exist_ok=True)
+            # packages.yaml is added in the makefile from the base uenv
             with (env_config_path / "spack.yaml").open(mode="w") as f:
                 f.write(yml)
 
@@ -490,14 +490,10 @@ repo:
         generate_config_path.mkdir(exist_ok=True)
 
         # write generate-config/Makefile
-        all_compilers = [x for x in recipe.compilers.keys()]
-        release_compilers = [x for x in all_compilers if x != "bootstrap"]
         with (generate_config_path / "Makefile").open("w") as f:
             f.write(
                 make_config_template.render(
                     build_path=self.path.as_posix(),
-                    all_compilers=all_compilers,
-                    release_compilers=release_compilers,
                     verbose=False,
                 )
             )

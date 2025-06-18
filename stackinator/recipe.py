@@ -3,6 +3,7 @@ import pathlib
 
 import jinja2
 import yaml
+import json
 
 from . import cache, root_logger, schema, spack_util
 
@@ -15,7 +16,10 @@ class Recipe:
             "3.0a",
             "+xpmem fabrics=ch4ofi ch4_max_vcis=4 process_managers=slurm",
         ),
-        "openmpi": ("5", "+internal-pmix +legacylaunchers +orterunprefix fabrics=cma,ofi,xpmem schedulers=slurm"),
+        "openmpi": (
+            "5",
+            "+internal-pmix +legacylaunchers +orterunprefix fabrics=cma,ofi,xpmem schedulers=slurm",
+        ),
     }
 
     @property
@@ -81,17 +85,6 @@ class Recipe:
         if not self.mount.is_dir():
             raise FileNotFoundError(f"the mount point '{self.mount}' must exist")
 
-        # required compilers.yaml file
-        compiler_path = self.path / "compilers.yaml"
-        self._logger.debug(f"opening {compiler_path}")
-        if not compiler_path.is_file():
-            raise FileNotFoundError(f"The recipe path '{compiler_path}' does not contain compilers.yaml")
-
-        with compiler_path.open() as fid:
-            raw = yaml.load(fid, Loader=yaml.Loader)
-            schema.compilers_validator.validate(raw)
-            self.generate_compiler_specs(raw)
-
         # required environments.yaml file
         environments_path = self.path / "environments.yaml"
         self._logger.debug(f"opening {environments_path}")
@@ -100,8 +93,27 @@ class Recipe:
 
         with environments_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
+            # insert utils env (squashfs)
+            raw["_internal_utils"] = {
+                "unify": True,
+                "mpi": None,
+                "specs": ["squashfs default_compression=zstd"],
+                "views": {"_internal_utils": {"link": "roots"}},
+            }
             schema.environments_validator.validate(raw)
+
             self.generate_environment_specs(raw)
+
+        # required base-uenv.json file
+        base_uenv_path = self.path / "base-uenv.json"
+        self._logger.debug(f"opening {base_uenv_path}")
+        if base_uenv_path.is_file():
+            with base_uenv_path.open() as fid:
+                raw = json.load(fid)
+                schema.base_uenv_validator.validate(raw)
+                self.base_uenv = raw
+        else:
+            self.base_uenv = {"compilers": []}
 
         # optional modules.yaml file
         modules_path = self.path / "modules.yaml"
@@ -303,20 +315,6 @@ class Recipe:
                         # TODO: Create a custom exception type
                         raise Exception(f"Unsupported mpi: {mpi_impl}")
 
-        # set constraints that ensure the the main compiler is always used to build packages
-        # that do not explicitly request a compiler.
-        for name, config in environments.items():
-            compilers = config["compiler"]
-            if len(compilers) == 1:
-                config["toolchain_constraints"] = []
-                continue
-            requires = [f"%{compilers[0]['spec']}"]
-            for spec in config["specs"]:
-                if "%" in spec:
-                    requires.append(spec)
-
-            config["toolchain_constraints"] = requires
-
         # An awkward hack to work around spack not supporting creating activation
         # scripts for each file system view in an environment: it only generates them
         # for the "default" view.
@@ -382,71 +380,13 @@ class Recipe:
                 # it separately for configuring the envvars.py helper during the uenv build.
                 extra = view_config.pop("uenv")
 
-                environments[cname]["view"] = {"name": view_name, "config": view_config, "extra": extra}
+                environments[cname]["view"] = {
+                    "name": view_name,
+                    "config": view_config,
+                    "extra": extra,
+                }
 
         self.environments = environments
-
-    # creates the self.compilers field that describes the full specifications
-    # for all of the compilers from the raw compilers.yaml input
-    def generate_compiler_specs(self, raw):
-        compilers = {}
-
-        bootstrap = {}
-        bootstrap["packages"] = {
-            "external": [
-                "perl",
-                "m4",
-                "autoconf",
-                "automake",
-                "libtool",
-                "gawk",
-                "python",
-                "texinfo",
-                "gawk",
-            ],
-        }
-        bootstrap_spec = raw["bootstrap"]["spec"]
-        bootstrap["specs"] = [
-            f"{bootstrap_spec} languages=c,c++",
-            "squashfs default_compression=zstd",
-        ]
-        bootstrap["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
-        compilers["bootstrap"] = bootstrap
-
-        gcc = {}
-        gcc["packages"] = {
-            "external": [
-                "perl",
-                "m4",
-                "autoconf",
-                "automake",
-                "libtool",
-                "gawk",
-                "python",
-                "texinfo",
-                "gawk",
-            ],
-        }
-        gcc["specs"] = raw["gcc"]["specs"]
-        gcc["requires"] = bootstrap_spec
-        gcc["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
-        compilers["gcc"] = gcc
-        if raw["llvm"] is not None:
-            llvm = {}
-            llvm["packages"] = False
-            llvm["specs"] = []
-            for spec in raw["llvm"]["specs"]:
-                if spec.startswith("nvhpc"):
-                    llvm["specs"].append(f"{spec}~mpi~blas~lapack")
-
-                if spec.startswith("llvm"):
-                    llvm["specs"].append(f"{spec} +clang targets=x86 ~gold ^ninja@kitware")
-
-            llvm["requires"] = raw["llvm"]["requires"]
-            llvm["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
-            compilers["llvm"] = llvm
-
-        self.compilers = compilers
 
     # The path of the default configuration for the target system/cluster
     @property
@@ -467,32 +407,6 @@ class Recipe:
     @property
     def mount(self):
         return pathlib.Path(self.config["store"])
-
-    @property
-    def compiler_files(self):
-        files = {}
-
-        env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(self.template_path),
-            trim_blocks=True,
-            lstrip_blocks=True,
-        )
-
-        makefile_template = env.get_template("Makefile.compilers")
-        push_to_cache = self.mirror is not None
-        files["makefile"] = makefile_template.render(
-            compilers=self.compilers,
-            push_to_cache=push_to_cache,
-            spack_version=self.spack_version,
-        )
-
-        # generate compilers/<compiler>/spack.yaml
-        files["config"] = {}
-        for compiler, config in self.compilers.items():
-            spack_yaml_template = env.get_template(f"compilers.{compiler}.spack.yaml")
-            files["config"][compiler] = spack_yaml_template.render(config=config)
-
-        return files
 
     @property
     def environment_files(self):
@@ -517,5 +431,16 @@ class Recipe:
         for env, config in self.environments.items():
             spack_yaml_template = jenv.get_template("environments.spack.yaml")
             files["config"][env] = spack_yaml_template.render(config=config, name=env, store=self.mount)
-
+            files_config_env = yaml.safe_load(files["config"][env])
+            # add base uenv upstream
+            for compiler in self.base_uenv["compilers"]:
+                files_config_env["spack"]["include"] += [
+                    str(pathlib.Path(compiler["image"]["prefix_path"]) / "env/default/packages.yaml")
+                ]
+            # add gpu base uenv
+            if "gpu" in self.base_uenv:
+                files_config_env["spack"]["include"] += [
+                    str(pathlib.Path(self.base_uenv["gpu"]["image"]["prefix_path"]) / "env/default/packages.yaml")
+                ]
+            files["config"][env] = yaml.dump(files_config_env)
         return files
