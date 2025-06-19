@@ -459,7 +459,7 @@ def view_impl(args):
         for c in compilers:
             local_paths = set([os.path.dirname(v) for _, v in c.items() if v is not None])
             compiler_paths += local_paths
-            print(f'adding compiler {c} -> {[p for p in local_paths]}')
+            print(f"adding compiler {c} -> {[p for p in local_paths]}")
 
         envvars.set_list("PATH", compiler_paths, EnvVarOp.PREPEND)
 
