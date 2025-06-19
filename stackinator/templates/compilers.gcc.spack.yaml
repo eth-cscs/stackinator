@@ -8,6 +8,8 @@ spack:
   - {{ spec }}
 {% endfor %}
   view: false
+  config:
+    deprecated: {{ config.deprecated }}
   concretizer:
     unify: when_possible
     reuse: false
