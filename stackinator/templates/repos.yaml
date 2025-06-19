@@ -1,5 +1,3 @@
 repos:
   alps: {{ repo_path }}
-  builtin:
-    destination: {{ builtin_repo_path }}
-    git: {{ builtin_repo_git_repo }}
+  builtin: {{ builtin_repo_path }}/repos/spack_repo/builtin
