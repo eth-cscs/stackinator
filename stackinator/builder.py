@@ -435,10 +435,13 @@ repo:
                     elif dst.exists():
                         self._logger.debug(f"  NOT installing package {pkg_path}")
 
-        # Copy the builtin repo to store
+        # Copy the builtin repo to store, delete if it already exists.
         spack_packages_builtin_path = spack_packages_path / "repos" / "spack_repo" / "builtin"
         spack_packages_store_path = store_path / "spack-packages"
         self._logger.debug(f"copying builtin repo from {spack_packages_builtin_path} to {spack_packages_store_path}")
+        if spack_packages_store_path.exists():
+            self._logger.debug(f"{spack_packages_store_path} exists ... deleting")
+            shutil.rmtree(spack_packages_store_path)
         install(spack_packages_builtin_path, spack_packages_store_path)
 
         # Generate the makefile and spack.yaml files that describe the compilers
