@@ -397,7 +397,7 @@ class Builder:
         self._logger.debug(f"created the repo packages path {pkg_dst}")
 
         # create the repository step 2: create the repo.yaml file that
-        # configures the repo.
+        # configures alps and builtin repos
         with (repo_dst / "repo.yaml").open("w") as f:
             f.write(
                 """\
@@ -415,7 +415,6 @@ repo:
                 repos_yaml_template.render(
                     repo_path=repo_path.as_posix(),
                     builtin_repo_path=builtin_repo_path.as_posix(),
-                    builtin_repo_git_repo=spack_packages_repo,
                     verbose=False,
                 )
             )
@@ -435,6 +434,12 @@ repo:
                         install(pkg_path, dst)
                     elif dst.exists():
                         self._logger.debug(f"  NOT installing package {pkg_path}")
+
+        # Copy the builtin repo to store
+        spack_packages_builtin_path = spack_packages_path / "repos" / "spack_repo" / "builtin"
+        spack_packages_store_path = store_path / "spack-packages"
+        self._logger.debug(f"copying builtin repo from {spack_packages_builtin_path} to {spack_packages_store_path}")
+        install(spack_packages_builtin_path, spack_packages_store_path)
 
         # Generate the makefile and spack.yaml files that describe the compilers
         compiler_files = recipe.compiler_files
