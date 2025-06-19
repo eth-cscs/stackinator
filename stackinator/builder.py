@@ -185,9 +185,7 @@ class Builder:
         spack_commit = spack["commit"]
         spack_path = self.path / "spack"
 
-        spack_git_commit_result = self._git_clone(
-            "spack", spack_repo, spack_commit, spack_path
-        )
+        spack_git_commit_result = self._git_clone("spack", spack_repo, spack_commit, spack_path)
 
         # Clone the spack-packages repository and check out commit if one was given
         spack_packages = spack["packages"]
@@ -535,7 +533,6 @@ repo:
                 )
             )
             f.write("\n")
-
 
     def _git_clone(self, name, repo, commit, path):
         if not (path / ".git").is_dir():
