@@ -25,6 +25,7 @@ spack:
     commit: releases/v0.20
 modules: true
 description: "HPC development tools for building MPI applications with the GNU compiler toolchain"
+version: 2
 ```
 
 * `name`: a plain text name for the environment
@@ -32,6 +33,24 @@ description: "HPC development tools for building MPI applications with the GNU c
 * `spack`: which spack repository to use for installation.
 * `modules`: _optional_ enable/diasble module file generation (default `true`).
 * `description`: _optional_ a string that describes the environment (default empty).
+* `version`:  _default = 1_ the version of the uenv recipe (see below)
+
+!!! note "uenv recipe versions"
+    Stackinator 6 introduces breaking changes to the uenv recipe format, introduced to support Spack v1.0.
+
+    We have started versioning uenv recipes:
+
+    * **version 1**: original uenv recipes for Spack v0.23 and earlier, supported by Stackinator version 5.
+    * **version 2**: uenv recipes for Spack v1.0 and later, supported by Stackinator version 6.
+
+    The default version is 1, so that old recipes that do not set a version are supported.
+
+    !!! warning "You must set version 2 explicitly to use Spack v1.0"
+
+    !!! warning "Version 1 recipes must be configured using Stackinator v5"
+        Version 5 of Stackinator is maintained in the `releases/v5` branch of stackinator.
+
+        You must also use the `releases/v5` branch of [Alps cluster config](https://github.com/eth-cscs/alps-cluster-config).
 
 ## Compilers
 
@@ -100,19 +119,19 @@ In the following sections, we will explore each of the environment configuration
 The `compiler` field describes a list compilers to use to build the software stack.
 Each compiler toolchain is specified using toolchain and spec
 
-```yaml title="compile all packages with gcc@11.3"
+```yaml title="compile all packages with gcc@11"
   compiler:
   - toolchain: gcc
-    spec: gcc@11.3
+    spec: gcc@11
 ```
 
 Sometimes two compiler toolchains are required, for example when using the `nvhpc` compilers, there are often dependencies that can't be built using the NVIDIA, or are better being built with GCC (for example `cmake`, `perl` and `netcdf-c`).
-The example below uses the `nvhpc` compilers with gcc@11.3.
+The example below uses the `nvhpc` compilers with `gcc@11`.
 
-```yaml title="compile all packages with gcc@11.3"
+```yaml title="compile all packages with gcc@11"
   compiler:
   - toolchain: gcc
-    spec: gcc@11.3
+    spec: gcc@11
   - toolchain: llvm
     spec: nvhpc@22.7
 ```
@@ -123,11 +142,14 @@ The example below uses the `nvhpc` compilers with gcc@11.3.
 !!! warning
     Stackinator does not test or support using two versions of gcc in the same toolchain.
 
+!!! note
+    It is generally advisable not to overspecify compiler version, so whenever possible constrain at most the major version.
+
 The order of the compilers is significant. The first compiler is the default, and the other compilers will only be used to build packages when explicitly added to a spec.
 For example, in the recipe below, only `netcdf-fortran` will be built with the `nvhpc` toolchain, while the root specs `cmake` and `netcdf-c` and all dependencies will be built using the `gcc` toolchain.
 
 
-```yaml title="compile all packages with gcc@11.3"
+```yaml title="compile all packages with gcc@11"
   compiler:
   - toolchain: gcc
     spec: gcc
@@ -357,6 +379,22 @@ repo
 Additional custom packages can be provided as part of the cluster configuration, as well as additional site packages.
 These packages are all optional, and will be installed together in a single Spack package repository that is made available to downstream users of the generated uenv stack.
 See the documentation for [cluster configuration](cluster-config.md) for more detail.
+
+!!! note
+    If you need to backport a spack package from a more recent spack version, you can do it by using an already checked out spack repository like this
+
+    (disclaimer: the package might need adjustments due to spack directives changes)
+
+    ```
+    # ensure to have the folder for custom packages in your recipe
+    mkdir -p stackinator-recipe/repo/packages
+    # switch to the already checked out spack repository
+    cd $SPACK_ROOT
+    # use git to extract package files into your "custom packages" section of the stackinator recipe
+    git archive origin/develop `spack location -p fmt` | tar -x --strip-components=5 -C stackinator-recipe/repo/packages
+    ```
+
+    In the above case, the package `fmt` is backported from `origin/develop` into the `stackinator-recipe`.
 
 !!! alps
     All packages are installed under a single spack package repository called `alps`.

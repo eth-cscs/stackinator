@@ -51,7 +51,29 @@ class Recipe:
         # required config.yaml file
         self.config = self.path / "config.yaml"
 
-        # set the recipe-defined mount point
+        # check the version of the recipe
+        if self.config["version"] != 2:
+            rversion = self.config["version"]
+            if rversion == 1:
+                self._logger.error(
+                    "\nThe recipe is an old version 1 recipe for Spack v0.23 and earlier.\n"
+                    "This version of Stackinator supports Spack 1.0, and has deprecated support for Spack v0.23.\n"
+                    "Use version 5 of stackinator, which can be accessed via the releases/v5 branch:\n"
+                    "    git switch releases/v5\n\n"
+                    "If this recipe is to be used with Spack 1.0, then please add the field 'version: 2' to\n"
+                    "config.yaml in your recipe.\n\n"
+                    "For more information: https://eth-cscs.github.io/stackinator/recipes/#configuration\n"
+                )
+                raise RuntimeError("incompatible uenv recipe version")
+            else:
+                self._logger.error(
+                    f"\nThe config.yaml file sets an unknown recipe version={rversion}.\n"
+                    "This version of Stackinator supports version 2 recipes.\n\n"
+                    "For more information: https://eth-cscs.github.io/stackinator/recipes/#configuration\n"
+                )
+                raise RuntimeError("incompatible uenv recipe version")
+
+        # override the mount point if defined as a CLI argument
         if args.mount:
             self.config["store"] = args.mount
 
@@ -121,10 +143,9 @@ class Recipe:
             self._logger.debug("no pre install hook provided")
 
         # determine the version of spack being used:
-        # --develop flag implies the next release of spack
-        # --spack-version option explicitly sets the version
-        # otherwise the name of the commit provided in the config.yaml file is inspected
-        self.spack_version = self.find_spack_version(args.develop, args.spack_version)
+        # currently this just returns 1.0... develop is ignored
+        # --develop flag will imply the next release of spack after 1.0 is supported properly
+        self.spack_version = self.find_spack_version(args.develop)
 
     # Returns:
     #   Path: if the recipe contains a spack package repository
@@ -207,46 +228,10 @@ class Recipe:
             schema.config_validator.validate(raw)
             self._config = raw
 
-    def find_spack_version(self, develop, spack_version):
-        # determine the "major" version, if it can be inferred.
-        # one of "0.21", "0.22", "0.23", "0.24" or "unknown".
-        # "0.24" implies the latest features in develop that will
-        # are being developed for the next version of spack
-
-        # the user has explicitly requested develop:
-        if develop:
-            return "0.24"
-
-        if spack_version is not None:
-            return spack_version
-
-        # infer from the branch name
-        # Note: this could be improved by first downloading
-        # the requested spack version/tag/commit, then checking
-        # the version returned by `spack --version`
-        #
-        # this would require defering this decision until after
-        # the repo is cloned in build.py... a lot of work.
-        commit = self.config["spack"]["commit"]
-        if commit is None or commit == "develop":
-            return "0.24"
-        # currently supported
-        if commit.find("0.24") >= 0:
-            return "0.24"
-        # currently supported
-        if commit.find("0.23") >= 0:
-            return "0.23"
-        # currently supported
-        if commit.find("0.22") >= 0:
-            return "0.22"
-        # currently supported
-        if commit.find("0.21") >= 0:
-            return "0.21"
-        # currently supported
-        if commit.find("0.20") >= 0:
-            raise ValueError(f"spack minimum version is v0.21 - recipe uses {commit}")
-
-        return "unknown"
+    # In Stackinator 6 we replaced logic required to determine the
+    # pre 1.0 Spack version.
+    def find_spack_version(self, develop):
+        return "1.0"
 
     @property
     def environment_view_meta(self):
