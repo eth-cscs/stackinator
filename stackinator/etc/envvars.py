@@ -542,6 +542,11 @@ def meta_impl(args):
 
     if args.spack is not None:
         spack_url, spack_ref, spack_commit = args.spack.split(",")
+        spack_packages_url = None
+        spack_packages_ref = None
+        spack_packages_commit = None
+        if args.spack_packages is not None:
+            spack_packages_url, spack_packages_ref, spack_packages_commit = args.spack_packages.split(",")
         spack_path = f"{args.mount}/config".replace("//", "/")
         meta["views"]["spack"] = {
             "activate": "/dev/null",
@@ -554,9 +559,12 @@ def meta_impl(args):
                     "list": {},
                     "scalar": {
                         "UENV_SPACK_CONFIG_PATH": spack_path,
+                        "UENV_SPACK_URL": spack_url,
                         "UENV_SPACK_REF": spack_ref,
                         "UENV_SPACK_COMMIT": spack_commit,
-                        "UENV_SPACK_URL": spack_url,
+                        "UENV_SPACK_PACKAGES_URL": spack_packages_url,
+                        "UENV_SPACK_PACKAGES_REF": spack_packages_ref,
+                        "UENV_SPACK_PACKAGES_COMMIT": spack_packages_commit,
                     },
                 },
             },
@@ -594,7 +602,13 @@ if __name__ == "__main__":
     uenv_parser.add_argument("--modules", help="configure a module view", action="store_true")
     uenv_parser.add_argument(
         "--spack",
-        help='configure a spack view. Format is "spack_url,git_ref,git_commit"',
+        help='configure a spack repository metadata. Format is "spack_url,git_ref,git_commit"',
+        type=str,
+        default=None,
+    )
+    uenv_parser.add_argument(
+        "--spack-packages",
+        help='configure spack-packages repository metadata. Format is "spack_url,git_ref,git_commit"',
         type=str,
         default=None,
     )
