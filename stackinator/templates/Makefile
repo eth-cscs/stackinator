@@ -69,7 +69,7 @@ modules-done: environments generate-config
 
 env-meta: generate-config environments{% if modules %} modules-done{% endif %}
 
-	$(SANDBOX) $(BUILD_ROOT)/envvars.py uenv {% if modules %}--modules{% endif %} --spack='{{ spack_meta.url }},{{ spack_meta.ref }},{{ spack_meta.commit }}' $(STORE)
+	$(SANDBOX) $(BUILD_ROOT)/envvars.py uenv {% if modules %}--modules{% endif %} --spack='{{ spack_meta.url }},{{ spack_meta.ref }},{{ spack_meta.commit }}' --spack-packages='{{ spack_meta.packages_url }},{{ spack_meta.packages_ref }},{{ spack_meta.packages_commit }}' $(STORE)
 	touch env-meta
 
 post-install: env-meta
@@ -110,6 +110,6 @@ build.tar.gz: spack-version Make.user Make.inc Makefile | environments
 
 # Clean generate files, does *not* remove installed software.
 clean:
-	rm -rf -- $(wildcard */*/spack.lock) $(wildcard */*/.spack-env) $(wildcard */*/Makefile) $(wildcard */*/generated) $(wildcard cache) $(wildcard compilers/*/config.yaml) $(wildcard compilers/*/packages.yaml) $(wildcard compilers/*/compilers.yaml) $(wildcard environments/*/config.yaml) $(wildcard environments/*/packages.yaml) $(wildcard environments/*/compilers.yaml) post-install modules-done env-meta store.squashfs 
+	rm -rf -- $(wildcard */*/spack.lock) $(wildcard */*/.spack-env) $(wildcard */*/Makefile) $(wildcard */*/generated) $(wildcard cache) $(wildcard compilers/*/config.yaml) $(wildcard compilers/*/packages.yaml) $(wildcard environments/*/config.yaml) $(wildcard environments/*/packages.yaml) post-install modules-done env-meta store.squashfs
 
 include Make.inc

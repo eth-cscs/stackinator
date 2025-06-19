@@ -447,13 +447,19 @@ def view_impl(args):
 
         with open(args.compilers, "r") as file:
             data = yaml.safe_load(file)
-        compilers = [c["compiler"] for c in data["compilers"]]
+
+        compilers = []
+        for p in data["packages"].values():
+            for e in p["externals"]:
+                c = e["extra_attributes"]["compilers"]
+                if c is not None:
+                    compilers.append(c)
 
         compiler_paths = []
         for c in compilers:
-            local_paths = set([os.path.dirname(v) for _, v in c["paths"].items() if v is not None])
+            local_paths = set([os.path.dirname(v) for _, v in c.items() if v is not None])
             compiler_paths += local_paths
-            print(f"adding compiler {c['spec']} -> {[p for p in local_paths]}")
+            print(f"adding compiler {c} -> {[p for p in local_paths]}")
 
         envvars.set_list("PATH", compiler_paths, EnvVarOp.PREPEND)
 
@@ -536,6 +542,11 @@ def meta_impl(args):
 
     if args.spack is not None:
         spack_url, spack_ref, spack_commit = args.spack.split(",")
+        spack_packages_url = None
+        spack_packages_ref = None
+        spack_packages_commit = None
+        if args.spack_packages is not None:
+            spack_packages_url, spack_packages_ref, spack_packages_commit = args.spack_packages.split(",")
         spack_path = f"{args.mount}/config".replace("//", "/")
         meta["views"]["spack"] = {
             "activate": "/dev/null",
@@ -548,9 +559,12 @@ def meta_impl(args):
                     "list": {},
                     "scalar": {
                         "UENV_SPACK_CONFIG_PATH": spack_path,
+                        "UENV_SPACK_URL": spack_url,
                         "UENV_SPACK_REF": spack_ref,
                         "UENV_SPACK_COMMIT": spack_commit,
-                        "UENV_SPACK_URL": spack_url,
+                        "UENV_SPACK_PACKAGES_URL": spack_packages_url,
+                        "UENV_SPACK_PACKAGES_REF": spack_packages_ref,
+                        "UENV_SPACK_PACKAGES_COMMIT": spack_packages_commit,
                     },
                 },
             },
@@ -577,7 +591,7 @@ if __name__ == "__main__":
         "--prefix_paths", help="a list of relative prefix path searchs of the form X=y:z,Y=p:q", default="", type=str
     )
     # only add compilers if this argument is passed
-    view_parser.add_argument("--compilers", help="path of the compilers.yaml file", type=str, default=None)
+    view_parser.add_argument("--compilers", help="path of the packages.yaml file", type=str, default=None)
 
     uenv_parser = subparsers.add_parser(
         "uenv",
@@ -588,7 +602,13 @@ if __name__ == "__main__":
     uenv_parser.add_argument("--modules", help="configure a module view", action="store_true")
     uenv_parser.add_argument(
         "--spack",
-        help='configure a spack view. Format is "spack_url,git_ref,git_commit"',
+        help='configure a spack repository metadata. Format is "spack_url,git_ref,git_commit"',
+        type=str,
+        default=None,
+    )
+    uenv_parser.add_argument(
+        "--spack-packages",
+        help='configure spack-packages repository metadata. Format is "spack_url,git_ref,git_commit"',
         type=str,
         default=None,
     )

@@ -36,7 +36,7 @@ find $scratch_path -name env.json
 
 echo "===== running final meta data stage  ${mount_path}"
 
-../stackinator/etc/envvars.py uenv ${mount_path}/ --modules --spack="https://github.com/spack/spack.git,releases/v0.20"
+../stackinator/etc/envvars.py uenv ${mount_path}/ --modules --spack="https://github.com/spack/spack.git,releases/v0.20" --spack-packages="https://github.com/spack/spack.git,develop"
 
 echo
 echo "===== develop"
