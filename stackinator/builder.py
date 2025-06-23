@@ -351,7 +351,7 @@ class Builder:
         # 2. cluster-config/repos.yaml
         #   - if the repos.yaml file exists it will contain a list of relative paths
         #     to search for package
-        # 1. spack/var/spack/repos/builtin
+        # 1. builtin repo
 
         # Build a list of repos with packages to install.
         repos = []
@@ -411,7 +411,7 @@ repo:
         repos_yaml_template = jinja_env.get_template("repos.yaml")
         with (config_path / "repos.yaml").open("w") as f:
             repo_path = recipe.mount / "repos" / "alps"
-            builtin_repo_path = recipe.mount / "repos" / "builtin"
+            builtin_repo_path = recipe.mount / "repos" / "spack_repo" / "builtin"
             f.write(
                 repos_yaml_template.render(
                     repo_path=repo_path.as_posix(),
@@ -437,8 +437,8 @@ repo:
                         self._logger.debug(f"  NOT installing package {pkg_path}")
 
         # Copy the builtin repo to store, delete if it already exists.
-        spack_packages_builtin_path = spack_packages_path / "repos" / "spack_repo" / "builtin"
-        spack_packages_store_path = store_path / "repos" / "builtin"
+        spack_packages_builtin_path = spack_packages_path / "repos" / "spack_repo"
+        spack_packages_store_path = store_path / "repos" / "spack_repo"
         self._logger.debug(f"copying builtin repo from {spack_packages_builtin_path} to {spack_packages_store_path}")
         if spack_packages_store_path.exists():
             self._logger.debug(f"{spack_packages_store_path} exists ... deleting")
