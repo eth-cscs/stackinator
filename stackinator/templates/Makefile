@@ -69,7 +69,7 @@ modules-done: environments generate-config
 
 env-meta: generate-config environments{% if modules %} modules-done{% endif %}
 
-	$(SANDBOX) $(BUILD_ROOT)/envvars.py uenv {% if modules %}--modules{% endif %} --spack='{{ spack_meta.url }},{{ spack_meta.ref }},{{ spack_meta.commit }}' $(STORE)
+	$(SANDBOX) $(BUILD_ROOT)/envvars.py uenv {% if modules %}--modules{% endif %} --spack='{{ spack_meta.url }},{{ spack_meta.ref }},{{ spack_meta.commit }}' --spack-packages='{{ spack_meta.packages_url }},{{ spack_meta.packages_ref }},{{ spack_meta.packages_commit }}' $(STORE)
 	touch env-meta
 
 post-install: env-meta
@@ -81,7 +81,7 @@ post-install: env-meta
 # Create a squashfs file from the installed software.
 store.squashfs: post-install
 	# clean up the __pycache__ paths in the repo
-	$(SANDBOX) find $(STORE)/repo -type d -name __pycache__ -exec rm -r {} +
+	$(SANDBOX) find $(STORE)/repos -type d -name __pycache__ -exec rm -r {} +
 	$(SANDBOX) chmod -R a+rX $(STORE)
 	$(SANDBOX) env -u SOURCE_DATE_EPOCH "$$($(SANDBOX) $(SPACK_HELPER) -e ./compilers/bootstrap find --format='{prefix}' squashfs | head -n1)/bin/mksquashfs" $(STORE) $@ -force-uid nobody -force-gid nobody -all-time $$(date +%s) -no-recovery -noappend -Xcompression-level 3
 
