@@ -25,6 +25,22 @@
                         {"type" : "null"}
                     ],
                     "default": null
+                },
+                "packages" : {
+                    "type" : "object",
+                    "additionalProperties": false,
+                    "properties" : {
+                        "repo": {
+                            "type": "string"
+                        },
+                        "commit": {
+                            "oneOf": [
+                                {"type" : "string"},
+                                {"type" : "null"}
+                            ],
+                            "default": null
+                        }
+                    }
                 }
             }
         },

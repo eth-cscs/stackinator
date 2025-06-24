@@ -4,33 +4,33 @@ CONFIG_DIR = $(STORE)/config
 MODULE_DIR = $(BUILD_ROOT)/modules
 
 # These will be the prefixes of the GCCs, LLVMs and NVHPCs in the respective environments.
-ALL_COMPILER_PREFIXES ={% for compiler in all_compilers %} $$($(SPACK_HELPER) -e ../compilers/{{ compiler }} find --format='{prefix}' gcc llvm nvhpc){% endfor %}
+ALL_COMPILER_PREFIXES ={% for compiler in all_compilers %} $$($(SPACK_HELPER) -e ../compilers/{{ compiler }} find --explicit --format='{prefix}' gcc llvm nvhpc){% endfor %}
 
 
-COMPILER_PREFIXES ={% for compiler in release_compilers %} $$($(SPACK_HELPER) -e ../compilers/{{ compiler }} find --format='{prefix}' gcc llvm nvhpc){% endfor %}
+COMPILER_PREFIXES ={% for compiler in release_compilers %} $$($(SPACK_HELPER) -e ../compilers/{{ compiler }} find --explicit --format='{prefix}' gcc llvm nvhpc){% endfor %}
 
 
-all: $(CONFIG_DIR)/upstreams.yaml $(CONFIG_DIR)/compilers.yaml $(CONFIG_DIR)/packages.yaml $(CONFIG_DIR)/repos.yaml $(MODULE_DIR)/upstreams.yaml $(MODULE_DIR)/compilers.yaml
+all: $(CONFIG_DIR)/upstreams.yaml $(CONFIG_DIR)/packages.yaml $(CONFIG_DIR)/repos.yaml $(MODULE_DIR)/upstreams.yaml $(MODULE_DIR)/compilers.yaml
 
 # Generate the upstream configuration that will be provided by the mounted image
-$(CONFIG_DIR)/compilers.yaml:
-	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $(COMPILER_PREFIXES))
-
 $(CONFIG_DIR)/upstreams.yaml:
 	$(SPACK) config --scope=user add upstreams:system:install_tree:$(STORE)
 
 # Copy the cluster-specific packages.yaml file to the configuration.
-# requires compilers.yaml to ensure that the path $(CONFIG_DIR) has been created.
-$(CONFIG_DIR)/packages.yaml: $(CONFIG_DIR)/compilers.yaml
+$(CONFIG_DIR)/packages.yaml:
+	# first create the directory, copy the base config and then update with compilers
+	mkdir -p $(CONFIG_DIR)
 	install -m 644 $(BUILD_ROOT)/config/packages.yaml $(CONFIG_DIR)/packages.yaml
+	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $(COMPILER_PREFIXES))
 
-$(CONFIG_DIR)/repos.yaml: $(CONFIG_DIR)/compilers.yaml
+# requires packages.yaml to ensure that the path $(CONFIG_DIR) has been created.
+$(CONFIG_DIR)/repos.yaml: $(CONFIG_DIR)/packages.yaml
 	install -m 644 $(BUILD_ROOT)/config/repos.yaml $(CONFIG_DIR)/repos.yaml
 
 # Generate a configuration used to generate the module files
 # The configuration in CONFIG_DIR can't be used for this purpose, because a compilers.yaml
 # that includes the bootstrap compiler is required to build the modules.
-$(MODULE_DIR)/compilers.yaml:
+$(MODULE_DIR)/packages.yaml: # TODO probably this is going to be dropped
 	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $(ALL_COMPILER_PREFIXES))
 
 $(MODULE_DIR)/upstreams.yaml:

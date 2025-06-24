@@ -16,7 +16,7 @@ store:
 	mkdir -p $(STORE)
 
 # Concretization
-%/spack.lock: %/spack.yaml %/compilers.yaml %/config.yaml %/packages.yaml
+%/spack.lock: %/spack.yaml %/config.yaml %/packages.yaml
 	$(SPACK_ENV) concretize -f
 
 # Generate Makefiles for the environment install
