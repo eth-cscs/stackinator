@@ -411,7 +411,7 @@ repo:
         # create the repository step 2: create the repos.yaml file in build_path/config
         repos_yaml_template = jinja_env.get_template("repos.yaml")
         with (config_path / "repos.yaml").open("w") as f:
-            repo_path = recipe.mount / "spack_repo" / "alps"
+            repo_path = recipe.mount / "repos" / "spack_repo" / "alps"
             builtin_repo_path = recipe.mount / "repos" / "spack_repo" / "builtin"
             f.write(
                 repos_yaml_template.render(
