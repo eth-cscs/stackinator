@@ -385,7 +385,7 @@ class Builder:
 
         # Delete the store/repo path, if it already exists.
         # Do this so that incremental builds (though not officially supported) won't break if a repo is updated.
-        repos_path = store_path / "repos"
+        repos_path = store_path / "spack_repo"
         repo_dst = repos_path / "alps"
         self._logger.debug(f"creating the stack spack repo in {repo_dst}")
         if repo_dst.exists():
@@ -404,13 +404,14 @@ class Builder:
                 """\
 repo:
   namespace: alps
+  api: v2.0
 """
             )
 
         # create the repository step 2: create the repos.yaml file in build_path/config
         repos_yaml_template = jinja_env.get_template("repos.yaml")
         with (config_path / "repos.yaml").open("w") as f:
-            repo_path = recipe.mount / "repos" / "alps"
+            repo_path = recipe.mount / "repos" / "spack_repo" / "alps"
             builtin_repo_path = recipe.mount / "repos" / "spack_repo" / "builtin"
             f.write(
                 repos_yaml_template.render(
