@@ -1,9 +1,6 @@
 spack:
   include:
-{% if config.packages %}
   - packages.yaml
-{% endif %}
-  - compilers.yaml
   - config.yaml
   config:
     deprecated: {{ config.deprecated }}
