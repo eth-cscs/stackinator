@@ -414,7 +414,7 @@ class Builder:
 
         # Delete the store/repo path, if it already exists.
         # Do this so that incremental builds (though not officially supported) won't break if a repo is updated.
-        repo_dst = store_path / pathlib.Path("spack_repo", "alps")
+        repo_dst = store_path / "spack_repo" / "alps"
         self._logger.debug(f"creating the stack spack prepo in {repo_dst}")
         if repo_dst.exists():
             self._logger.debug(f"{repo_dst} exists ... deleting")
