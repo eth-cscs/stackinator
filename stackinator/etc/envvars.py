@@ -451,9 +451,10 @@ def view_impl(args):
         compilers = []
         for p in data["packages"].values():
             for e in p["externals"]:
-                c = e["extra_attributes"]["compilers"]
-                if c is not None:
-                    compilers.append(c)
+                if "extra_attributes" in e:
+                    c = e["extra_attributes"]["compilers"]
+                    if c is not None:
+                        compilers.append(c)
 
         compiler_paths = []
         for c in compilers:
