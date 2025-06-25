@@ -385,7 +385,7 @@ class Builder:
 
         # Delete the store/repo path, if it already exists.
         # Do this so that incremental builds (though not officially supported) won't break if a repo is updated.
-        repos_path = store_path / "spack_repo"
+        repos_path = store_path / "repos" / "spack_repo"
         repo_dst = repos_path / "alps"
         self._logger.debug(f"creating the stack spack repo in {repo_dst}")
         if repo_dst.exists():
@@ -438,8 +438,8 @@ repo:
                         self._logger.debug(f"  NOT installing package {pkg_path}")
 
         # Copy the builtin repo to store, delete if it already exists.
-        spack_packages_builtin_path = spack_packages_path / "repos" / "spack_repo"
-        spack_packages_store_path = store_path / "repos" / "spack_repo"
+        spack_packages_builtin_path = spack_packages_path / "repos" / "spack_repo" / "builtin"
+        spack_packages_store_path = store_path / "repos" / "spack_repo" / "builtin"
         self._logger.debug(f"copying builtin repo from {spack_packages_builtin_path} to {spack_packages_store_path}")
         if spack_packages_store_path.exists():
             self._logger.debug(f"{spack_packages_store_path} exists ... deleting")
