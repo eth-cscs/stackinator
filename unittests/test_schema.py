@@ -26,7 +26,6 @@ def recipes():
         "base-amdgpu",
         "base-nvgpu",
         "cache",
-        "unique-bootstrap",
         "with-repo",
     ]
 
@@ -70,14 +69,12 @@ def test_compilers_yaml(yaml_path):
     with open(yaml_path / "compilers.defaults.yaml") as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
         schema.validator(schema.compilers_schema).validate(raw)
-        assert raw["bootstrap"] == {"spec": "gcc@11"}
         assert raw["gcc"] == {"specs": ["gcc@10.2"]}
         assert raw["llvm"] is None
 
     with open(yaml_path / "compilers.full.yaml") as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
         schema.validator(schema.compilers_schema).validate(raw)
-        assert raw["bootstrap"]["spec"] == "gcc@11"
         assert raw["gcc"] == {"specs": ["gcc@11", "gcc@10.2", "gcc@9.3.0"]}
         assert raw["llvm"] == {
             "specs": ["llvm@13", "llvm@11.2", "nvhpc@22.11"],
