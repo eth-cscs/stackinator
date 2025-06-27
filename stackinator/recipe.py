@@ -100,6 +100,16 @@ class Recipe:
 
         with environments_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
+            # add a special environment that installs tools required later in the build process.
+            # currently we only need squashfs for creating the squashfs file.
+            raw["uenv_tools"] = {
+                "compiler": [{"toolchain": "gcc", "spec": "gcc"}],
+                "mpi": None,
+                "unify": True,
+                "deprecated": False,
+                "specs": ["squashfs"],
+                "views": {},
+            }
             schema.environments_validator.validate(raw)
             self.generate_environment_specs(raw)
 
@@ -402,7 +412,6 @@ class Recipe:
             gcc["specs"] = list(map(lambda x: x + " +bootstrap", raw["gcc"]["specs"]))
 
         gcc["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
-        gcc["specs"].append("squashfs default_compression=zstd")
         compilers["gcc"] = gcc
 
         if raw["llvm"] is not None:
