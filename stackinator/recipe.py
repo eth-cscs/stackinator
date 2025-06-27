@@ -391,27 +391,12 @@ class Recipe:
     def generate_compiler_specs(self, raw):
         compilers = {}
 
-        bootstrap = {}
-        bootstrap["packages"] = {
-            "external": [
-                "perl",
-                "m4",
-                "autoconf",
-                "automake",
-                "libtool",
-                "gawk",
-                "python",
-                "texinfo",
-                "gawk",
-            ],
-        }
-        bootstrap_spec = raw["bootstrap"]["spec"]
-        bootstrap["specs"] = [
-            f"{bootstrap_spec} languages=c,c++",
-            "squashfs default_compression=zstd",
-        ]
-        bootstrap["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
-        compilers["bootstrap"] = bootstrap
+        #bootstrap = {}
+        # ...
+        #bootstrap_spec = raw["bootstrap"]["spec"]
+        #bootstrap["specs"] = [
+        #bootstrap["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
+        #compilers["bootstrap"] = bootstrap
 
         gcc = {}
         gcc["packages"] = {
@@ -433,7 +418,8 @@ class Recipe:
         elif isinstance(raw["gcc"]["specs"], list):
             gcc["specs"] = list(map(lambda x: x + " +bootstrap", raw["gcc"]["specs"]))
 
-        gcc["requires"] = bootstrap_spec
+        # TODO: may or may not need to be hooked into the compiler in packages.yaml
+        #gcc["requires"] = bootstrap_spec
         gcc["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
         compilers["gcc"] = gcc
 

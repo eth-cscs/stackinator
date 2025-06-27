@@ -48,14 +48,12 @@ def generate_mirrors_yaml(config):
                 "fetch": {
                     "url": f"file://{path}",
                     "access_pair": [None, None],
-                    "access_token": None,
                     "profile": None,
                     "endpoint_url": None,
                 },
                 "push": {
                     "url": f"file://{path}",
                     "access_pair": [None, None],
-                    "access_token": None,
                     "profile": None,
                     "endpoint_url": None,
                 },
