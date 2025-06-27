@@ -40,11 +40,6 @@ all:{% for compiler in compilers %} {{ compiler }}/generated/build_cache{% endfo
 
 {% endif %}
 {% endfor %}
-# Configure dependencies between compilers
-#gcc/packages.yaml: bootstrap/generated/env
-#	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK_HELPER) -e ./bootstrap find --explicit --format '{prefix}' {{ compilers.gcc.requires }}))
-#	# add ~bootstrap variant to the detected compiler (built by previous bootstrap step)
-#	yq write -i $@ 'packages.gcc.externals[0].spec' "$$(yq read $@ 'packages.gcc.externals[0].spec') ~bootstrap"
 
 {% if compilers.llvm %}
 llvm/packages.yaml: gcc/generated/env

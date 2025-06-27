@@ -391,36 +391,28 @@ class Recipe:
     def generate_compiler_specs(self, raw):
         compilers = {}
 
-        #bootstrap = {}
-        # ...
-        #bootstrap_spec = raw["bootstrap"]["spec"]
-        #bootstrap["specs"] = [
-        #bootstrap["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
-        #compilers["bootstrap"] = bootstrap
-
         gcc = {}
-        gcc["packages"] = {
-            "external": [
-                "perl",
-                "m4",
-                "autoconf",
-                "automake",
-                "libtool",
-                "gawk",
-                "python",
-                "texinfo",
-                "gawk",
-            ],
-        }
+        #gcc["packages"] = {
+        #    "external": [
+        #        "perl",
+        #        "m4",
+        #        "autoconf",
+        #        "automake",
+        #        "libtool",
+        #        "gawk",
+        #        "python",
+        #        "texinfo",
+        #        "gawk",
+        #    ],
+        #}
 
         if isinstance(raw["gcc"]["specs"], str):
             gcc["specs"] = raw["gcc"]["specs"] + " +bootstrap"
         elif isinstance(raw["gcc"]["specs"], list):
             gcc["specs"] = list(map(lambda x: x + " +bootstrap", raw["gcc"]["specs"]))
 
-        # TODO: may or may not need to be hooked into the compiler in packages.yaml
-        #gcc["requires"] = bootstrap_spec
         gcc["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
+        gcc["specs"].append("squashfs default_compression=zstd")
         compilers["gcc"] = gcc
 
         if raw["llvm"] is not None:
