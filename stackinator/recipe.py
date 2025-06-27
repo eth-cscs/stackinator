@@ -392,19 +392,9 @@ class Recipe:
         compilers = {}
 
         gcc = {}
-        #gcc["packages"] = {
-        #    "external": [
-        #        "perl",
-        #        "m4",
-        #        "autoconf",
-        #        "automake",
-        #        "libtool",
-        #        "gawk",
-        #        "python",
-        #        "texinfo",
-        #        "gawk",
-        #    ],
-        #}
+        # gcc["packages"] = {
+        #     "external": [ "perl", "m4", "autoconf", "automake", "libtool", "gawk", "python", "texinfo", "gawk", ],
+        # }
 
         if isinstance(raw["gcc"]["specs"], str):
             gcc["specs"] = raw["gcc"]["specs"] + " +bootstrap"
