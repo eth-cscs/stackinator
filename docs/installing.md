@@ -7,8 +7,12 @@ The default location for a recipe is set in the `store` field of `config.yaml` i
 name: best-stack-ever
 store: /user-environment
 spack:
-  commit: releases/v0.20
-  repo: https://github.com/spack/spack.git
+    repo: https://github.com/spack/spack.git
+    commit: releases/v1.0
+    packages:
+        repo: https://github.com/spack/spack-packages.git
+        commit: develop
+version: 2
 ```
 
 The installation path can be overridden using the `--mount/-m` flag to `stack-config`.
