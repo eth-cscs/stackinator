@@ -22,7 +22,10 @@ name: prgenv-gnu
 store: /user-environment
 spack:
     repo: https://github.com/spack/spack.git
-    commit: releases/v0.20
+    commit: releases/v1.0
+    packages:
+        repo: https://github.com/spack/spack-packages.git
+        commit: develop
 modules: true
 description: "HPC development tools for building MPI applications with the GNU compiler toolchain"
 version: 2
@@ -30,7 +33,7 @@ version: 2
 
 * `name`: a plain text name for the environment
 * `store`: the location where the environment will be mounted.
-* `spack`: which spack repository to use for installation.
+* `spack`: which spack and package repositories to use for installation.
 * `modules`: _optional_ enable/diasble module file generation (default `true`).
 * `description`: _optional_ a string that describes the environment (default empty).
 * `version`:  _default = 1_ the version of the uenv recipe (see below)
