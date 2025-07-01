@@ -9,49 +9,29 @@
             "type": "string",
             "pattern": "^gcc@\\d{1,2}(\\.\\d{1}(\\.\\d{1})?)?$"
         },
-        "gcc_version_spec_list": {
-            "type": "array",
-            "items": {"$ref": "#/defs/gcc_version_spec"},
-            "minItems": 1
-        },
-        "llvm_version_spec": {
-            "type": "string",
-            "pattern": "^llvm@\\d{1,2}(\\.\\d{1}(\\.\\d{1})?)?$"
-        },
         "nvhpc_version_spec": {
             "type": "string",
             "pattern": "^nvhpc@\\d{2}(\\.\\d{1,2})?$"
-        },
-        "llvm_version_spec_list": {
-            "type": "array",
-            "items": {
-                "anyOf": [
-                    {"$ref": "#/defs/llvm_version_spec"},
-                    {"$ref": "#/defs/nvhpc_version_spec"}
-                ]
-            },
-            "minItems": 1
         }
     },
     "properties": {
         "gcc": {
             "type": "object",
             "properties": {
-                "specs": {"$ref": "#/defs/gcc_version_spec_list"}
+                "spec": {"$ref": "#/defs/gcc_version_spec"}
             },
             "additionalProperties": false,
-            "required": ["specs"]
+            "required": ["spec"]
         },
-        "llvm": {
+        "nvhpc": {
             "oneOf": [
                 {
                     "type": "object",
                     "properties": {
-                        "requires": {"$ref": "#/defs/gcc_version_spec"},
-                        "specs": {"$ref": "#/defs/llvm_version_spec_list"}
+                        "spec": {"$ref": "#/defs/nvhpc_version_spec"}
                     },
                     "additionalProperties": false,
-                    "required": ["requires", "specs"]
+                    "required": ["spec"]
                 },
                 {
                     "type": "null"

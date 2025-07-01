@@ -406,28 +406,34 @@ class Recipe:
         #     "external": [ "perl", "m4", "autoconf", "automake", "libtool", "gawk", "python", "texinfo", "gawk", ],
         # }
 
-        if isinstance(raw["gcc"]["specs"], str):
-            gcc["specs"] = raw["gcc"]["specs"] + " +bootstrap"
-        elif isinstance(raw["gcc"]["specs"], list):
-            gcc["specs"] = list(map(lambda x: x + " +bootstrap", raw["gcc"]["specs"]))
+        gcc["specs"] = [raw["gcc"]["spec"] + " +bootstrap"]
 
         gcc["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
         compilers["gcc"] = gcc
 
-        if raw["llvm"] is not None:
-            llvm = {}
-            llvm["packages"] = False
-            llvm["specs"] = []
-            for spec in raw["llvm"]["specs"]:
-                if spec.startswith("nvhpc"):
-                    llvm["specs"].append(f"{spec}~mpi~blas~lapack")
+        # TODO: fix up using gcc as an upstream of nvhpc
+        if raw["nvhpc"] is not None:
+            nvhpc = {}
+            nvhpc["packags"] = False
+            nvhpc["specs"] = [raw["nvhpc"]["spec"] + " ~mpi~blas~lapack"]
 
-                if spec.startswith("llvm"):
-                    llvm["specs"].append(f"{spec} +clang targets=x86 ~gold ^ninja@kitware")
+            nvhpc["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
+            compilers["nvhpc"] = nvhpc
 
-            llvm["requires"] = raw["llvm"]["requires"]
-            llvm["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
-            compilers["llvm"] = llvm
+        # if raw["llvm"] is not None:
+        #    llvm = {}
+        #    llvm["packages"] = False
+        #    llvm["specs"] = []
+        #    for spec in raw["llvm"]["specs"]:
+        #        if spec.startswith("nvhpc"):
+        #            llvm["specs"].append(f"{spec}~mpi~blas~lapack")
+        #
+        #        if spec.startswith("llvm"):
+        #            llvm["specs"].append(f"{spec} +clang targets=x86 ~gold ^ninja@kitware")
+        #
+        #    llvm["requires"] = raw["llvm"]["requires"]
+        #    llvm["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
+        #    compilers["llvm"] = llvm
 
         self.compilers = compilers
 

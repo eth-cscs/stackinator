@@ -61,5 +61,11 @@ include llvm/Makefile
 endif
 {% endif %}
 
+{% if compilers.nvhpc %}
+ifneq (,$(wildcard gcc/Makefile))
+include nvhpc/Makefile
+endif
+{% endif %}
+
 
 endif
