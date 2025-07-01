@@ -1,7 +1,7 @@
 {% set pipejoiner = joiner('|') %}
 -include Make.user
 
-.PHONY: compilers environments generate-config clean spack-setup
+.PHONY: compilers environments generate-config clean
 
 all: environments
 
@@ -16,19 +16,9 @@ spack-setup: spack-version
 	@printf "spack arch... " ; \
 	arch="$$($(SANDBOX) $(SPACK) arch)"; \
 	printf "%s\n" "$$arch"; \
-	case "$$arch" in \
-		*cray*) \
-			echo "You are running on Cray, which is usually a bad idea, since it turns Spack into modules mode. Try running in an clean environment with env -i."; \
-			exit 1 \
-			;; \
-	esac; \
 	printf "spack version... "; \
 	version="$$($(SANDBOX) $(SPACK) --version)"; \
 	printf "%s\n" "$$version"; \
-	if [ "$$version" != "$$(cat spack-version)" ]; then \
-		echo "The spack version seems to have been changed in the meantime... remove ./spack-version if that was intended"; \
-		exit 1; \
-	fi; \
 	printf "checking if spack concretizer works... "; \
 	$(SANDBOX) $(SPACK_HELPER) -d spec zlib > $(BUILD_ROOT)/spack-bootstrap-output 2>&1; \
 	if [ "$$?" != "0" ]; then \
