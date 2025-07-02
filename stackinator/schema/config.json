@@ -15,6 +15,7 @@
         "spack" : {
             "type" : "object",
             "additionalProperties": false,
+            "required": ["packages"],
             "properties" : {
                 "repo": {
                     "type": "string"
