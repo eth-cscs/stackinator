@@ -46,6 +46,11 @@ llvm/packages.yaml: gcc/generated/env
 	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK_HELPER) -e ./gcc find --explicit --format '{prefix}' {{ compilers.llvm.requires }}))
 {% endif %}
 
+{% if compilers.nvhpc %}
+nvhpc/packages.yaml: gcc/generated/env
+	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK_HELPER) -e ./gcc find --explicit --format '{prefix}' {{ compilers.nvhpc.requires }}))
+{% endif %}
+
 
 include ../Make.inc
 

@@ -1,10 +1,6 @@
 import argparse
-import hashlib
 import logging
-import os
-import platform
 import sys
-import time
 import traceback
 
 from . import VERSION, root_logger
@@ -13,9 +9,9 @@ from .recipe import Recipe
 
 
 def generate_logfile_name(name=""):
-    #idstr = f"{time.localtime()}{os.getpid}{platform.uname()}"
-    #return f"log{name}_{hashlib.md5(idstr.encode('utf-8')).hexdigest()}"
-    return f"stackinator_log"
+    # idstr = f"{time.localtime()}{os.getpid}{platform.uname()}"
+    # return f"log{name}_{hashlib.md5(idstr.encode('utf-8')).hexdigest()}"
+    return "stackinator_log"
 
 
 def configure_logging(logfile):

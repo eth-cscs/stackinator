@@ -49,17 +49,11 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 
 {{ env }}/packages.yaml:
 	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $({{ env }}_PREFIX))
-
-{% endfor %}
-
-# Configure external system dependencies for each compiler toolchain
-{% for env, config in environments.items() %}
 {% if config.packages %}
-{{ env }}/packages.yaml:
 	$(SPACK) external find --not-buildable --scope=user {% for package in config.packages %} {{package}}{% endfor %}
-
-
 {% endif %}
+
+
 {% endfor %}
 
 -include ../Make.inc
@@ -69,3 +63,4 @@ ifeq (,$(filter clean,$(MAKECMDGOALS)))
 include {{ env }}/Makefile
 {% endfor %}
 endif
+

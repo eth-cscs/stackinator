@@ -130,6 +130,40 @@ class Recipe:
             with packages_path.open() as fid:
                 self.packages = yaml.load(fid, Loader=yaml.Loader)
 
+        self._logger.debug("creating packages")
+
+        # load recipe/packages.yaml -> recipe_packages (if it exists)
+        recipe_packages = {}
+        recipe_packages_path = self.path / "packages.yaml"
+        if recipe_packages_path.is_file():
+            with recipe_packages_path.open() as fid:
+                raw = yaml.load(fid, Loader=yaml.Loader)
+                recipe_packages = raw["packages"]
+
+        # load system/packages.yaml -> system_packages (if it exists)
+        system_packages = {}
+        system_packages_path = self.system_config_path / "packages.yaml"
+        if system_packages_path.is_file():
+            # load system yaml
+            with system_packages_path.open() as fid:
+                raw = yaml.load(fid, Loader=yaml.Loader)
+                system_packages = raw["packages"]
+
+        # extract gcc_packages from system packages
+        # remove gcc from packages afterwards
+        if system_packages["gcc"]:
+            gcc_packages = {"gcc": system_packages["gcc"]}
+            del system_packages["gcc"]
+        else:
+            raise RuntimeError("The system packages.yaml file does not provide gcc")
+
+        self.packages = {
+            # the package definition used in every environment
+            "global": {"packages": system_packages | recipe_packages},
+            # the package definition used to build gcc (requires system gcc to bootstrap)
+            "gcc": {"packages": system_packages | gcc_packages | recipe_packages},
+        }
+
         # optional mirror configurtion
         mirrors_path = self.path / "mirrors.yaml"
         if mirrors_path.is_file():
@@ -405,10 +439,9 @@ class Recipe:
         # gcc["packages"] = {
         #     "external": [ "perl", "m4", "autoconf", "automake", "libtool", "gawk", "python", "texinfo", "gawk", ],
         # }
-
         gcc["specs"] = [raw["gcc"]["spec"] + " +bootstrap"]
-
         gcc["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
+
         compilers["gcc"] = gcc
 
         # TODO: fix up using gcc as an upstream of nvhpc
@@ -475,11 +508,15 @@ class Recipe:
             spack_version=self.spack_version,
         )
 
-        # generate compilers/<compiler>/spack.yaml
         files["config"] = {}
         for compiler, config in self.compilers.items():
             spack_yaml_template = env.get_template(f"compilers.{compiler}.spack.yaml")
-            files["config"][compiler] = spack_yaml_template.render(config=config)
+            files["config"][compiler] = {}
+            # compilers/<compiler>/spack.yaml
+            files["config"][compiler]["spack.yaml"] = spack_yaml_template.render(config=config)
+            # compilers/gcc/packages.yaml
+            if compiler == "gcc":
+                files["config"][compiler]["packages.yaml"] = yaml.dump(self.packages["gcc"])
 
         return files
 
