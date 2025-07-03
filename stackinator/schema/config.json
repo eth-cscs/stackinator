@@ -1,9 +1,9 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$schema": "http://json-schema.org/draft-2019-09/schema#",
     "title": "Schema for Spack Stack config.yaml recipe file",
     "type" : "object",
-    "additionalProperties": false,
-    "required": ["name", "spack"],
+    "unevaluatedProperties": false,
+    "required": ["name"],
     "properties" : {
         "name" : {
             "type": "string"
@@ -11,39 +11,6 @@
         "store" : {
             "type" : "string",
             "default" : "/user-environment"
-        },
-        "spack" : {
-            "type" : "object",
-            "additionalProperties": false,
-            "required": ["packages"],
-            "properties" : {
-                "repo": {
-                    "type": "string"
-                },
-                "commit": {
-                    "oneOf": [
-                        {"type" : "string"},
-                        {"type" : "null"}
-                    ],
-                    "default": null
-                },
-                "packages" : {
-                    "type" : "object",
-                    "additionalProperties": false,
-                    "properties" : {
-                        "repo": {
-                            "type": "string"
-                        },
-                        "commit": {
-                            "oneOf": [
-                                {"type" : "string"},
-                                {"type" : "null"}
-                            ],
-                            "default": null
-                        }
-                    }
-                }
-            }
         },
         "mirror" : {
             "type" : "object",
@@ -78,5 +45,75 @@
             "type": "number",
             "default": 1
         }
+    },
+    "allOf": [
+      {
+        "if": {
+          "required": ["version"],
+          "properties": {
+            "version": {"const": 2 }
+          }
+        },
+        "then": {
+          "required": ["spack"],
+          "properties": {
+            "spack": {
+              "$ref": "#/$defs/git-repo",
+              "unevaluatedProperties": false,
+              "required": ["packages"],
+              "properties": {
+                "packages": {
+                  "$ref": "#/$defs/git-repo",
+                  "unevaluatedProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "if": {
+          "oneOf": [
+            {
+              "not": {
+                "required": ["version"]
+              }
+            },
+            {
+              "required": ["version"],
+              "properties": {
+                "version": {"const": 1 }
+              }
+            }
+          ]
+        },
+        "then": {
+          "required": ["spack"],
+          "properties": {
+            "spack": {
+              "$ref": "#/$defs/git-repo",
+              "unevaluatedProperties": false
+            }
+          }
+        }
+      }
+    ],
+    "$defs": {
+      "git-repo": {
+        "type" : "object",
+        "required": ["repo"],
+        "properties" : {
+          "repo": {
+            "type": "string"
+          },
+          "commit": {
+            "oneOf": [
+                {"type" : "string"},
+                {"type" : "null"}
+            ],
+            "default": null
+          }
+        }
+      }
     }
 }
