@@ -1,0 +1,13 @@
+version: 2
+name: cuda-env
+# store: /user-environment
+spack:
+    repo: https://github.com/spack/spack.git
+    # commit: None
+    packages:
+      repo: https://github.com/spack/spack-packages.git
+      # commit: None
+# mirror:
+    # key: None
+    # enable: True
+# modules: True
