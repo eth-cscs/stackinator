@@ -45,7 +45,7 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 
 # Create the compilers.yaml configuration for each environment
 {% for env, config in environments.items() %}
-{{ env }}_PREFIX = {% for C in config.compiler %} $$($(SPACK_HELPER) -e ../compilers/{{ C.toolchain }} find --explicit --format '{prefix}' {{ C.spec }}){% endfor %}
+{{ env }}_PREFIX = {% for C in config.compiler %} $$($(SPACK_HELPER) -e ../compilers/{{ C }} find --explicit --format '{prefix}' {{ C.spec }}){% endfor %}
 
 {{ env }}/packages.yaml:
 	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $({{ env }}_PREFIX))

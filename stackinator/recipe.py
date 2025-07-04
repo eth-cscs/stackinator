@@ -103,7 +103,7 @@ class Recipe:
             # add a special environment that installs tools required later in the build process.
             # currently we only need squashfs for creating the squashfs file.
             raw["uenv_tools"] = {
-                "compiler": [{"toolchain": "gcc", "spec": "gcc"}],
+                "compiler": ["gcc"],
                 "mpi": None,
                 "unify": True,
                 "deprecated": False,
@@ -443,7 +443,7 @@ class Recipe:
         # }
         gcc_version = raw["gcc"]["version"]
         gcc["specs"] = [f"gcc@{gcc_version} + bootstrap"]
-        gcc["exclude_from_cache"] = cache_exclude
+        gcc["exclude_from_cache"] = []
 
         compilers["gcc"] = gcc
 
