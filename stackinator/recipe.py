@@ -349,6 +349,7 @@ class Recipe:
 
         # set constraints that ensure the the main compiler is always used to build packages
         # that do not explicitly request a compiler.
+        # TODO: remove compilers section and make these direct dependencies, i.e %compiler@version
         for name, config in environments.items():
             compilers = config["compiler"]
             if len(compilers) == 1:
@@ -435,38 +436,34 @@ class Recipe:
     def generate_compiler_specs(self, raw):
         compilers = {}
 
+        cache_exclude = ["cuda", "nvhpc", "perl"]
         gcc = {}
         # gcc["packages"] = {
         #     "external": [ "perl", "m4", "autoconf", "automake", "libtool", "gawk", "python", "texinfo", "gawk", ],
         # }
-        gcc["specs"] = [raw["gcc"]["spec"] + " +bootstrap"]
-        gcc["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
+        gcc_version = raw["gcc"]["version"]
+        gcc["specs"] = [f"gcc@{gcc_version} + bootstrap"]
+        gcc["exclude_from_cache"] = cache_exclude
 
         compilers["gcc"] = gcc
 
-        # TODO: fix up using gcc as an upstream of nvhpc
         if raw["nvhpc"] is not None:
             nvhpc = {}
-            nvhpc["packags"] = False
-            nvhpc["specs"] = [raw["nvhpc"]["spec"] + " ~mpi~blas~lapack"]
+            nvhpc_version = raw["nvhpc"]["version"]
+            nvhpc["packages"] = False
+            nvhpc["specs"] = [f"nvhpc@{nvhpc_version} ~mpi~blas~lapack"]
 
-            nvhpc["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
+            nvhpc["exclude_from_cache"] = cache_exclude
             compilers["nvhpc"] = nvhpc
 
-        # if raw["llvm"] is not None:
-        #    llvm = {}
-        #    llvm["packages"] = False
-        #    llvm["specs"] = []
-        #    for spec in raw["llvm"]["specs"]:
-        #        if spec.startswith("nvhpc"):
-        #            llvm["specs"].append(f"{spec}~mpi~blas~lapack")
-        #
-        #        if spec.startswith("llvm"):
-        #            llvm["specs"].append(f"{spec} +clang targets=x86 ~gold ^ninja@kitware")
-        #
-        #    llvm["requires"] = raw["llvm"]["requires"]
-        #    llvm["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
-        #    compilers["llvm"] = llvm
+        if raw["llvm"] is not None:
+            llvm = {}
+            llvm_version = raw["llvm"]["version"]
+            llvm["packages"] = False
+            llvm["specs"] = [f"llvm@{llvm_version} +clang ~gold"]
+
+            llvm["exclude_from_cache"] = cache_exclude
+            compilers["llvm"] = llvm
 
         self.compilers = compilers
 

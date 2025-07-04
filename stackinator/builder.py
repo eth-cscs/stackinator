@@ -456,16 +456,12 @@ repo:
         generate_config_path.mkdir(exist_ok=True)
 
         # write generate-config/Makefile
-        # TODO: we differentiate between all and release compilers in order to generate modules
-        # we have to do better, no?
         all_compilers = [x for x in recipe.compilers.keys()]
-        #release_compilers = [x for x in all_compilers if x != "bootstrap"]
         with (generate_config_path / "Makefile").open("w") as f:
             f.write(
                 make_config_template.render(
                     build_path=self.path.as_posix(),
                     all_compilers=all_compilers,
-                    #release_compilers=release_compilers,
                     release_compilers=all_compilers,
                     verbose=False,
                 )

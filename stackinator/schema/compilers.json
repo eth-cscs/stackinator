@@ -4,34 +4,40 @@
     "type": "object",
     "additionalProperties": false,
     "required": ["gcc"],
-    "defs": {
-        "gcc_version_spec": {
-            "type": "string",
-            "pattern": "^gcc@\\d{1,2}(\\.\\d{1}(\\.\\d{1})?)?$"
-        },
-        "nvhpc_version_spec": {
-            "type": "string",
-            "pattern": "^nvhpc@\\d{2}(\\.\\d{1,2})?$"
-        }
-    },
     "properties": {
         "gcc": {
             "type": "object",
             "properties": {
-                "spec": {"$ref": "#/defs/gcc_version_spec"}
+                "version": {"type": "string"}
             },
             "additionalProperties": false,
-            "required": ["spec"]
+            "required": ["version"]
         },
         "nvhpc": {
             "oneOf": [
                 {
                     "type": "object",
                     "properties": {
-                        "spec": {"$ref": "#/defs/nvhpc_version_spec"}
+                        "version": {"type": "string"}
                     },
                     "additionalProperties": false,
-                    "required": ["spec"]
+                    "required": ["version"]
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null
+        },
+        "llvm": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "version": {"type": "string"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["version"]
                 },
                 {
                     "type": "null"
