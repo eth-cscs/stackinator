@@ -124,7 +124,7 @@ Sometimes two compiler toolchains are required, for example when using the `nvhp
 The example below uses the `nvhpc` compilers with `gcc@11`.
 
 ```yaml title="compile all packages with gcc and nvhpc"
-  compilers: [gcc, nvhpc]
+  compiler: [gcc, nvhpc]
 ```
 
 The order of the compilers is significant.
@@ -133,7 +133,7 @@ For example, in the recipe below, only `netcdf-fortran` will be built with the `
 
 
 ```yaml title="compile all packages with gcc@11"
-  compilers: [gcc, nvhpc]
+  compiler: [gcc, nvhpc]
   specs
   - cmake
   - netcdf-c
