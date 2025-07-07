@@ -355,7 +355,7 @@ class Recipe:
             if len(compilers) == 1:
                 config["toolchain_constraints"] = []
                 continue
-            requires = [f"%{compilers[0]['spec']}"]
+            requires = [f"%{compilers[0]}"]
             for spec in config["specs"]:
                 if "%" in spec:
                     requires.append(spec)
