@@ -1,3 +1,0 @@
-gcc:
-  specs:
-  - gcc@11

@@ -1,7 +1,5 @@
 gcc-env:
-  compiler:
-      - toolchain: gcc
-        spec: gcc@11
+  compiler: [gcc]
   unify: true
   specs:
   - cuda@11.8
@@ -14,9 +12,7 @@ gcc-env:
     - +cuda
     - cuda_arch=80
 tools:
-  compiler:
-      - toolchain: gcc
-        spec: gcc@11
+  compiler: [gcc]
   unify: true
   specs:
   - cmake

@@ -1,3 +1,2 @@
 gcc:
-  specs:
-  - gcc@10.2
+  version: "10.2"
