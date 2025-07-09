@@ -1,9 +1,5 @@
 full-env:
-  compiler:
-  - toolchain: gcc
-    spec: gcc@11
-  - toolchain: gcc
-    spec: gcc@12
+  compiler: [gcc]
   unify: when_possible
   specs:
   - osu-micro-benchmarks@5.9
@@ -20,9 +16,7 @@ full-env:
   views:
     default:
 defaults-env:
-  compiler:
-  - toolchain: gcc
-    spec: gcc@11
+  compiler: [gcc]
   specs:
   - tree
   # assert variants=[]
@@ -31,9 +25,7 @@ defaults-env:
   # assert packages=[]
   # assert view=True
 defaults-env-mpi-nogpu:
-  compiler:
-  - toolchain: gcc
-    spec: gcc@11
+  compiler: [gcc]
   specs:
   - tree
   mpi:

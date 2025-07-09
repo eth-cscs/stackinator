@@ -1,9 +1,4 @@
-bootstrap:
-  spec: gcc@11
 gcc:
-  specs:
-  - gcc@11
+  version: "11"
 llvm:
-  requires: gcc@11
-  specs:
-  - llvm@13
+  version: "13"

@@ -59,37 +59,34 @@ version: 2
 
 Take an example configuration:
 ```yaml title="compilers.yaml"
-bootstrap:
-  spec: gcc@11
 gcc:
-  specs:
-  - gcc@11
+  version: "13"
 llvm:
-  requires: gcc@11
-  specs:
-  - nvhpc@21.7
-  - llvm@14
+  version: "16"
+nvhpc:
+  version: "25.1"
 ```
+
+!!! warning
+    The version must be a string in quotes, i.e. `"13"` not `13`.
 
 The compilers are built in multiple stages:
 
-1. *bootstrap*: A bootstrap gcc compiler is built using the system compiler (currently gcc 4.7.5).
-    * `gcc:specs`: single spec of the form `gcc@version`.
-    * The selected version should have full support for the target architecture in order to build optimised gcc toolchains in step 2.
-2. *gcc*: The bootstrap compiler is then used to build the gcc version(s) provided by the stack.
-    * `gcc:specs`: A list of _at least one_ of the specs of the form `gcc@version`.
-3. *llvm*: (optional) The nvhpc and/or llvm toolchains are built using one of the gcc toolchains installed in step 2.
-    * `llvm:specs`: a list of specs of the form `nvhpc@version` or `llvm@version`.
-    * `llvm:requires`: the version of gcc from step 2 that is used to build the llvm compilers.
+1. *gcc*: gcc is built using the system compiler.
+    * `gcc:version`: The version of gcc
+1. *llvm*: (optional) The llvm toolchain is built using the gcc toolchain installed in step 1.
+    * `llvm:version`: The version of llvm
+1. *nvhpc*: (optional) The nvhpc toolchain is built using the gcc toolchain installed in step 1.
+    * `nvhpc:version`: The version of nvhpc
 
-The first two steps are required, so that the simplest stack will provide at least one version of gcc compiled for the target architecture.
+The first step - building `gcc` - is required, so that the simplest stack will provide at least one version of gcc compiled for the target architecture.
 
 !!! note
     Don't provide full specs, because the tool will insert "opinionated" specs for the target node type, for example:
 
-    * `nvhpc@21.7` generates `nvhpc@21.7 ~mpi~blas~lapack`
-    * `llvm@14` generates `llvm@14 +clang targets=x86 ~gold ^ninja@kitware`
-    * `gcc@11` generates `gcc@11 build_type=Release +profiled +strip`
+    * `nvhpc:version:"21.7"` generates `nvhpc@21.7 ~mpi~blas~lapack`
+    * `llvm:version:"14"` generates `llvm@14 +clang ~gold`
+    * `gcc:version:"13"` generates `gcc@13 build_type=Release +profiled +strip +bootstrap`
 
 ## Environments
 
@@ -122,42 +119,24 @@ In the following sections, we will explore each of the environment configuration
 The `compiler` field describes a list compilers to use to build the software stack.
 Each compiler toolchain is specified using toolchain and spec
 
-```yaml title="compile all packages with gcc@11"
-  compiler:
-  - toolchain: gcc
-    spec: gcc@11
+```yaml title="compile all packages with gcc"
+  compiler: [gcc]
 ```
 
 Sometimes two compiler toolchains are required, for example when using the `nvhpc` compilers, there are often dependencies that can't be built using the NVIDIA, or are better being built with GCC (for example `cmake`, `perl` and `netcdf-c`).
 The example below uses the `nvhpc` compilers with `gcc@11`.
 
-```yaml title="compile all packages with gcc@11"
-  compiler:
-  - toolchain: gcc
-    spec: gcc@11
-  - toolchain: llvm
-    spec: nvhpc@22.7
+```yaml title="compile all packages with gcc and nvhpc"
+  compiler: [gcc, nvhpc]
 ```
 
-!!! note
-    If more than one version of gcc has been installed, use the same version that was used to install `nvhpc`.
-
-!!! warning
-    Stackinator does not test or support using two versions of gcc in the same toolchain.
-
-!!! note
-    It is generally advisable not to overspecify compiler version, so whenever possible constrain at most the major version.
-
-The order of the compilers is significant. The first compiler is the default, and the other compilers will only be used to build packages when explicitly added to a spec.
+The order of the compilers is significant.
+The first compiler is the default, and the other compilers will only be used to build packages when explicitly added to a spec.
 For example, in the recipe below, only `netcdf-fortran` will be built with the `nvhpc` toolchain, while the root specs `cmake` and `netcdf-c` and all dependencies will be built using the `gcc` toolchain.
 
 
 ```yaml title="compile all packages with gcc@11"
-  compiler:
-  - toolchain: gcc
-    spec: gcc
-  - toolchain: llvm
-    spec: nvhpc
+  compiler: [gcc, nvhpc]
   specs
   - cmake
   - netcdf-c

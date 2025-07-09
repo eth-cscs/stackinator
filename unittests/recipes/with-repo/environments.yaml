@@ -1,7 +1,5 @@
 gcc-env:
-  compiler:
-      - toolchain: gcc
-        spec: gcc@11.3.0
+  compiler: [gcc]
   unify: true
   specs:
   - osu-micro-benchmarks@5.9
@@ -10,9 +8,7 @@ gcc-env:
     spec: cray-mpich
     gpu: false
 tools:
-  compiler:
-      - toolchain: gcc
-        spec: gcc@11.3.0
+  compiler: [gcc]
   unify: true
   specs:
   - cmake

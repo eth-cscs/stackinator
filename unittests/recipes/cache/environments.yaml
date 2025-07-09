@@ -1,7 +1,5 @@
 gcc-env:
-  compiler:
-      - toolchain: gcc
-        spec: gcc@11
+  compiler: [gcc]
   unify: true
   specs:
   - fmt
@@ -9,9 +7,7 @@ gcc-env:
     spec: cray-mpich
     gpu: false
 tools:
-  compiler:
-      - toolchain: gcc
-        spec: gcc@11
+  compiler: [gcc]
   unify: true
   specs:
   - cmake

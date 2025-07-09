@@ -100,6 +100,16 @@ class Recipe:
 
         with environments_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
+            # add a special environment that installs tools required later in the build process.
+            # currently we only need squashfs for creating the squashfs file.
+            raw["uenv_tools"] = {
+                "compiler": ["gcc"],
+                "mpi": None,
+                "unify": True,
+                "deprecated": False,
+                "specs": ["squashfs"],
+                "views": {},
+            }
             schema.environments_validator.validate(raw)
             self.generate_environment_specs(raw)
 
@@ -119,6 +129,40 @@ class Recipe:
         if packages_path.is_file():
             with packages_path.open() as fid:
                 self.packages = yaml.load(fid, Loader=yaml.Loader)
+
+        self._logger.debug("creating packages")
+
+        # load recipe/packages.yaml -> recipe_packages (if it exists)
+        recipe_packages = {}
+        recipe_packages_path = self.path / "packages.yaml"
+        if recipe_packages_path.is_file():
+            with recipe_packages_path.open() as fid:
+                raw = yaml.load(fid, Loader=yaml.Loader)
+                recipe_packages = raw["packages"]
+
+        # load system/packages.yaml -> system_packages (if it exists)
+        system_packages = {}
+        system_packages_path = self.system_config_path / "packages.yaml"
+        if system_packages_path.is_file():
+            # load system yaml
+            with system_packages_path.open() as fid:
+                raw = yaml.load(fid, Loader=yaml.Loader)
+                system_packages = raw["packages"]
+
+        # extract gcc packages from system packages
+        # remove gcc from packages afterwards
+        if system_packages["gcc"]:
+            gcc_packages = {"gcc": system_packages["gcc"]}
+            del system_packages["gcc"]
+        else:
+            raise RuntimeError("The system packages.yaml file does not provide gcc")
+
+        self.packages = {
+            # the package definition used in every environment
+            "global": {"packages": system_packages | recipe_packages},
+            # the package definition used to build gcc (requires system gcc to bootstrap)
+            "gcc": {"packages": system_packages | gcc_packages | recipe_packages},
+        }
 
         # optional mirror configurtion
         mirrors_path = self.path / "mirrors.yaml"
@@ -305,12 +349,13 @@ class Recipe:
 
         # set constraints that ensure the the main compiler is always used to build packages
         # that do not explicitly request a compiler.
+        # TODO: remove compilers section and make these direct dependencies, i.e %compiler@version
         for name, config in environments.items():
             compilers = config["compiler"]
             if len(compilers) == 1:
                 config["toolchain_constraints"] = []
                 continue
-            requires = [f"%{compilers[0]['spec']}"]
+            requires = [f"%{compilers[0]}"]
             for spec in config["specs"]:
                 if "%" in spec:
                     requires.append(spec)
@@ -391,65 +436,33 @@ class Recipe:
     def generate_compiler_specs(self, raw):
         compilers = {}
 
-        bootstrap = {}
-        bootstrap["packages"] = {
-            "external": [
-                "perl",
-                "m4",
-                "autoconf",
-                "automake",
-                "libtool",
-                "gawk",
-                "python",
-                "texinfo",
-                "gawk",
-            ],
-        }
-        bootstrap_spec = raw["bootstrap"]["spec"]
-        bootstrap["specs"] = [
-            f"{bootstrap_spec} languages=c,c++",
-            "squashfs default_compression=zstd",
-        ]
-        bootstrap["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
-        compilers["bootstrap"] = bootstrap
-
+        cache_exclude = ["cuda", "nvhpc", "perl"]
         gcc = {}
-        gcc["packages"] = {
-            "external": [
-                "perl",
-                "m4",
-                "autoconf",
-                "automake",
-                "libtool",
-                "gawk",
-                "python",
-                "texinfo",
-                "gawk",
-            ],
-        }
+        # gcc["packages"] = {
+        #     "external": [ "perl", "m4", "autoconf", "automake", "libtool", "gawk", "python", "texinfo", "gawk", ],
+        # }
+        gcc_version = raw["gcc"]["version"]
+        gcc["specs"] = [f"gcc@{gcc_version} + bootstrap"]
+        gcc["exclude_from_cache"] = []
 
-        if isinstance(raw["gcc"]["specs"], str):
-            gcc["specs"] = raw["gcc"]["specs"] + " +bootstrap"
-        elif isinstance(raw["gcc"]["specs"], list):
-            gcc["specs"] = list(map(lambda x: x + " +bootstrap", raw["gcc"]["specs"]))
-
-        gcc["requires"] = bootstrap_spec
-        gcc["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
         compilers["gcc"] = gcc
+
+        if raw["nvhpc"] is not None:
+            nvhpc = {}
+            nvhpc_version = raw["nvhpc"]["version"]
+            nvhpc["packages"] = False
+            nvhpc["specs"] = [f"nvhpc@{nvhpc_version} ~mpi~blas~lapack"]
+
+            nvhpc["exclude_from_cache"] = cache_exclude
+            compilers["nvhpc"] = nvhpc
 
         if raw["llvm"] is not None:
             llvm = {}
+            llvm_version = raw["llvm"]["version"]
             llvm["packages"] = False
-            llvm["specs"] = []
-            for spec in raw["llvm"]["specs"]:
-                if spec.startswith("nvhpc"):
-                    llvm["specs"].append(f"{spec}~mpi~blas~lapack")
+            llvm["specs"] = [f"llvm@{llvm_version} +clang ~gold"]
 
-                if spec.startswith("llvm"):
-                    llvm["specs"].append(f"{spec} +clang targets=x86 ~gold ^ninja@kitware")
-
-            llvm["requires"] = raw["llvm"]["requires"]
-            llvm["exclude_from_cache"] = ["cuda", "nvhpc", "perl"]
+            llvm["exclude_from_cache"] = cache_exclude
             compilers["llvm"] = llvm
 
         self.compilers = compilers
@@ -492,11 +505,15 @@ class Recipe:
             spack_version=self.spack_version,
         )
 
-        # generate compilers/<compiler>/spack.yaml
         files["config"] = {}
         for compiler, config in self.compilers.items():
             spack_yaml_template = env.get_template(f"compilers.{compiler}.spack.yaml")
-            files["config"][compiler] = spack_yaml_template.render(config=config)
+            files["config"][compiler] = {}
+            # compilers/<compiler>/spack.yaml
+            files["config"][compiler]["spack.yaml"] = spack_yaml_template.render(config=config)
+            # compilers/gcc/packages.yaml
+            if compiler == "gcc":
+                files["config"][compiler]["packages.yaml"] = yaml.dump(self.packages["gcc"])
 
         return files
 

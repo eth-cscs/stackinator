@@ -16,6 +16,7 @@
             "type" : "object",
             "additionalProperties": false,
             "properties" : {
+                "required": ["repo", "commit", "packages"],
                 "repo": {
                     "type": "string"
                 },
@@ -29,6 +30,7 @@
                 "packages" : {
                     "type" : "object",
                     "additionalProperties": false,
+                    "required": ["repo", "commit"],
                     "properties" : {
                         "repo": {
                             "type": "string"

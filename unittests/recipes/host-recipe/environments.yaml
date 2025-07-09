@@ -1,7 +1,5 @@
 gcc-env:
-  compiler:
-      - toolchain: gcc
-        spec: gcc@11.3.0
+  compiler: [gcc]
   unify: true
   specs:
   - cmake

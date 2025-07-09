@@ -298,24 +298,15 @@ class Builder:
         # that are defined for the target cluster.
         config_path = self.path / "config"
         config_path.mkdir(exist_ok=True)
-        system_config_path = pathlib.Path(recipe.system_config_path)
+        packages_path = config_path / "packages.yaml"
 
-        # Copy the yaml files to the spack config path
-        for f_config in system_config_path.iterdir():
-            # print warning if mirrors.yaml is found
-            if f_config.name in ["mirrors.yaml"]:
-                self._logger.error(
-                    "mirrors.yaml have been removed from cluster configurations,"
-                    " use the --cache option on stack-config instead."
-                )
-                raise RuntimeError("Unsupported mirrors.yaml file in cluster configuration.")
-
-            # construct full file path
-            src = system_config_path / f_config.name
-            dst = config_path / f_config.name
-            # copy only files
-            if src.is_file():
-                shutil.copy(src, dst)
+        # the packages.yaml configuration that will be used when building all environments
+        # - the system packages.yaml with gcc removed
+        # - plus additional packages provided by the recipe
+        global_packages_yaml = yaml.dump(recipe.packages["global"])
+        global_packages_path = config_path / "packages.yaml"
+        with global_packages_path.open("w") as fid:
+            fid.write(global_packages_yaml)
 
         # generate a mirrors.yaml file if build caches have been configured
         if recipe.mirror:
@@ -323,21 +314,6 @@ class Builder:
             self._logger.debug(f"generate the build cache mirror: {dst}")
             with dst.open("w") as fid:
                 fid.write(cache.generate_mirrors_yaml(recipe.mirror))
-
-        # append recipe packages to packages.yaml
-        if recipe.packages:
-            system_packages = system_config_path / "packages.yaml"
-            packages_data = {}
-            if system_packages.is_file():
-                # load system yaml
-                with system_packages.open() as fid:
-                    raw = yaml.load(fid, Loader=yaml.Loader)
-                    packages_data = raw["packages"]
-            packages_data.update(recipe.packages["packages"])
-            packages_yaml = yaml.dump({"packages": packages_data})
-            packages_path = config_path / "packages.yaml"
-            with packages_path.open("w") as fid:
-                fid.write(packages_yaml)
 
         # Add custom spack package recipes, configured via Spack repos.
         # Step 1: copy Spack repos to store_path where they will be used to
@@ -362,7 +338,7 @@ class Builder:
             repos.append(recipe.spack_repo)
 
         # look for repos.yaml file in the system configuration
-        repo_yaml = system_config_path / "repos.yaml"
+        repo_yaml = recipe.system_config_path / "repos.yaml"
         if repo_yaml.exists() and repo_yaml.is_file():
             # open repos.yaml file and reat the list of repos
             with repo_yaml.open() as fid:
@@ -373,7 +349,7 @@ class Builder:
 
             # test each path
             for rel_path in P:
-                repo_path = (system_config_path / rel_path).resolve()
+                repo_path = (recipe.system_config_path / rel_path).resolve()
                 if spack_util.is_repo(repo_path):
                     repos.append(repo_path)
                     self._logger.debug(f"adding site spack package repo: {repo_path}")
@@ -453,11 +429,12 @@ repo:
         with (compiler_path / "Makefile").open(mode="w") as f:
             f.write(compiler_files["makefile"])
 
-        for name, yml in compiler_files["config"].items():
+        for name, files in compiler_files["config"].items():
             compiler_config_path = compiler_path / name
             compiler_config_path.mkdir(exist_ok=True)
-            with (compiler_config_path / "spack.yaml").open(mode="w") as f:
-                f.write(yml)
+            for file, raw in files.items():
+                with (compiler_config_path / file).open(mode="w") as f:
+                    f.write(raw)
 
         # generate the makefile and spack.yaml files that describe the environments
         environment_files = recipe.environment_files
@@ -480,13 +457,12 @@ repo:
 
         # write generate-config/Makefile
         all_compilers = [x for x in recipe.compilers.keys()]
-        release_compilers = [x for x in all_compilers if x != "bootstrap"]
         with (generate_config_path / "Makefile").open("w") as f:
             f.write(
                 make_config_template.render(
                     build_path=self.path.as_posix(),
                     all_compilers=all_compilers,
-                    release_compilers=release_compilers,
+                    release_compilers=all_compilers,
                     verbose=False,
                 )
             )

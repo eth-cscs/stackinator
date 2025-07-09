@@ -1,7 +1,0 @@
-name: example
-store: '/user-environment'
-spack:
-    repo: https://github.com/spack/spack.git
-    commit: v0.22.3
-mirror:
-    enable: false

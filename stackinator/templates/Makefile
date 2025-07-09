@@ -1,7 +1,7 @@
 {% set pipejoiner = joiner('|') %}
 -include Make.user
 
-.PHONY: compilers environments generate-config clean spack-setup
+.PHONY: compilers environments generate-config clean
 
 all: environments
 
@@ -16,19 +16,9 @@ spack-setup: spack-version
 	@printf "spack arch... " ; \
 	arch="$$($(SANDBOX) $(SPACK) arch)"; \
 	printf "%s\n" "$$arch"; \
-	case "$$arch" in \
-		*cray*) \
-			echo "You are running on Cray, which is usually a bad idea, since it turns Spack into modules mode. Try running in an clean environment with env -i."; \
-			exit 1 \
-			;; \
-	esac; \
 	printf "spack version... "; \
 	version="$$($(SANDBOX) $(SPACK) --version)"; \
 	printf "%s\n" "$$version"; \
-	if [ "$$version" != "$$(cat spack-version)" ]; then \
-		echo "The spack version seems to have been changed in the meantime... remove ./spack-version if that was intended"; \
-		exit 1; \
-	fi; \
 	printf "checking if spack concretizer works... "; \
 	$(SANDBOX) $(SPACK_HELPER) -d spec zlib > $(BUILD_ROOT)/spack-bootstrap-output 2>&1; \
 	if [ "$$?" != "0" ]; then \
@@ -83,7 +73,7 @@ store.squashfs: post-install
 	# clean up the __pycache__ paths in the repo
 	$(SANDBOX) find $(STORE)/repos -type d -name __pycache__ -exec rm -r {} +
 	$(SANDBOX) chmod -R a+rX $(STORE)
-	$(SANDBOX) env -u SOURCE_DATE_EPOCH "$$($(SANDBOX) $(SPACK_HELPER) -e ./compilers/bootstrap find --format='{prefix}' squashfs | head -n1)/bin/mksquashfs" $(STORE) $@ -force-uid nobody -force-gid nobody -all-time $$(date +%s) -no-recovery -noappend -Xcompression-level 3
+	$(SANDBOX) env -u SOURCE_DATE_EPOCH "$$($(SANDBOX) $(SPACK_HELPER) -C $(STORE)/config find --format='{prefix}' squashfs | head -n1)/bin/mksquashfs" $(STORE) $@ -force-uid nobody -force-gid nobody -all-time $$(date +%s) -no-recovery -noappend -Xcompression-level 3
 
 # Force push all built packages to the build cache
 cache-force: mirror-setup

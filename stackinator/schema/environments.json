@@ -20,12 +20,8 @@
                  "compiler": {
                      "type": "array",
                      "items": {
-                         "type": "object",
-                         "additionalProperties": false,
-                         "properties": {
-                             "toolchain": {"type": "string"},
-                             "spec":      {"type": "string"}
-                         }
+                         "type": "string",
+                         "enum": ["gcc", "nvhpc", "llvm"]
                      }
                  },
                  "specs": {

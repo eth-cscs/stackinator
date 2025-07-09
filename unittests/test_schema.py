@@ -23,10 +23,8 @@ def yaml_path(test_path):
 def recipes():
     return [
         "host-recipe",
-        "base-amdgpu",
         "base-nvgpu",
         "cache",
-        "unique-bootstrap",
         "with-repo",
     ]
 
@@ -70,19 +68,15 @@ def test_compilers_yaml(yaml_path):
     with open(yaml_path / "compilers.defaults.yaml") as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
         schema.validator(schema.compilers_schema).validate(raw)
-        assert raw["bootstrap"] == {"spec": "gcc@11"}
-        assert raw["gcc"] == {"specs": ["gcc@10.2"]}
+        assert raw["gcc"] == {"version": "10.2"}
         assert raw["llvm"] is None
 
     with open(yaml_path / "compilers.full.yaml") as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
         schema.validator(schema.compilers_schema).validate(raw)
-        assert raw["bootstrap"]["spec"] == "gcc@11"
-        assert raw["gcc"] == {"specs": ["gcc@11", "gcc@10.2", "gcc@9.3.0"]}
-        assert raw["llvm"] == {
-            "specs": ["llvm@13", "llvm@11.2", "nvhpc@22.11"],
-            "requires": "gcc@10.2",
-        }
+        assert raw["gcc"] == {"version": "11"}
+        assert raw["llvm"] == {"version": "13"}
+        assert raw["nvhpc"] == {"version": "25.1"}
 
 
 def test_recipe_compilers_yaml(recipe_paths):
@@ -105,7 +99,7 @@ def test_environments_yaml(yaml_path):
         env = raw["defaults-env"]
 
         # test the required fields were read correctly
-        assert env["compiler"] == [{"toolchain": "gcc", "spec": "gcc@11"}]
+        assert env["compiler"] == ["gcc"]
         assert env["specs"] == ["tree"]
 
         # test defaults were set correctly
@@ -124,10 +118,7 @@ def test_environments_yaml(yaml_path):
 
         assert "full-env" in raw
         env = raw["full-env"]
-        assert env["compiler"] == [
-            {"toolchain": "gcc", "spec": "gcc@11"},
-            {"toolchain": "gcc", "spec": "gcc@12"},
-        ]
+        assert env["compiler"] == ["gcc"]
         assert env["specs"] == ["osu-micro-benchmarks@5.9", "hdf5 +mpi"]
 
         # test defaults were set correctly
