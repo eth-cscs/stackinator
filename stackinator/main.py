@@ -1,6 +1,9 @@
 import argparse
 import logging
+import os
 import sys
+import time
+import tempfile
 import traceback
 
 from . import VERSION, root_logger
@@ -9,9 +12,15 @@ from .recipe import Recipe
 
 
 def generate_logfile_name(name=""):
-    # idstr = f"{time.localtime()}{os.getpid}{platform.uname()}"
-    # return f"log{name}_{hashlib.md5(idstr.encode('utf-8')).hexdigest()}"
-    return "stackinator_log"
+    # name the logfile
+    timestring = time.strftime("%Y%m%d-%H%M%S", time.localtime())
+    logfile = f"log_stackinator_{timestring}"
+
+    # create the path where the log file is stored
+    user_tmpdir = os.path.join(tempfile.gettempdir(), os.getenv("USER") or os.getlogin())
+    os.makedirs(user_tmpdir, exist_ok=True)
+
+    return os.path.join(user_tmpdir, logfile)
 
 
 def configure_logging(logfile):
