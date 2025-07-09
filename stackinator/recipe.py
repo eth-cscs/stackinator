@@ -149,7 +149,7 @@ class Recipe:
                 raw = yaml.load(fid, Loader=yaml.Loader)
                 system_packages = raw["packages"]
 
-        # extract gcc_packages from system packages
+        # extract gcc packages from system packages
         # remove gcc from packages afterwards
         if system_packages["gcc"]:
             gcc_packages = {"gcc": system_packages["gcc"]}
