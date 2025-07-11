@@ -184,22 +184,7 @@ rocm-env:
 
 !!! alps
 
-    As new versions of cray-mpich are released with CPE, they are provided on Alps vClusters, via the Spack package repo in the [CSCS cluster configuration repo](https://github.com/eth-cscs/alps-cluster-config/tree/master/site/repo).
-    The following versions of cray-mpich are currently provided:
-
-    |   cray-mpich  |   CPE     |   notes                  |
-    | :------------ | :-------- | :----------------------- |
-    |  8.1.29       | 24.03     | pre-release  |
-    |  8.1.28       | 23.12     | released 2023-12 **default** |
-    |  8.1.27       | 23.09     | released 2023-09     |
-    |  8.1.26       | 23.06     | released 2023-06     |
-    |  8.1.25       | 23.03     | released 2023-02-26  |
-    |  8.1.24       | 23.02     | released 2023-01-19  |
-    |  8.1.23       | 22.12     | released 2022-11-29  |
-    |  8.1.21.1     | 22.11     | released 2022-10-25  |
-    |  8.1.18.4     | 22.08     | released 2022-07-21  |
-
-    All versions of cray-mpich in the table have been validated on Alps vClusters with Slingshot 11 and libfabric 1.15.2.
+    As new versions of cray-mpich are released with CPE, they are provided on Alps vClusters, via the Spack package repo in the [CSCS cluster configuration repo](https://github.com/eth-cscs/alps-cluster-config/tree/main/site/spack_repo/alps).
 
 !!! note
     The `cray-mpich` spec is added to the list of package specs automatically, and all packages that use the virtual dependency `+mpi` will use this `cray-mpich`.
