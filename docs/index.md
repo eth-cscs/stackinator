@@ -6,26 +6,11 @@ It is used to build software vClusters on Alps infrastructure at CSCS.
 
 ## Getting Stackinator
 
-### From GitHub (recommended)
-
 To get the latest version, download directly from GitHub.
 
 ``` bash
 git clone https://github.com/eth-cscs/stackinator.git
-cd stackinator
-./bootstrap.sh
 ```
-
-!!! warning
-    The `main` branch of Stackinator includes features for Spack v1.0, and may break older recipes.
-
-    For existing recipes use Spack v0.23 and earlier, use [version 5](#versions):
-
-    ```bash
-    git clone --branch=releases/v5 https://github.com/eth-cscs/stackinator.git
-    ```
-
-The `bootstrap.sh` script will install the necessary dependencies, so that Stackinator can be run as a standalone application.
 
 Once installed, add the `bin` sub-directory to your path:
 
@@ -33,17 +18,14 @@ Once installed, add the `bin` sub-directory to your path:
 export PATH="<stackinator-install-path>/bin:$PATH"
 ```
 
-### Using Pip
+!!! info
+    The `main` branch of Stackinator includes features for Spack v1.0, and may break older recipes.
 
-Stackinator is available on PyPi:
+    For existing recipes use Spack v0.23 and earlier, use [version 5](#versions)
 
-```
-pip install stackinator
-```
+### Requirements
 
-!!! warning
-    The PyPi package is only updated for releases, so you will likely be missing the latest and greatest features.
-    Let us know if you need more regular PyPi updates.
+To run stackinator [uv](https://docs.astral.sh/uv/getting-started/installation/) needs to be [installed](https://docs.cscs.ch/guides/terminal/#managing-x86-and-arm).
 
 ### Versions
 
@@ -53,9 +35,6 @@ There will be significant changes introduced in Spack 1.0, which will require ma
 The git branch `releases/v5` will be maintained to provide support for all versions 0.21, 0.22 and 0.23 of Spack and existing recipes.
 
 The `main` branch of Stackinator will contain 
-
-!!! warning
-    After the release of version 5, the main development branch was changed from `master` to `main`.
 
 ## Quick Start
 
