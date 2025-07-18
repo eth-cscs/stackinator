@@ -354,7 +354,7 @@ class Recipe:
                 config["prefer"] = config["prefer"]
             else:
                 compiler = config["compiler"][0]
-                config["prefer"] = [f'%c={compiler}', f'%cxx={compiler}', f'%fortran={compiler}']
+                config["prefer"] = [f"%c={compiler}", f"%cxx={compiler}", f"%fortran={compiler}"]
 
         # An awkward hack to work around spack not supporting creating activation
         # scripts for each file system view in an environment: it only generates them
