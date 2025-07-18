@@ -33,6 +33,19 @@
                      "items": {"type": "string"},
                      "default": []
                  },
+                 "prefer": {
+                    "oneOf": [
+                        {
+                             "type": "array",
+                             "items": {"type": "string"},
+                             "default": []
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                 },
                  "mpi": {
                      "oneOf": [
                          {

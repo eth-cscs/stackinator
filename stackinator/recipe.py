@@ -349,18 +349,12 @@ class Recipe:
 
         # set constraints that ensure the the main compiler is always used to build packages
         # that do not explicitly request a compiler.
-        # TODO: remove compilers section and make these direct dependencies, i.e %compiler@version
         for name, config in environments.items():
-            compilers = config["compiler"]
-            if len(compilers) == 1:
-                config["toolchain_constraints"] = []
-                continue
-            requires = [f"%{compilers[0]}"]
-            for spec in config["specs"]:
-                if "%" in spec:
-                    requires.append(spec)
-
-            config["toolchain_constraints"] = requires
+            if config["prefer"] is not None:
+                config["prefer"] = config["prefer"]
+            else:
+                compiler = config["compiler"][0]
+                config["prefer"] = [f'%c={compiler}', f'%cxx={compiler}', f'%fortran={compiler}']
 
         # An awkward hack to work around spack not supporting creating activation
         # scripts for each file system view in an environment: it only generates them
