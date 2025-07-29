@@ -15,8 +15,8 @@
         "spack" : {
             "type" : "object",
             "additionalProperties": false,
+            "required": ["repo", "commit", "packages"],
             "properties" : {
-                "required": ["repo", "commit", "packages"],
                 "repo": {
                     "type": "string"
                 },
