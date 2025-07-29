@@ -10,6 +10,9 @@ jobs:
     - name: Install uv
       run: |
         curl -LsSf https://astral.sh/uv/install.sh | sh
+    - name: Validate Schemas
+      run: |
+        ./test_schemas.py
     - name: Generic Unittests
       run: |
         ./test_stackinator.py
