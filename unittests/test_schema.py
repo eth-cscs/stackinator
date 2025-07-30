@@ -38,7 +38,7 @@ def test_config_yaml(yaml_path):
     # test that the defaults are set as expected
     with open(yaml_path / "config.defaults.yaml") as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
-        schema.validate(schema.ConfigValidator, raw)
+        schema.ConfigValidator.validate(raw)
         assert raw["store"] == "/user-environment"
         assert raw["spack"]["commit"] is None
         assert raw["modules"] == True  # noqa: E712
@@ -47,7 +47,7 @@ def test_config_yaml(yaml_path):
 
     with open(yaml_path / "config.full.yaml") as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
-        schema.validate(schema.ConfigValidator, raw)
+        schema.ConfigValidator.validate(raw)
         assert raw["store"] == "/alternative-point"
         assert raw["spack"]["commit"] == "6408b51"
         assert raw["modules"] == False  # noqa: E712
@@ -60,20 +60,20 @@ def test_recipe_config_yaml(recipe_paths):
     for p in recipe_paths:
         with open(p / "config.yaml") as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            schema.validate(schema.ConfigValidator, raw)
+            schema.ConfigValidator.validate(raw)
 
 
 def test_compilers_yaml(yaml_path):
     # test that the defaults are set as expected
     with open(yaml_path / "compilers.defaults.yaml") as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
-        schema.validate(schema.CompilersValidator, raw)
+        schema.CompilersValidator.validate(raw)
         assert raw["gcc"] == {"version": "10.2"}
         assert raw["llvm"] is None
 
     with open(yaml_path / "compilers.full.yaml") as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
-        schema.validate(schema.CompilersValidator, raw)
+        schema.CompilersValidator.validate(raw)
         assert raw["gcc"] == {"version": "11"}
         assert raw["llvm"] == {"version": "13"}
         assert raw["nvhpc"] == {"version": "25.1"}
@@ -84,13 +84,13 @@ def test_recipe_compilers_yaml(recipe_paths):
     for p in recipe_paths:
         with open(p / "compilers.yaml") as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            schema.validate(schema.CompilersValidator, raw)
+            schema.CompilersValidator.validate(raw)
 
 
 def test_environments_yaml(yaml_path):
     with open(yaml_path / "environments.full.yaml") as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
-        schema.validate(schema.EnvironmentsValidator, raw)
+        schema.EnvironmentsValidator.validate(raw)
 
         # the defaults-env does not set fields
         # test that they have been set to the defaults correctly
@@ -136,7 +136,7 @@ def test_environments_yaml(yaml_path):
             jsonschema.exceptions.ValidationError,
             match=r"Additional properties are not allowed \('providers' was unexpected",
         ):
-            schema.validate(schema.EnvironmentsValidator, raw)
+            schema.EnvironmentsValidator.validate(raw)
 
 
 def test_recipe_environments_yaml(recipe_paths):
@@ -144,4 +144,4 @@ def test_recipe_environments_yaml(recipe_paths):
     for p in recipe_paths:
         with open(p / "environments.yaml") as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            schema.validate(schema.EnvironmentsValidator, raw)
+            schema.EnvironmentsValidator.validate(raw)

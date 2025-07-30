@@ -49,14 +49,6 @@ def validator(schema):
     return extend_with_default(metaschema)(schema)
 
 
-def validator_from_schemafile(schema_filepath):
-    """
-    Create a new validator class given the schema filepath.
-    See validator function for details.
-    """
-    return validator(json.load(open(schema_filepath)))
-
-
 class ValidationError(jsonschema.ValidationError):
     def __init__(self, name: str, errors: list[jsonschema.ValidationError]):
         assert len(errors) != 0
@@ -68,19 +60,18 @@ class ValidationError(jsonschema.ValidationError):
         super().__init__(message)
 
 
-def validate(schema_validator: jsonschema.protocols.Validator, instance: dict):
-    """
-    Validate an instance of a schema against a given schema_validator class.
+class SchemaValidator:
+    def __init__(self, schema_filepath: pathlib.Path):
+        self._validator = validator(json.load(open(schema_filepath)))
 
-    :raises ValidationError: if the instance is invalid
-    """
-    errors = [error for error in schema_validator.iter_errors(instance)]
+    def validate(self, instance: dict):
+        errors = [error for error in self._validator.iter_errors(instance)]
 
-    if len(errors) != 0:
-        raise ValidationError(schema_validator.schema.get("title", "no-title"), errors)
+        if len(errors) != 0:
+            raise ValidationError(self._validator.schema.get("title", "no-title"), errors)
 
 
-ConfigValidator = validator_from_schemafile(prefix / "schema/config.json")
-CompilersValidator = validator_from_schemafile(prefix / "schema/compilers.json")
-EnvironmentsValidator = validator_from_schemafile(prefix / "schema/environments.json")
-CacheValidator = validator_from_schemafile(prefix / "schema/cache.json")
+ConfigValidator = SchemaValidator(prefix / "schema/config.json")
+CompilersValidator = SchemaValidator(prefix / "schema/compilers.json")
+EnvironmentsValidator = SchemaValidator(prefix / "schema/environments.json")
+CacheValidator = SchemaValidator(prefix / "schema/cache.json")

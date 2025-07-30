@@ -68,7 +68,7 @@ class Recipe:
 
         with compiler_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            schema.validate(schema.CompilersValidator, raw)
+            schema.CompilersValidator.validate(raw)
             self.generate_compiler_specs(raw)
 
         # required environments.yaml file
@@ -89,7 +89,7 @@ class Recipe:
                 "specs": ["squashfs"],
                 "views": {},
             }
-            schema.validate(schema.EnvironmentsValidator, raw)
+            schema.EnvironmentsValidator.validate(raw)
             self.generate_environment_specs(raw)
 
         # optional modules.yaml file
@@ -279,7 +279,7 @@ class Recipe:
                     raise RuntimeError("incompatible uenv recipe version")
 
             # validate config against schema
-            schema.validate(schema.ConfigValidator, raw)
+            schema.ConfigValidator.validate(raw)
             self._config = raw
 
     # In Stackinator 6 we replaced logic required to determine the
