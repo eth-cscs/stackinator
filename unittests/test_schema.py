@@ -41,7 +41,6 @@ def test_config_yaml(yaml_path):
         raw = yaml.load(fid, Loader=yaml.Loader)
         schema.ConfigValidator.validate(raw)
         assert raw["store"] == "/user-environment"
-        assert raw["spack"]["commit"] is None
         assert raw["modules"] == True  # noqa: E712
         assert raw["mirror"] == {"enable": True, "key": None}
         assert raw["description"] is None
@@ -51,6 +50,7 @@ def test_config_yaml(yaml_path):
         schema.ConfigValidator.validate(raw)
         assert raw["store"] == "/alternative-point"
         assert raw["spack"]["commit"] == "6408b51"
+        assert raw["spack"]["packages"]["commit"] == "develop"
         assert raw["modules"] == False  # noqa: E712
         assert raw["mirror"] == {"enable": True, "key": "/home/bob/veryprivate.key"}
         assert raw["description"] == "a really useful environment"
