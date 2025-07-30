@@ -57,17 +57,26 @@ def validator_from_schemafile(schema_filepath):
     return validator(json.load(open(schema_filepath)))
 
 
+class ValidationError(jsonschema.ValidationError):
+    def __init__(self, name: str, errors: [jsonschema.ValidationError]):
+        assert len(errors) != 0
+        messages = [
+            f"- Failed validating '{error.validator}' in {error.json_path} : {error.message}" for error in errors
+        ]
+        message = f"ValidationError for '{name}'\n"
+        message += "\n".join(messages)
+        super().__init__(message)
+
+
 def validate(schema_validator, instance):
     """
     Validate an instance of a schema against a given schema_validator class.
 
-    It prints all errors detected during validation and then it raises the first one.
+    :raises ValidationError: if the instance is invalid
     """
     errors = [error for error in schema_validator.iter_errors(instance)]
     if len(errors) != 0:
-        for error in errors:
-            print(error.json_path, error.message)
-        raise errors[0]
+        raise ValidationError(schema_validator.schema.get("title", "no-title"), errors)
 
 
 ConfigValidator = validator_from_schemafile(prefix / "schema/config.json")
