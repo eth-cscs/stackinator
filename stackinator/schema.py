@@ -1,8 +1,11 @@
 import json
 import pathlib
+from textwrap import dedent
 
 import jsonschema
 import yaml
+
+from . import root_logger
 
 prefix = pathlib.Path(__file__).parent.resolve()
 
@@ -61,17 +64,52 @@ class ValidationError(jsonschema.ValidationError):
 
 
 class SchemaValidator:
-    def __init__(self, schema_filepath: pathlib.Path):
+    def __init__(self, schema_filepath: pathlib.Path, precheck=None):
         self._validator = validator(json.load(open(schema_filepath)))
+        self._precheck = precheck
 
     def validate(self, instance: dict):
+        if self._precheck:
+            self._precheck(instance)
+
         errors = [error for error in self._validator.iter_errors(instance)]
 
         if len(errors) != 0:
             raise ValidationError(self._validator.schema.get("title", "no-title"), errors)
 
 
-ConfigValidator = SchemaValidator(prefix / "schema/config.json")
+def check_config_version(instance):
+    # check config version
+    rversion = instance.get("version", 1)
+    if rversion != 2:
+        if rversion == 1:
+            root_logger.error(
+                dedent("""
+                       The recipe is an old version 1 recipe for Spack v0.23 and earlier.
+                       This version of Stackinator supports Spack 1.0, and has deprecated support for Spack v0.23.
+                       Use version 5 of stackinator, which can be accessed via the releases/v5 branch:
+                       git switch releases/v5
+
+                       If this recipe is to be used with Spack 1.0, then please add the field 'version: 2' to
+                       config.yaml in your recipe.
+
+                       For more information: https://eth-cscs.github.io/stackinator/recipes/#configuration
+                       """)
+            )
+            raise RuntimeError("incompatible uenv recipe version")
+        else:
+            root_logger.error(
+                dedent(f"""
+                       The config.yaml file sets an unknown recipe version={rversion}.
+                       This version of Stackinator supports version 2 recipes.
+
+                       For more information: https://eth-cscs.github.io/stackinator/recipes/#configuration
+                       """)
+            )
+            raise RuntimeError("incompatible uenv recipe version")
+
+
+ConfigValidator = SchemaValidator(prefix / "schema/config.json", check_config_version)
 CompilersValidator = SchemaValidator(prefix / "schema/compilers.json")
 EnvironmentsValidator = SchemaValidator(prefix / "schema/environments.json")
 CacheValidator = SchemaValidator(prefix / "schema/cache.json")
