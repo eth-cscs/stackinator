@@ -1,6 +1,10 @@
 name: arbor
 spack:
-  commit: releases/v0.21
+  commit: releases/v1.0
   repo: https://github.com/spack/spack.git
+  packages:
+    commit: releases/v2025.07
+    repo: https://github.com/spack/spack-packages.git
 store: /user-environment
 description: The Arbor neuroscience simulation package and its dependencies for multicore systems.
+version: 2
