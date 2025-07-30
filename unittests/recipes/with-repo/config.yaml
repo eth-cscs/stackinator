@@ -3,3 +3,4 @@ store: '/user-environment'
 spack:
     repo: https://github.com/spack/spack.git
     commit: v21.0
+version: 2

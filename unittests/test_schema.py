@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import pathlib
+from textwrap import dedent
 
 import jsonschema
 import pytest
@@ -53,6 +54,16 @@ def test_config_yaml(yaml_path):
         assert raw["modules"] == False  # noqa: E712
         assert raw["mirror"] == {"enable": True, "key": "/home/bob/veryprivate.key"}
         assert raw["description"] == "a really useful environment"
+
+    # unsupported old version
+    with pytest.raises(RuntimeError, match="incompatible uenv recipe version"):
+        config = dedent("""
+        name: cuda-env
+        spack:
+            repo: https://github.com/spack/spack.git
+        """)
+        raw = yaml.load(config, Loader=yaml.Loader)
+        schema.ConfigValidator.validate(raw)
 
 
 def test_recipe_config_yaml(recipe_paths):

@@ -12,3 +12,4 @@ spack:
     #enable: True
 # default True
 #modules: True
+version: 2
