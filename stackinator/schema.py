@@ -58,7 +58,7 @@ class ValidationError(jsonschema.ValidationError):
         messages = [
             f"- Failed validating '{error.validator}' in {error.json_path} : {error.message}" for error in errors
         ]
-        message = f"ValidationError for '{name}'\n"
+        message = f"ValidationError in '{name}'\n"
         message += "\n".join(messages)
         super().__init__(message)
 
