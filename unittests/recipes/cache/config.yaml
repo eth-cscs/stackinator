@@ -2,7 +2,10 @@ name: cached-example
 store: '/user-environment'
 spack:
   repo: https://github.com/spack/spack.git
-  commit: 6408b51
+  commit: releases/v1.0
+  packages:
+    repo: https://github.com/spack/spack-packages.git
+    commit: releases/v2025.07
 mirror:
   key: /scratch/e1000/bcumming/secret/spack-key.gpg
   enable: true
