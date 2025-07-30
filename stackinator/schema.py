@@ -58,7 +58,7 @@ def validator_from_schemafile(schema_filepath):
 
 
 class ValidationError(jsonschema.ValidationError):
-    def __init__(self, name: str, errors: [jsonschema.ValidationError]):
+    def __init__(self, name: str, errors: list[jsonschema.ValidationError]):
         assert len(errors) != 0
         messages = [
             f"- Failed validating '{error.validator}' in {error.json_path} : {error.message}" for error in errors
@@ -68,13 +68,14 @@ class ValidationError(jsonschema.ValidationError):
         super().__init__(message)
 
 
-def validate(schema_validator, instance):
+def validate(schema_validator: jsonschema.protocols.Validator, instance: dict):
     """
     Validate an instance of a schema against a given schema_validator class.
 
     :raises ValidationError: if the instance is invalid
     """
     errors = [error for error in schema_validator.iter_errors(instance)]
+
     if len(errors) != 0:
         raise ValidationError(schema_validator.schema.get("title", "no-title"), errors)
 
