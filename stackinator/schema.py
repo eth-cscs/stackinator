@@ -79,7 +79,6 @@ class SchemaValidator:
 
 
 def check_config_version(instance):
-    # check config version
     rversion = instance.get("version", 1)
     if rversion != 2:
         if rversion == 1:
