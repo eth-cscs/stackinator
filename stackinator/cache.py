@@ -12,7 +12,7 @@ def configuration_from_file(file, mount):
         raw = yaml.load(fid, Loader=yaml.Loader)
 
         # validate the yaml
-        schema.cache_validator.validate(raw)
+        schema.validate(schema.CacheValidator, raw)
 
         # verify that the root path exists
         path = pathlib.Path(os.path.expandvars(raw["root"]))

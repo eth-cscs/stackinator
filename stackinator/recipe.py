@@ -89,7 +89,7 @@ class Recipe:
 
         with compiler_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            schema.compilers_validator.validate(raw)
+            schema.validate(schema.CompilersValidator, raw)
             self.generate_compiler_specs(raw)
 
         # required environments.yaml file
@@ -110,7 +110,7 @@ class Recipe:
                 "specs": ["squashfs"],
                 "views": {},
             }
-            schema.environments_validator.validate(raw)
+            schema.validate(schema.EnvironmentsValidator, raw)
             self.generate_environment_specs(raw)
 
         # optional modules.yaml file
@@ -269,7 +269,7 @@ class Recipe:
 
         with config_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            schema.config_validator.validate(raw)
+            schema.validate(schema.ConfigValidator, raw)
             self._config = raw
 
     # In Stackinator 6 we replaced logic required to determine the
