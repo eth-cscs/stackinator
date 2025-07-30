@@ -1,5 +1,6 @@
 import copy
 import pathlib
+from textwrap import dedent
 
 import jinja2
 import yaml
@@ -50,28 +51,6 @@ class Recipe:
 
         # required config.yaml file
         self.config = self.path / "config.yaml"
-
-        # check the version of the recipe
-        if self.config["version"] != 2:
-            rversion = self.config["version"]
-            if rversion == 1:
-                self._logger.error(
-                    "\nThe recipe is an old version 1 recipe for Spack v0.23 and earlier.\n"
-                    "This version of Stackinator supports Spack 1.0, and has deprecated support for Spack v0.23.\n"
-                    "Use version 5 of stackinator, which can be accessed via the releases/v5 branch:\n"
-                    "    git switch releases/v5\n\n"
-                    "If this recipe is to be used with Spack 1.0, then please add the field 'version: 2' to\n"
-                    "config.yaml in your recipe.\n\n"
-                    "For more information: https://eth-cscs.github.io/stackinator/recipes/#configuration\n"
-                )
-                raise RuntimeError("incompatible uenv recipe version")
-            else:
-                self._logger.error(
-                    f"\nThe config.yaml file sets an unknown recipe version={rversion}.\n"
-                    "This version of Stackinator supports version 2 recipes.\n\n"
-                    "For more information: https://eth-cscs.github.io/stackinator/recipes/#configuration\n"
-                )
-                raise RuntimeError("incompatible uenv recipe version")
 
         # override the mount point if defined as a CLI argument
         if args.mount:
@@ -269,6 +248,37 @@ class Recipe:
 
         with config_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
+
+            # check config version
+            rversion = raw.get("version", 1)
+            if rversion != 2:
+                if rversion == 1:
+                    self._logger.error(
+                        dedent("""
+                               The recipe is an old version 1 recipe for Spack v0.23 and earlier.
+                               This version of Stackinator supports Spack 1.0, and has deprecated support for Spack v0.23.
+                               Use version 5 of stackinator, which can be accessed via the releases/v5 branch:
+                               git switch releases/v5
+
+                               If this recipe is to be used with Spack 1.0, then please add the field 'version: 2' to
+                               config.yaml in your recipe.
+
+                               For more information: https://eth-cscs.github.io/stackinator/recipes/#configuration
+                               """)
+                    )
+                    raise RuntimeError("incompatible uenv recipe version")
+                else:
+                    self._logger.error(
+                        dedent(f"""
+                               The config.yaml file sets an unknown recipe version={rversion}.
+                               This version of Stackinator supports version 2 recipes.
+
+                               For more information: https://eth-cscs.github.io/stackinator/recipes/#configuration
+                               """)
+                    )
+                    raise RuntimeError("incompatible uenv recipe version")
+
+            # validate config against schema
             schema.validate(schema.ConfigValidator, raw)
             self._config = raw
 
