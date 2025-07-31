@@ -7,12 +7,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Install uv
-      run: |
-        curl -LsSf https://astral.sh/uv/install.sh | sh
+    - name: Install Tools
+      uses: threeal/pipx-install-action@v1.0.0
+      with:
+        packages: >-
+          uv
+          check-jsonschema
     - name: Validate Schemas
       run: |
-        ./test_schemas.py
+        find stackinator/schema -type f -name "*.json" -print -exec check-jsonschema --check-metaschema {} \;
     - name: Generic Unittests
       run: |
         ./test_stackinator.py
