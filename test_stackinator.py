@@ -9,11 +9,7 @@
 # ]
 # ///
 
-import pathlib
 import sys
-
-prefix = pathlib.Path(__file__).parent.resolve()
-sys.path = [prefix.as_posix()] + sys.path
 
 import pytest  # noqa: E402
 
