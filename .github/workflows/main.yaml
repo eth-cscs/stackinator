@@ -15,7 +15,13 @@ jobs:
           check-jsonschema
     - name: Validate Schemas
       run: |
-        find stackinator/schema -type f -name "*.json" -print -exec check-jsonschema --check-metaschema {} \;
+        errors=0
+        for schema in `find stackinator/schema -type f -name "*.json"`; do
+          echo $schema
+          check-jsonschema --check-metaschema $schema
+          errors=$(($errors + $?))
+        done
+        exit $errors
     - name: Generic Unittests
       run: |
         ./test_stackinator.py
