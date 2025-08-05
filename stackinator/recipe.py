@@ -1,5 +1,6 @@
 import copy
 import pathlib
+import re
 
 import jinja2
 import yaml
@@ -325,10 +326,19 @@ class Recipe:
                 mpi_gpu = mpi["gpu"]
                 if mpi_spec:
                     try:
+                        # Version must be first component in spec, 
                         mpi_impl, mpi_ver = mpi_spec.strip().split(sep="@", maxsplit=1)
+                        try:
+                            mpi_ver, mpi_compiler = mpi_ver.strip().split(sep="%", maxsplit=1)
+                        except ValueError:
+                            mpi_compiler = None
                     except ValueError:
                         mpi_impl = mpi_spec.strip()
                         mpi_ver = None
+                        try:
+                            mpi_ver, mpi_compiler = mpi_spec.strip().split(sep="%", maxsplit=1)
+                        except ValueError:
+                            mpi_compiler = None
 
                     if mpi_impl in Recipe.valid_mpi_specs:
                         default_ver, options = Recipe.valid_mpi_specs[mpi_impl]
@@ -337,11 +347,9 @@ class Recipe:
                         else:
                             version_opt = f"@{default_ver}" if default_ver else ""
 
-                        spec = f"{mpi_impl}{version_opt} {options or ''}".strip()
-
-                        if mpi_gpu:
-                            spec = f"{spec} +{mpi_gpu}"
-
+                        gpu_variant = f'+{mpi_gpu}' if mpi_gpu else ''
+                        compiler = f'%{mpi_compiler}' if mpi_compiler else ''
+                        spec = f"{mpi_impl}{version_opt} {gpu_variant} {options or ''} {compiler}".strip()
                         environments[name]["specs"].append(spec)
                     else:
                         # TODO: Create a custom exception type
@@ -355,7 +363,7 @@ class Recipe:
             if len(compilers) == 1:
                 config["toolchain_constraints"] = []
                 continue
-            requires = [f"%{compilers[0]}"]
+            requires = [f"%[when=%c]c={compilers[0]} %[when=%cxx]cxx={compilers[0]} %[when=%fortran]fortran={compilers[0]}"]
             for spec in config["specs"]:
                 if "%" in spec:
                     requires.append(spec)
@@ -438,9 +446,6 @@ class Recipe:
 
         cache_exclude = ["cuda", "nvhpc", "perl"]
         gcc = {}
-        # gcc["packages"] = {
-        #     "external": [ "perl", "m4", "autoconf", "automake", "libtool", "gawk", "python", "texinfo", "gawk", ],
-        # }
         gcc_version = raw["gcc"]["version"]
         gcc["specs"] = [f"gcc@{gcc_version} + bootstrap"]
         gcc["exclude_from_cache"] = []

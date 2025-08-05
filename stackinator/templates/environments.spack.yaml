@@ -11,11 +11,10 @@ spack:
 {% for spec in config.specs %}
   - '{{ spec }}'
 {% endfor %}
+{% if config.toolchain_constraints or config.variants %}
   packages:
-    all:
-{% set separator = joiner(', ') %}
-      compiler: [{% for c in config.compiler %}{{ separator() }}'{{ c.spec }}'{% endfor %}]
 {% if config.toolchain_constraints %}
+    all:
       require:
 {% set separator = joiner(', ') %}
       - one_of: [{% for c in config.toolchain_constraints %}{{ separator() }}'{{ c }}'{% endfor %}]
@@ -24,6 +23,7 @@ spack:
 {% set separator = joiner(', ') %}
       variants: [{% for v in config.variants %}{{ separator() }}'{{ v }}'{% endfor %}]
     {% endif %}
+{% endif %}
     {% if config.mpi.spec %}
     mpi:
       require: '{{ config.mpi.spec }}'
