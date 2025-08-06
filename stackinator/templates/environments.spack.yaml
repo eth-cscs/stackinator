@@ -11,7 +11,7 @@ spack:
 {% for spec in config.specs %}
   - '{{ spec }}'
 {% endfor %}
-{% if config.toolchain_constraints or config.variants or config.mpi.spec %}
+{% if config.prefer or config.variants or config.mpi.spec %}
   packages:
 {% if config.prefer or config.variants %}
     all:
