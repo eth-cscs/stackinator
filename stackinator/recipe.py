@@ -349,18 +349,18 @@ class Recipe:
 
         # set constraints that ensure the the main compiler is always used to build packages
         # that do not explicitly request a compiler.
-        # TODO: remove compilers section and make these direct dependencies, i.e %compiler@version
         for name, config in environments.items():
-            compilers = config["compiler"]
-            if len(compilers) == 1:
-                config["toolchain_constraints"] = []
-                continue
-            requires = [f"%{compilers[0]}"]
-            for spec in config["specs"]:
-                if "%" in spec:
-                    requires.append(spec)
-
-            config["toolchain_constraints"] = requires
+            # if the recipe provided no "prefer" settings, provide a default one that
+            # nudges Spack towards using the first compiler (we don't think that this actually
+            # has much effect).
+            # With this set, the user can the customise the compiler to use as on a package spec, e.g.
+            #   hdf5+mpi+fortran %fortran=nvhpc
+            # Which will compile the upstream MPI with nvfortran, as well as downstream dependendencies.
+            if config["prefer"] is None:
+                compiler = config["compiler"][0]
+                config["prefer"] = [
+                    f"%[when=%c] c={compiler} %[when=%cxx] cxx={compiler} %[when=%fortran] fortran={compiler}"
+                ]
 
         # An awkward hack to work around spack not supporting creating activation
         # scripts for each file system view in an environment: it only generates them
