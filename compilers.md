@@ -1,3 +1,31 @@
+## proposal
+
+Generate: `spack:packages:all:prefer: ['%[when=%c] c=[{compilers[0]}] %[when=%cxx] cxx={compilers[0]} %[when=%fortran] fortran={compilers[0]}']`
+
+The user can then manually customise specs, e.g.  `%fortran=nvhpc`, on a per-package basis.
+
+This approach is a little ad-hoc, but gets the job done for now.
+
+For a future change, I would propose adding a new `toolchain` field to the field that lets the recipe author provide a specific toolchain that would be implemented as a Spack toolchain or using a `require` 
+
+```
+default:
+  compiler: [gcc, nvhpc]
+  toolchain:
+    c: gcc
+    cxx: gcc
+    fortran: nvhpc
+  mpi:
+    spec: cray-mpich@8.1.30
+    gpu: cuda
+  specs:
+    ...
+```
+
+By not using "spack syntax" for the `toolchain` spec, we would have the freedom to generate an elaborate `require` statement, or create a proper `toolchain`.
+
+## working
+
 TODO:
 - remove the requirement (which is overly broad and blocks us from using `requires` below)
     - link: [github.com/eth-cscs/alps-cluster-config](https://github.com/eth-cscs/alps-cluster-config/blob/main/site/spack_repo/alps/packages/cray_mpich/package.py#L80-L85)

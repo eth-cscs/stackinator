@@ -358,7 +358,9 @@ class Recipe:
             # Which will compile the upstream MPI with nvfortran, as well as downstream dependendencies.
             if config["prefer"] is None:
                 compiler = config["compiler"][0]
-                config["prefer"] = [f"%[when=%c] c={compiler} %[when=%cxx] cxx={compiler} %[when=%fortran] fortran={compiler}"]
+                config["prefer"] = [
+                    f"%[when=%c] c={compiler} %[when=%cxx] cxx={compiler} %[when=%fortran] fortran={compiler}"
+                ]
 
         # An awkward hack to work around spack not supporting creating activation
         # scripts for each file system view in an environment: it only generates them
