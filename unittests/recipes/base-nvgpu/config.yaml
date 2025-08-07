@@ -5,3 +5,4 @@ spack:
     commit: 6408b51
 mirror:
     enable: false
+version: 2

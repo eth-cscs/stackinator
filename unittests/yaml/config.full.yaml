@@ -8,3 +8,4 @@ mirror:
     enable: True
 modules: False
 description: "a really useful environment"
+version: 2
