@@ -317,7 +317,7 @@ class Builder:
 
         packages_data = {}
         # append network packages to packages.yaml
-        network_config_path = system_config_path / "network.yaml"
+        network_config_path = recipe.system_config_path / "network.yaml"
         if not network_config_path.is_file():
             raise FileNotFoundError(f"The network configuration file '{network_config_path}' does not exist")
         with network_config_path.open() as fid:
@@ -326,13 +326,13 @@ class Builder:
 
         # append recipe packages to packages.yaml
         if recipe.packages:
-            system_packages = system_config_path / "packages.yaml"
+            system_packages = recipe.system_config_path / "packages.yaml"
             if system_packages.is_file():
                 # load system yaml
                 with system_packages.open() as fid:
                     raw = yaml.load(fid, Loader=yaml.Loader)
                     packages_data.update(raw["packages"])
-            packages_data.update(recipe.packages["packages"])
+            packages_data.update(recipe.packages["global"]["packages"])
             packages_yaml = yaml.dump({"packages": packages_data})
             packages_path = config_path / "packages.yaml"
             with packages_path.open("w") as fid:
