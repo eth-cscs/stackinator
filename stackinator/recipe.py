@@ -308,7 +308,10 @@ class Recipe:
             if "mpi" not in config:
                 environments[name]["mpi"] = {"spec": None, "gpu": None, "network": {"spec": None}}
 
-            if "network" not in config["mpi"]:
+            if config["mpi"] is None:
+                environments[name]["mpi"] = {"spec": None, "gpu": None, "network": {"spec": ""}}
+
+            elif "network" not in config["mpi"]:
                 environments[name]["mpi"]["network"] = {"spec": ""}
 
         # we have not loaded the system configs yet, so mpi information will be generated
