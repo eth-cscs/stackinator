@@ -3,11 +3,12 @@
 Spack stacks are built on bare-metal clusters using a minimum of dependencies from the underlying system.
 A cluster configuration is a directory with the following structure:
 
+TODO: document layout of the `network.yaml` file
+
 ```
 /path/to/cluster/configuration
-├─ compilers.yaml   # system compiler
 ├─ packages.yaml    # external system packages
-├─ concretiser.yaml
+├─ network.yaml     # configuration options for network libraries
 └─ repos.yaml       # optional reference to additional site packages
 ```
 
@@ -51,9 +52,8 @@ This is designed to make it encourage putting cluster definitions and the site d
 ```
 /path/to/cluster-configs
 ├─ my_cluster
-│   ├─ compilers.yaml
 │   ├─ packages.yaml
-│   ├─ concretiser.yaml
+│   ├─ network.yaml
 │   └─ repos.yaml    # refers to ../site/repo
 └─ site
    └─ repo           # the site wide repo

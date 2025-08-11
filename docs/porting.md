@@ -98,7 +98,10 @@ Because of this, the compiler description is greatly streamlined.
           version: "25.1"
         ```
 
+[](){#ref-porting-network}
 ## `environments.yaml`
+
+TODO: document `mpi` -> `network` field.
 
 The main change in `environments.yaml` is how the compiler toolchain is specified.
 The compilers are provided as a list, without version information.
