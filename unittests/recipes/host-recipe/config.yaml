@@ -4,4 +4,4 @@ description: "An example gcc configuration for CPU-only development"
 spack:
   commit: releases/v0.23
   repo: https://github.com/spack/spack.git
-
+version: 2

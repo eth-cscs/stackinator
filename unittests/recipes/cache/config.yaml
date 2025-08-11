@@ -6,3 +6,4 @@ spack:
 mirror:
   key: /scratch/e1000/bcumming/secret/spack-key.gpg
   enable: true
+version: 2
