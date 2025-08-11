@@ -41,16 +41,61 @@ def test_config_yaml(yaml_path):
         raw = yaml.load(fid, Loader=yaml.Loader)
         schema.ConfigValidator.validate(raw)
         assert raw["store"] == "/user-environment"
+        assert raw["spack"]["commit"] is None
+        assert raw["spack"]["packages"]["commit"] is None
         assert raw["modules"] == True  # noqa: E712
         assert raw["mirror"] == {"enable": True, "key": None}
         assert raw["description"] is None
 
+    # no spack:commit
+    config = dedent("""
+    version: 2
+    name: env-without-spack-commit
+    spack:
+        repo: https://github.com/spack/spack.git
+        packages:
+            repo: https://github.com/spack/spack.git
+            commit: develop-packages
+    """)
+    raw = yaml.load(
+        config,
+        Loader=yaml.Loader,
+    )
+    schema.ConfigValidator.validate(raw)
+    assert raw["spack"]["commit"] is None
+    assert raw["spack"]["packages"]["commit"] is not None
+    assert raw["modules"] == True  # noqa: E712
+    assert raw["mirror"] == {"enable": True, "key": None}
+    assert raw["description"] is None
+
+    # no spack:packages:commit
+    config = dedent("""
+    version: 2
+    name: env-without-spack-packages-commit
+    spack:
+        repo: https://github.com/spack/spack.git
+        commit: develop
+        packages:
+            repo: https://github.com/spack/spack.git
+    """)
+    raw = yaml.load(
+        config,
+        Loader=yaml.Loader,
+    )
+    schema.ConfigValidator.validate(raw)
+    assert raw["spack"]["commit"] == "develop"
+    assert raw["spack"]["packages"]["commit"] is None
+    assert raw["modules"] == True  # noqa: E712
+    assert raw["mirror"] == {"enable": True, "key": None}
+    assert raw["description"] is None
+
+    # full config
     with open(yaml_path / "config.full.yaml") as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
         schema.ConfigValidator.validate(raw)
         assert raw["store"] == "/alternative-point"
         assert raw["spack"]["commit"] == "6408b51"
-        assert raw["spack"]["packages"]["commit"] == "develop"
+        assert raw["spack"]["packages"]["commit"] == "v2025.07.0"
         assert raw["modules"] == False  # noqa: E712
         assert raw["mirror"] == {"enable": True, "key": "/home/bob/veryprivate.key"}
         assert raw["description"] == "a really useful environment"

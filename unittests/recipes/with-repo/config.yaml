@@ -2,8 +2,7 @@ name: with-repo
 store: '/user-environment'
 spack:
     repo: https://github.com/spack/spack.git
-    commit: releases/v1.0
+    commit: v21.0
     packages:
-      repo: https://github.com/spack/spack-packages.git
-      commit: develop
+        repo: https://github.com/spack/spack-packages.git
 version: 2

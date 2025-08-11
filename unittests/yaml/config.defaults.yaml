@@ -3,10 +3,12 @@ name: cuda-env
 #store: /user-environment
 spack:
     repo: https://github.com/spack/spack.git
-    commit: 6408b51
+    # default: None == no `git checkout` command
+    #commit: 6408b51
     packages:
-      repo: https://github.com/spack/spack-packages.git
-      commit: develop
+        repo: https://github.com/spack/spack-packages.git
+        # default: None == no `git checkout` command
+        #commit: 6408b51
 #mirror:
     # default None
     #key: None

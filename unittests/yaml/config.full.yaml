@@ -5,7 +5,7 @@ spack:
     commit: 6408b51
     packages:
         repo: https://github.com/spack/spack-packages.git
-        commit: develop
+        commit: v2025.07.0
 mirror:
     key: /home/bob/veryprivate.key
     enable: True
