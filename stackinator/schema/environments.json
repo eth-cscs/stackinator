@@ -46,22 +46,60 @@
                     ],
                     "default": null
                  },
-                 "mpi": {
+                 "network": {
                      "oneOf": [
                          {
                              "type": "object",
-                             "additionalProperties": false,
-                             "properties": {
-                                 "spec": {"type": "string"},
-                                 "gpu":  {
-                                     "enum": ["cuda", "rocm", null, false],
-                                     "default": null
-                                 }
+                             "cray-mpich": {
+                                 "oneOf": [
+                                     {
+                                         "type": "object",
+                                         "additionalProperties": false,
+                                         "properties": {
+                                             "version": {"type": "string"},
+                                             "gpu":  {
+                                                 "enum": ["cuda", "rocm", null, false],
+                                                 "default": null
+                                             }
+                                         }
+                                     },
+                                     {
+                                         "type": "string"
+                                     },
+                                     {
+                                         "type": "null"
+                                     }
+                                 ],
+                                 "default": null
+                             },
+                             "openmpi": {
+                                 "oneOf": [
+                                     {
+                                         "type": "object",
+                                         "additionalProperties": false,
+                                         "properties": {
+                                             "version": {"type": "string"},
+                                             "gpu":  {
+                                                 "enum": ["cuda", "rocm", null, false],
+                                                 "default": null
+                                             }
+                                         }
+                                     },
+                                     {
+                                         "type": "string"
+                                     }
+                                 ],
+                                 "default": null
+                             },
+                             "specs": {
+                                 "type": "array",
+                                 "items": {"type": "string"},
+                                 "default": []
                              }
                          },
-                         {"enum": [null, false]}
+                         {"type": "null"}
                      ],
-                     "default": null
+                     "defalt": null
                  },
                  "packages": {
                      "type": "array",
@@ -116,6 +154,6 @@
                  }
              }
          }
-     }
+    }
 }
 
