@@ -13,13 +13,36 @@
             "default" : "/user-environment"
         },
         "spack": {
-            "$ref": "#/$defs/git-repo",
+            "type": "object",
             "additionalProperties": false,
-            "required": ["packages"],
+            "required": ["repo", "packages"],
             "properties": {
+                "repo": {
+                    "type": "string"
+                },
+                "commit": {
+                    "oneOf": [
+                        {"type" : "string"},
+                        {"type" : "null"}
+                    ],
+                    "default": null
+                },
                 "packages": {
-                    "$ref": "#/$defs/git-repo",
-                    "additionalProperties": false
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["repo"],
+                    "properties" : {
+                        "repo": {
+                            "type": "string"
+                        },
+                        "commit": {
+                            "oneOf": [
+                                {"type" : "string"},
+                                {"type" : "null"}
+                            ],
+                            "default": null
+                        }
+                    }
                 }
             }
         },
@@ -57,20 +80,6 @@
             "default": 1,
             "minimum": 1,
             "maximum": 2
-        }
-    },
-    "$defs": {
-        "git-repo": {
-            "type": "object",
-            "required": ["repo"],
-            "properties" : {
-                "repo": {
-                    "type": "string"
-                },
-                "commit": {
-                    "type": "string"
-                }
-            }
         }
     }
 }
