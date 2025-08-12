@@ -5,6 +5,10 @@ spack:
     repo: https://github.com/spack/spack.git
     # default: None == no `git checkout` command
     #commit: 6408b51
+    packages:
+        repo: https://github.com/spack/spack-packages.git
+        # default: None == no `git checkout` command
+        #commit: 6408b51
 #mirror:
     # default None
     #key: None
@@ -12,3 +16,4 @@ spack:
     #enable: True
 # default True
 #modules: True
+version: 2

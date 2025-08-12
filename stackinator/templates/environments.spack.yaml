@@ -11,15 +11,14 @@ spack:
 {% for spec in config.specs %}
   - '{{ spec }}'
 {% endfor %}
-{% if config.toolchain_constraints or config.variants or config.mpi.spec %}
+{% if config.prefer or config.variants or config.mpi.spec %}
   packages:
-{% if config.toolchain_constraints or config.variants %}
+{% if config.prefer or config.variants %}
     all:
-{% if config.toolchain_constraints %}
-      require:
+    {% if config.prefer %}
 {% set separator = joiner(', ') %}
-      - one_of: [{% for c in config.toolchain_constraints %}{{ separator() }}'{{ c }}'{% endfor %}]
-{% endif %}
+      prefer: [{% for c in config.prefer %}{{ separator() }}'{{ c }}'{% endfor %}]
+    {% endif %}
     {% if config.variants %}
 {% set separator = joiner(', ') %}
       variants: [{% for v in config.variants %}{{ separator() }}'{{ v }}'{% endfor %}]

@@ -51,28 +51,6 @@ class Recipe:
         # required config.yaml file
         self.config = self.path / "config.yaml"
 
-        # check the version of the recipe
-        if self.config["version"] != 2:
-            rversion = self.config["version"]
-            if rversion == 1:
-                self._logger.error(
-                    "\nThe recipe is an old version 1 recipe for Spack v0.23 and earlier.\n"
-                    "This version of Stackinator supports Spack 1.0, and has deprecated support for Spack v0.23.\n"
-                    "Use version 5 of stackinator, which can be accessed via the releases/v5 branch:\n"
-                    "    git switch releases/v5\n\n"
-                    "If this recipe is to be used with Spack 1.0, then please add the field 'version: 2' to\n"
-                    "config.yaml in your recipe.\n\n"
-                    "For more information: https://eth-cscs.github.io/stackinator/recipes/#configuration\n"
-                )
-                raise RuntimeError("incompatible uenv recipe version")
-            else:
-                self._logger.error(
-                    f"\nThe config.yaml file sets an unknown recipe version={rversion}.\n"
-                    "This version of Stackinator supports version 2 recipes.\n\n"
-                    "For more information: https://eth-cscs.github.io/stackinator/recipes/#configuration\n"
-                )
-                raise RuntimeError("incompatible uenv recipe version")
-
         # override the mount point if defined as a CLI argument
         if args.mount:
             self.config["store"] = args.mount
@@ -89,7 +67,7 @@ class Recipe:
 
         with compiler_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            schema.compilers_validator.validate(raw)
+            schema.CompilersValidator.validate(raw)
             self.generate_compiler_specs(raw)
 
         # required environments.yaml file
@@ -110,7 +88,7 @@ class Recipe:
                 "specs": ["squashfs"],
                 "views": {},
             }
-            schema.environments_validator.validate(raw)
+            schema.EnvironmentsValidator.validate(raw)
             self.generate_environment_specs(raw)
 
         # optional modules.yaml file
@@ -269,7 +247,7 @@ class Recipe:
 
         with config_path.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
-            schema.config_validator.validate(raw)
+            schema.ConfigValidator.validate(raw)
             self._config = raw
 
     # In Stackinator 6 we replaced logic required to determine the
@@ -349,18 +327,18 @@ class Recipe:
 
         # set constraints that ensure the the main compiler is always used to build packages
         # that do not explicitly request a compiler.
-        # TODO: remove compilers section and make these direct dependencies, i.e %compiler@version
         for name, config in environments.items():
-            compilers = config["compiler"]
-            if len(compilers) == 1:
-                config["toolchain_constraints"] = []
-                continue
-            requires = [f"%{compilers[0]}"]
-            for spec in config["specs"]:
-                if "%" in spec:
-                    requires.append(spec)
-
-            config["toolchain_constraints"] = requires
+            # if the recipe provided no "prefer" settings, provide a default one that
+            # nudges Spack towards using the first compiler (we don't think that this actually
+            # has much effect).
+            # With this set, the user can the customise the compiler to use as on a package spec, e.g.
+            #   hdf5+mpi+fortran %fortran=nvhpc
+            # Which will compile the upstream MPI with nvfortran, as well as downstream dependendencies.
+            if config["prefer"] is None:
+                compiler = config["compiler"][0]
+                config["prefer"] = [
+                    f"%[when=%c] c={compiler} %[when=%cxx] cxx={compiler} %[when=%fortran] fortran={compiler}"
+                ]
 
         # An awkward hack to work around spack not supporting creating activation
         # scripts for each file system view in an environment: it only generates them

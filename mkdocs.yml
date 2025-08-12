@@ -9,18 +9,23 @@ nav:
     - 'Cluster Configuration': cluster-config.md
     - 'Interfaces': interfaces.md
     - 'Build Caches': build-caches.md
+    - 'Spack 1.0': porting.md
   - 'Development': development.md
 # - Tutorial: tutorial.md
 theme:
   name: material
   features:
     - content.code.copy
+    - content.code.annotate
     - navigation.tabs
   palette:
     primary: deep orange
     accent: deep orange
+plugins:
+  - autorefs
 markdown_extensions:
   - attr_list # for internal links
+  - md_in_html
   - admonition
   - pymdownx.details
   - pymdownx.superfences
@@ -31,6 +36,8 @@ markdown_extensions:
   - tables
   - toc:
       permalink: true
+  - pymdownx.tabbed:
+      alternate_style: true
 extra_css:
   - stylesheets/extra.css
 repo_url: https://github.com/eth-cscs/stackinator
