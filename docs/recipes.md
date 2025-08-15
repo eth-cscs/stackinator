@@ -162,17 +162,74 @@ serial-env:
   network: null
 ```
 
-The `network` field has separate fields for defining cray-mpich, OpenMPI and additional custom package definitions
+The `network` field has a field for defining MPI and additional custom package definitions
 
 ```yaml title="enironments.yaml overview of options"
 <env-name>:
   network:
-    cray-mpich: # describe cray-mpich (can not be used with openmpi)
-    openmpi:    # describe openmpi    (can not be used with cray-mpich)
+    mpi:        # provide the spec for MPI
     specs:      # additional custom specs for dependencies (libfabric etc)
 ```
 
-#### Configuring MPI
+!!! example "cray-mpich"
+
+    Rely on the defaults for the target system system:
+    ```yaml title="environments.yaml"
+    network:
+      mpi: cray-mpich
+    ```
+
+    Provide a more explicit spec that disables `cuda` (this might be useful on a system where `cuda` support is the default).
+    Also request a specific version of `libfabric`
+    ```yaml title="environments.yaml"
+    network:
+      mpi: cray-mpich@9.0 ~cuda
+      specs: ['libfabric@1.2.2']
+    ```
+
+!!! example "openmpi"
+
+    ```yaml title="environments.yaml"
+    network:
+      mpi: openmpi@5.0.8
+      specs: ['libfabric@1.2.2']
+    ```
+
+It is only possible to have a single MPI implementation in an environment, specified through the `mpi` field.
+Behind the scenes, Stackinator adds a hard requirement that all packages in the environment use the the chosen MPI, to help Spack concretise correctly.
+
+??? tip "but I want to provide cray-mpich and openmpi in my uenv"
+    No problem!
+    Just add two environments in your `environments.yaml` file, for example:
+
+    ```
+    mpich:
+        compilers: [gcc]
+        network:
+          mpi: openmpi@5.0.8
+          specs: ['libfabric@1.2.2']
+        specs:
+          - hdf5+mpi+fortran
+        views:
+          cray-mpich:
+            ... # define
+    openmpi:
+        compilers: [gcc]
+        network:
+          mpi: openmpi@5.0.8
+          specs: ['libfabric@1.2.2']
+        specs: 
+          - hdf5+mpi+fortran
+        views:
+          openmpi:
+            ... # define
+    ```
+
+    The uenv will provide two views for the end user.
+
+!!! question "Why add a `network:specs` field instead of just adding `libfabric` and friends to the main `specs` list"
+    The `network.yaml` file in the cluster config provides a set of default specs for MPI dependencies for each MPI distribution.
+    It is easier to override these by providing a custom field for network dependencies.
 
 !!! alps
 
@@ -182,67 +239,7 @@ The `network` field has separate fields for defining cray-mpich, OpenMPI and add
     As such, it is recommended as an option for applications that have performance issues or bugs with cray-mpich.
 
 
-It is only possible to have one MPI implementation in an environment - choose one of `cray-mpich` or `openmpi`.
 
-Most of the time, you will want to use the "defaults" that are configured in [alps-cluster-config](https://github.com/eth-cscs/alps-cluster-config)
-
-=== "cray-mpich"
-
-    ```yaml
-      network:
-        cray-mpich:
-            gpu: <one of cuda, rocm or null> # default is system specific
-            version: <one of version string or null>
-    ```
-
-=== "openmpi"
-
-    ```yaml
-      network:
-        openmpi:
-            gpu: <one of cuda, rocm or null> # default is system specific
-            version: <one of version string or null>
-    ```
-??? question "What are the defaults?"
-    The defaults are cluster-specific, for example on a system with NVIDIA GPUs, cray-mpich and openmpi will probably be configured to enable `gpu=cuda` by default.
-
-    See the `network.yaml` file in the cluster configuration for the default flags, and for the definitions of the `cray-mpich`, `openmpi`, `libfabric`, and `libcxi` Spack packages.
-
-Possibly changing which version of MPI or whether to enable GPU support, as shown in the following examples:
-
-!!! example "configure with the defaults"
-    === "cray-mpich"
-
-        Choose the default version of cray-mpich with cuda support enabled.
-
-        ```yaml
-        network:
-          cray-mpich:
-            gpu: cuda
-        ```
-
-    === "openmpi"
-
-        Choose the openmpi version 5.0.6 with the default GPU support for the target system.
-
-        ```yaml
-        network:
-          openmpi:
-            version: 5.0.6
-        ```
-
-It is possible to fully customise how MPI is built by providing the full spec instead of setting individual sub-options.
-This is an advanced option, that the majority of uenv authors will not use, because stackinator aims to simplify MPI deployment on HPC Alps.
-
-!!! example "openmpi with a custom spec"
-    Build OpenMPI with a fully customised spec 
-
-    ```yaml
-    openmpi: openmpi@5.0.7 +cray-xpmem +cuda +internal-pmix fabrics=cma,ofi,xpmem schedulers=slurm
-    specs: ['libfabric@2.2 fabrics=cxi,rxm,tcp +debug']
-    ```
-
-    Note that when customising the full spec, you will probably also need to fine tune the network stack dependencies using `specs`.
 
 #### Custimsing network dependences with specs
 

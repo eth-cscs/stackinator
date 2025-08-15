@@ -1,5 +1,6 @@
 import copy
 import pathlib
+import re
 
 import jinja2
 import yaml
@@ -316,32 +317,16 @@ class Recipe:
                 # start with an empty list:
                 specs = []
 
-                mpi = None
-                mpi_name = None
-                if "cray-mpich" in config["network"]:
-                    mpi = config["network"]["cray-mpich"]
-                    mpi_name = "cray-mpich"
-                elif "openmpi" in config["network"]:
-                    if mpi is not None:
-                        raise Exception("only one MPI implementation can be selected in an environment")
-                    mpi = config["network"]["openmpi"]
-                    mpi_name = "openmpi"
-
-                if mpi is not None:
-                    if isinstance(mpi, str):
-                        # a literal spec was provided
-                        specs.append(mpi)
+                if config["network"]["mpi"] is not None:
+                    spec = config["network"]["mpi"].strip()
+                    # find the name of the MPI package
+                    match = re.match(r"^([A-Za-z][A-Za-z0-9_-]*)", spec)
+                    if match:
+                        mpi_name = match.group(1)
+                        if mpi_name not in ("cray-mpich", "openmpi"):
+                            raise Exception(f"{mpi_name} is not a supported MPI version: try one of cray-mpich or openmpi.")
                     else:
-                        # the user has specified a set of configuration options to convert into a spec
-                        if (not self.mpi_templates) and (mpi_name not in self.mpi_templates):
-                            raise Exception(
-                                "the network configuration for the target system has no template for {mpi_name}"
-                            )
-                        template = self.mpi_templates[mpi_name]
-                        gpu = f"+{template['gpu']}" if template["gpu"] else ""
-                        version = f"@{template['version']}" if template["version"] else ""
-                        mpi_spec = template["spec"].format(gpu=gpu, version=version)
-                        specs.append(mpi_spec)
+                        raise Exception(f"{spec} is not a valid MPI spec")
 
                     # if the recipe provided explicit specs for dependencies, inject them:
                     if config["network"]["specs"]:
@@ -350,6 +335,7 @@ class Recipe:
                     elif self.mpi_templates[mpi_name]["specs"]:
                         specs += self.mpi_templates[mpi_name]["specs"]
 
+                    specs.append(spec)
                     environments[name]["mpi"] = mpi_name
                     environments[name]["specs"] += specs
 

@@ -101,10 +101,16 @@ Because of this, the compiler description is greatly streamlined.
 [](){#ref-porting-network}
 ## `environments.yaml`
 
-TODO: document `mpi` -> `network` field.
+There are two significant changes to the `environments.yaml` file that need to be made:
 
-The main change in `environments.yaml` is how the compiler toolchain is specified.
-The compilers are provided as a list, without version information.
+1. the description of MPI and its dependencies
+1. the description of compilers
+
+The good news that in both cases it is simpler than before.
+
+### Specifying compilers
+
+Compilers are now described as a list, without version information.
 
 !!! example "a gcc based uenv"
     This uenv uses `gcc@13` as the only compiler.
@@ -173,6 +179,32 @@ Avoid specifying the compiler to use for `cray-mpich`, because this conflicts wi
       - hdf5+mpi+hl+fortran %fortran=nvhpc
     ```
     This will transitively require that `cray-mpich` be installed using `nvhpc`.
+
+### Specifying MPI, libfabric and friends
+
+In order to make it easier to build cray-mpich, OpenMPI or MPICH, and have greater control over dependencies like libfabric with Spack 1.0, the interface has changed.
+The `mpi:` field is gone, and in its place there is a `network:` field.
+
+!!! example "cray-mpich with cuda support"
+    === "Stackinator 5"
+
+        ```yaml title="environments.yaml"
+        mpi:
+          spec: cray-mpich@8.1.30
+          gpu: cuda
+        ```
+
+    === "Stackinator 6"
+
+        ```yaml title="environments.yaml"
+        network:
+          mpi: cray-mpich@8.1.30 +cuda
+        ```
+
+    If building on a system with NVIDIA GPUs, the `+cuda` option is probably selected by default.
+    See the `mpi:cray-mpich` and `packages:cray-mpich` fields for the `network.yaml` file in the cluster configuration to see the defaults.
+
+
 
 ## `modules.yaml`
 
