@@ -155,12 +155,7 @@ Stackinator can configure MPI (cray-mpich and OpenMPI) its dependencies (libfabr
     The `network` field replaces the `mpi` field in Stackinator 6.
     See the [porting guide][ref-porting-network] for guidance on updating uenv recipes for Spack 1.0.
 
-If the `network` field is not set, or is set to `null`, MPI will not be configured in an environment:
-
-```yaml title="environments.yaml no network/mpi stack"
-serial-env:
-  network: null
-```
+If the `network` field is not set, MPI will not be configured in an environment.
 
 The `network` field has a field for defining MPI and additional custom package definitions
 
@@ -180,7 +175,7 @@ The `network` field has a field for defining MPI and additional custom package d
     ```
 
     Provide a more explicit spec that disables `cuda` (this might be useful on a system where `cuda` support is the default).
-    Also request a specific version of `libfabric`
+    Also request a specific version of
     ```yaml title="environments.yaml"
     network:
       mpi: cray-mpich@9.0 ~cuda
@@ -198,7 +193,7 @@ The `network` field has a field for defining MPI and additional custom package d
 It is only possible to have a single MPI implementation in an environment, specified through the `mpi` field.
 Behind the scenes, Stackinator adds a hard requirement that all packages in the environment use the the chosen MPI, to help Spack concretise correctly.
 
-??? tip "but I want to provide cray-mpich and openmpi in my uenv"
+??? question "How do I provide cray-mpich and openmpi in my uenv?"
     No problem!
     Just add two environments in your `environments.yaml` file, for example:
 
@@ -227,8 +222,11 @@ Behind the scenes, Stackinator adds a hard requirement that all packages in the 
 
     The uenv will provide two views for the end user.
 
-!!! question "Why add a `network:specs` field instead of just adding `libfabric` and friends to the main `specs` list"
-    The `network.yaml` file in the cluster config provides a set of default specs for MPI dependencies for each MPI distribution.
+
+The `network.yaml` file in the cluster config provides a set of default specs for MPI dependencies for each MPI distribution.
+See the [`network.yaml` documenation][ref-cluster-config-network] for more information about how the defaults are set.
+
+??? question "Why add a `network:specs` field instead of just adding `libfabric` and friends to the main `specs` list?"
     It is easier to override these by providing a custom field for network dependencies.
 
 !!! alps
@@ -238,12 +236,6 @@ Behind the scenes, Stackinator adds a hard requirement that all packages in the 
     OpenMPI's support for the Slingshot network is improving, however it may not be optimal for many applications, or requires more effort to fine tune.
     As such, it is recommended as an option for applications that have performance issues or bugs with cray-mpich.
 
-
-
-
-#### Custimsing network dependences with specs
-
-You can provide
 
 ### Specs
 

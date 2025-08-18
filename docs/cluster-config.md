@@ -3,8 +3,6 @@
 Spack stacks are built on bare-metal clusters using a minimum of dependencies from the underlying system.
 A cluster configuration is a directory with the following structure:
 
-TODO: document layout of the `network.yaml` file
-
 ```
 /path/to/cluster/configuration
 ├─ packages.yaml    # external system packages
@@ -27,11 +25,73 @@ stack-config --system ./alps-cluster-config/clariden --recipe <recipe path> --bu
 
 If there are additional system packages that you want to use in a recipe, consider adding a `packages.yaml` file to the recipe, in which you can define additional external packages.
 
-!!! warning
-    Only use external dependencies that are strictly necessary:
-
+!!! warning "Only use external dependencies that are strictly necessary"
     * the more dependencies, the more potential that software stacks will have to be rebuilt when the system is updated, and the more potential there are for breaking changes;
     * the external packages are part of the Spack upstream configuration generated with the Stack - you might be constraining the choices of downstream users.
+
+[](){#ref-cluster-config-network}
+### Configuring MPI and network libraries: `network.yaml`
+
+The `network.yaml` file contains two high level fields:
+
+```yaml title="network.yaml"
+mpi:
+    cray-mpich:
+        specs: [... default packages to add to the network stack ...]
+    openmpi:
+        specs: [... default packages to add to the network stack ...]
+# standard Spack packages.yaml for packages
+packages:
+    libfabric: ...
+    openmpi:   ...
+```
+
+??? example "example `network.yaml` for grace hopper"
+    * The `specs` field for `mpi:cray-mpich:specs` and `mpi:openmpi:specs` fields set different default `libfabric` for the respective MPI distributions.
+    * By default `packages:cray-mpich` and `packages:openmpi` add the `+cuda` variant as a preference to build with cuda support by default on the Grace-Hopper nodes.
+        * This can be overriden by adding `~cuda` to the spec in `network:mpi` in your recipe.
+    * The version of `libfabric` on tye system is `1.22.0`, but it is set as buildable so that it can be build from source by Spack if a different (more recent) verson is selected in a recipe.
+    * A combination of `require` and `prefer` are used in the `packages` definitions to enforce settings and set defaults, respectively.
+
+    ```yaml title="network.yaml"
+    mpi:
+      cray-mpich:
+        specs: ["libfabric@1.22"]
+      openmpi:
+        specs: ["libfabric@2.2.0"]
+    packages:
+      # adding a variant to the variants field of a package
+      #   e.g. packages:openmpi:variants
+      # is not strong enough: if that variant does not exist it simply will be ignored with no error message
+      openmpi:
+        buildable: true
+        require:
+          - 'schedulers=slurm'
+          - 'fabrics=cma,ofi,xpmem'
+          - '+internal-pmix'
+          - '+cray-xpmem'
+        prefer:
+          - '+cuda'
+        variants: []
+      cray-mpich:
+        buildable: true
+        prefer:
+          - '+cuda'
+          - '@8.1.32'
+      libfabric:
+        buildable: true
+        externals:
+        - spec: libfabric@1.22.0 fabrics=cxi,rxm,tcp
+          prefix: /opt/cray/libfabric/1.22.0/
+        version: ["git.v2.2.0=main"]
+        require: fabrics=cxi,rxm,tcp
+      libcxi:
+        version: ["git.be1f7149482581ad589a124e5f6764b9d20d2d45=main"]
+      cxi-driver:
+        version: ["git.08deb056fac4ca8b0d3d39b5f7cc0dad019ee266=main"]
+      cassini-headers:
+        version: ["git.59b6de6a91d9637809677c50cc48b607a91a9acb=main"]
+    ```
 
 ## Site and System Configurations
 
