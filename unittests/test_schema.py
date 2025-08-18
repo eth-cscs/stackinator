@@ -167,7 +167,7 @@ def test_environments_yaml(yaml_path):
         assert env["unify"] == True  # noqa: E712
         assert env["packages"] == []
         assert env["variants"] == []
-        assert env["network"] == {"mpi": None, "specs": []}
+        assert env["network"] == {"mpi": None, "specs": None}
         assert env["views"] == {}
 
         env = raw["defaults-env-mpi-nogpu"]

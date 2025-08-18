@@ -142,7 +142,7 @@ class Recipe:
             # currently we only need squashfs for creating the squashfs file.
             raw["uenv_tools"] = {
                 "compiler": ["gcc"],
-                "network": None,
+                "network": {"mpi": None, "specs": None},
                 "unify": True,
                 "deprecated": False,
                 "specs": ["squashfs"],

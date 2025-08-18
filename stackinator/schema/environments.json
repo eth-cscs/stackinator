@@ -49,7 +49,7 @@
                  "network": {
                      "type": "object",
                      "additionalProperties": false,
-                     "default": {"mpi": null, "specs": []},
+                     "default": {"mpi": null, "specs": null},
                      "properties": {
                          "mpi": {
                              "oneOf": [
@@ -59,9 +59,14 @@
                              "default": null
                          },
                          "specs": {
-                             "type": "array",
-                             "items": {"type": "string"},
-                             "default": []
+                             "oneOf": [
+                                 {
+                                     "type": "array",
+                                     "items": {"type": "string"}
+                                 },
+                                 {"type": "null"}
+                             ],
+                             "default": null
                          }
                      }
                  },
