@@ -4,9 +4,9 @@ full-env:
   specs:
   - osu-micro-benchmarks@5.9
   - hdf5 +mpi
-  mpi:
-    spec: cray-mpich
-    gpu: cuda
+  network:
+    mpi: cray-mpich +cuda
+    specs: ["libfabric@2.2.0"]
   packages:
   - perl
   - git
@@ -21,12 +21,12 @@ defaults-env:
   - tree
   # assert variants=[]
   # assert unify=True
-  # assert mpi=None
+  # assert network={"mpi": None, "specs": []}
   # assert packages=[]
   # assert view=True
 defaults-env-mpi-nogpu:
   compiler: [gcc]
   specs:
   - tree
-  mpi:
-    spec: cray-mpich
+  network:
+    mpi: cray-mpich

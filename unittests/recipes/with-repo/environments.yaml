@@ -4,9 +4,8 @@ gcc-env:
   specs:
   - osu-micro-benchmarks@5.9
   - hdf5 +mpi
-  mpi:
-    spec: cray-mpich
-    gpu: false
+  network:
+    mpi: cray-mpich
 tools:
   compiler: [gcc]
   unify: true

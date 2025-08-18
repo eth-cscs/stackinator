@@ -3,9 +3,9 @@ gcc-env:
   unify: true
   specs:
   - fmt
-  mpi:
-    spec: cray-mpich
-    gpu: false
+  network:
+    mpi: cray-mpich ~cuda
+    specs: []
 tools:
   compiler: [gcc]
   unify: true

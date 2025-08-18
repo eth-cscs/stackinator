@@ -4,9 +4,8 @@ full-env:
   specs:
   - osu-micro-benchmarks@5.9
   - hdf5 +mpi
-  mpi:
-    spec: cray-mpich
-    gpu: cuda
+  network:
+    mpi: cray-mpich +cuda
   packages:
   - perl
   - git

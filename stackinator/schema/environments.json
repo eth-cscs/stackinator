@@ -47,59 +47,23 @@
                     "default": null
                  },
                  "network": {
-                     "oneOf": [
-                         {
-                             "type": "object",
-                             "cray-mpich": {
-                                 "oneOf": [
-                                     {
-                                         "type": "object",
-                                         "additionalProperties": false,
-                                         "properties": {
-                                             "version": {"type": "string"},
-                                             "gpu":  {
-                                                 "enum": ["cuda", "rocm", null, false],
-                                                 "default": null
-                                             }
-                                         }
-                                     },
-                                     {
-                                         "type": "string"
-                                     },
-                                     {
-                                         "type": "null"
-                                     }
-                                 ],
-                                 "default": null
-                             },
-                             "openmpi": {
-                                 "oneOf": [
-                                     {
-                                         "type": "object",
-                                         "additionalProperties": false,
-                                         "properties": {
-                                             "version": {"type": "string"},
-                                             "gpu":  {
-                                                 "enum": ["cuda", "rocm", null, false],
-                                                 "default": null
-                                             }
-                                         }
-                                     },
-                                     {
-                                         "type": "string"
-                                     }
-                                 ],
-                                 "default": null
-                             },
-                             "specs": {
-                                 "type": "array",
-                                 "items": {"type": "string"},
-                                 "default": []
-                             }
+                     "type": "object",
+                     "additionalProperties": false,
+                     "default": {"mpi": null, "specs": []},
+                     "properties": {
+                         "mpi": {
+                             "oneOf": [
+                                 { "type": "string" },
+                                 { "type": "null" }
+                             ],
+                             "default": null
                          },
-                         {"type": "null"}
-                     ],
-                     "defalt": null
+                         "specs": {
+                             "type": "array",
+                             "items": {"type": "string"},
+                             "default": []
+                         }
+                     }
                  },
                  "packages": {
                      "type": "array",
