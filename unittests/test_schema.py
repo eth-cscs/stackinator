@@ -5,7 +5,6 @@ from textwrap import dedent
 
 import jsonschema
 import pytest
-import pprint
 import yaml
 
 import stackinator.schema as schema
@@ -148,10 +147,6 @@ def test_environments_yaml(yaml_path):
     with open(yaml_path / "environments.full.yaml") as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
         schema.EnvironmentsValidator.validate(raw)
-
-        print("===========================================================================")
-        pprint.pp(raw)
-        print("===========================================================================")
 
         # the defaults-env does not set fields
         # test that they have been set to the defaults correctly
