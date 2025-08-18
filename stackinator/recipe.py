@@ -324,7 +324,9 @@ class Recipe:
                     if match:
                         mpi_name = match.group(1)
                         if mpi_name not in ("cray-mpich", "openmpi"):
-                            raise Exception(f"{mpi_name} is not a supported MPI version: try one of cray-mpich or openmpi.")
+                            raise Exception(
+                                f"{mpi_name} is not a supported MPI version: try one of cray-mpich or openmpi."
+                            )
                     else:
                         raise Exception(f"{spec} is not a valid MPI spec")
 
