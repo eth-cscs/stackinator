@@ -335,7 +335,6 @@ class Recipe:
                     elif self.mpi_templates[mpi_name]["specs"]:
                         specs += self.mpi_templates[mpi_name]["specs"]
 
-                    specs.append(spec)
                     environments[name]["mpi"] = mpi_name
                     environments[name]["specs"] += specs
 
