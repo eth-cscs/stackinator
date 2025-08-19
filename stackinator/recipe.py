@@ -121,7 +121,7 @@ class Recipe:
                     mpi_templates = raw["mpi"]
         self.mpi_templates = mpi_templates
 
-        # note that the order that package sets are sepcified in is significant.
+        # note that the order that package sets are specified in is significant.
         # arguments to the right have higher precedence.
         self.packages = {
             # the package definition used in every environment

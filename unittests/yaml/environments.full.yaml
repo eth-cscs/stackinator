@@ -21,7 +21,7 @@ defaults-env:
   - tree
   # assert variants=[]
   # assert unify=True
-  # assert network={"mpi": None, "specs": []}
+  # assert network={"mpi": None, "specs": None}
   # assert packages=[]
   # assert view=True
 defaults-env-mpi-nogpu:

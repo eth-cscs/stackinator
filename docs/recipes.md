@@ -168,14 +168,14 @@ The `network` field has a field for defining MPI and additional custom package d
 
 !!! example "cray-mpich"
 
-    Rely on the defaults for the target system system:
+    Rely on the defaults for the target system:
     ```yaml title="environments.yaml"
     network:
       mpi: cray-mpich
     ```
 
     Provide a more explicit spec that disables `cuda` (this might be useful on a system where `cuda` support is the default).
-    Also request a specific version of
+    Also request a specific version of `libfabric`
     ```yaml title="environments.yaml"
     network:
       mpi: cray-mpich@9.0 ~cuda
@@ -191,7 +191,7 @@ The `network` field has a field for defining MPI and additional custom package d
     ```
 
 It is only possible to have a single MPI implementation in an environment, specified through the `mpi` field.
-Behind the scenes, Stackinator adds a hard requirement that all packages in the environment use the the chosen MPI, to help Spack concretise correctly.
+Behind the scenes, Stackinator adds a hard requirement that all packages in the environment use the chosen MPI, to help Spack concretise correctly.
 
 ??? question "How do I provide cray-mpich and openmpi in my uenv?"
     No problem!
@@ -201,7 +201,7 @@ Behind the scenes, Stackinator adds a hard requirement that all packages in the 
     mpich:
         compilers: [gcc]
         network:
-          mpi: openmpi@5.0.8
+          mpi: cray-mpich
           specs: ['libfabric@1.2.2']
         specs:
           - hdf5+mpi+fortran
@@ -224,7 +224,7 @@ Behind the scenes, Stackinator adds a hard requirement that all packages in the 
 
 
 The `network.yaml` file in the cluster config provides a set of default specs for MPI dependencies for each MPI distribution.
-See the [`network.yaml` documenation][ref-cluster-config-network] for more information about how the defaults are set.
+See the [`network.yaml` documentation][ref-cluster-config-network] for more information about how the defaults are set.
 
 ??? question "Why add a `network:specs` field instead of just adding `libfabric` and friends to the main `specs` list?"
     It is easier to override these by providing a custom field for network dependencies.

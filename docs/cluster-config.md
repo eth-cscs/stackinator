@@ -50,7 +50,7 @@ packages:
     * The `specs` field for `mpi:cray-mpich:specs` and `mpi:openmpi:specs` fields set different default `libfabric` for the respective MPI distributions.
     * By default `packages:cray-mpich` and `packages:openmpi` add the `+cuda` variant as a preference to build with cuda support by default on the Grace-Hopper nodes.
         * This can be overriden by adding `~cuda` to the spec in `network:mpi` in your recipe.
-    * The version of `libfabric` on tye system is `1.22.0`, but it is set as buildable so that it can be build from source by Spack if a different (more recent) verson is selected in a recipe.
+    * The version of `libfabric` on the system is `1.22.0`, but it is set as buildable so that it can be built from source by Spack if a different (more recent) version is selected in a recipe.
     * A combination of `require` and `prefer` are used in the `packages` definitions to enforce settings and set defaults, respectively.
 
     ```yaml title="network.yaml"
