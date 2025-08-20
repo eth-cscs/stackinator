@@ -323,9 +323,10 @@ class Recipe:
                     match = re.match(r"^([A-Za-z][A-Za-z0-9_-]*)", spec)
                     if match:
                         mpi_name = match.group(1)
-                        if mpi_name not in ("cray-mpich", "openmpi"):
+                        supported_mpis = [k for k in self.mpi_templates.keys()]
+                        if mpi_name not in supported_mpis:
                             raise Exception(
-                                f"{mpi_name} is not a supported MPI version: try one of cray-mpich or openmpi."
+                                f"{mpi_name} is not a supported MPI version: try one of {supported_mpis}."
                             )
                     else:
                         raise Exception(f"{spec} is not a valid MPI spec")
