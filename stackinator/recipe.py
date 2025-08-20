@@ -109,10 +109,10 @@ class Recipe:
         # - meta data about mpi
         # - package information for network libraries (libfabric, openmpi, cray-mpich, ... etc)
         network_path = self.system_config_path / "network.yaml"
-        self._logger.debug(f"opening {network_path}")
         network_packages = {}
         mpi_templates = {}
         if network_path.is_file():
+            self._logger.debug(f"opening {network_path}")
             with network_path.open() as fid:
                 raw = yaml.load(fid, Loader=yaml.Loader)
                 if "packages" in raw:
