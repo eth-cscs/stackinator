@@ -231,7 +231,7 @@ See the [`network.yaml` documentation][ref-cluster-config-network] for more info
 
 !!! alps
 
-    The recommended MPI distribution on Alps is `cray-mpich`, as it is the most widely tested MPI for the libfabric/slingshot network.
+    The recommended MPI distribution on Alps is `cray-mpich`, as it is the most widely tested MPI for the libfabric/Slingshot network.
 
     OpenMPI's support for the Slingshot network is improving, however it may not be optimal for many applications, or requires more effort to fine tune.
     As such, it is recommended as an option for applications that have performance issues or bugs with cray-mpich.

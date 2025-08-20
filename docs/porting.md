@@ -201,7 +201,7 @@ The `mpi:` field is gone, and in its place there is a `network:` field.
           mpi: cray-mpich@8.1.30 +cuda
         ```
 
-    If building on a system with NVIDIA GPUs, the `+cuda` option is probably selected by default.
+    If building on a system with NVIDIA GPUs, the `+cuda` option is selected by default.
     See the `mpi:cray-mpich` and `packages:cray-mpich` fields for the `network.yaml` file in the cluster configuration to see the defaults.
 
 

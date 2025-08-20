@@ -46,7 +46,7 @@ packages:
     openmpi:   ...
 ```
 
-??? example "example `network.yaml` for grace hopper"
+??? example "example `network.yaml` for Grace Hopper"
     * The `specs` field for `mpi:cray-mpich:specs` and `mpi:openmpi:specs` fields set different default `libfabric` for the respective MPI distributions.
     * By default `packages:cray-mpich` and `packages:openmpi` add the `+cuda` variant as a preference to build with cuda support by default on the Grace-Hopper nodes.
         * This can be overriden by adding `~cuda` to the spec in `network:mpi` in your recipe.
