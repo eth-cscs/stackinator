@@ -325,9 +325,7 @@ class Recipe:
                         mpi_name = match.group(1)
                         supported_mpis = [k for k in self.mpi_templates.keys()]
                         if mpi_name not in supported_mpis:
-                            raise Exception(
-                                f"{mpi_name} is not a supported MPI version: try one of {supported_mpis}."
-                            )
+                            raise Exception(f"{mpi_name} is not a supported MPI version: try one of {supported_mpis}.")
                     else:
                         raise Exception(f"{spec} is not a valid MPI spec")
 
