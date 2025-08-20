@@ -187,7 +187,7 @@ The `network` field has a field for defining MPI and additional custom package d
     ```yaml title="environments.yaml"
     network:
       mpi: openmpi@5.0.8
-      specs: ['libfabric@1.2.2']
+      specs: ['libfabric@2.2.0']
     ```
 
 It is only possible to have a single MPI implementation in an environment, specified through the `mpi` field.
