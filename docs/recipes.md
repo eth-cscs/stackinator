@@ -100,7 +100,7 @@ To provide a single Spack stack that meets the workflow's needs, we would create
 # A GCC-based programming environment
 prgenv-gnu:
   compiler:   # ... compiler toolchain
-  mpi:        # ... mpi configuration
+  network:    # ... network configuration
   deprecated: # ... whether to allow usage of deprecated packages or not
   unify:      # ... configure Spack concretizer
   specs:      # ... list of packages to install
@@ -146,48 +146,96 @@ For example, in the recipe below, only `netcdf-fortran` will be built with the `
 !!! note
     This approach is typically used to build Fortran applications and packages with one toolchain (e.g. `nvhpc`), and all of the C/C++ dependencies with a different toolchain (e.g. `gcc`).
 
-### MPI
+[](){#ref-recipes-network}
+### MPI and networking
 
-Stackinator can configure cray-mpich (CUDA, ROCM, or non-GPU aware) on a per-environment basis, by setting the `mpi` field in an environment.
+Stackinator can configure MPI (cray-mpich and OpenMPI) its dependencies (libfabric, cxi, etc) through the `network` field.
 
-!!! note
-    Future versions of Stackinator will support OpenMPI, MPICH and MVAPICH when (and if) they develop robust support for HPE SlingShot 11 interconnect.
+!!! note ""
+    The `network` field replaces the `mpi` field in Stackinator 6.
+    See the [porting guide][ref-porting-network] for guidance on updating uenv recipes for Spack 1.0.
 
-If the `mpi` field is not set, or is set to `null`, MPI will not be configured in an environment:
-```yaml title="environments.yaml: no MPI"
-serial-env:
-  mpi: null
-  # ...
+If the `network` field is not set, MPI will not be configured in an environment.
+
+The `network` field has a field for defining MPI and additional custom package definitions
+
+```yaml title="enironments.yaml overview of options"
+<env-name>:
+  network:
+    mpi:        # provide the spec for MPI
+    specs:      # additional custom specs for dependencies (libfabric etc)
 ```
 
-To configure MPI without GPU support, set the `spec` field with an optional version:
-```yaml title="environments.yaml: MPI without GPU support"
-host-env:
-  mpi:
-    spec: cray-mpich@8.1.23
-  # ...
-```
+!!! example "cray-mpich"
 
-GPU-aware MPI can be configured by setting the optional `gpu` field to specify whether to support `cuda` or `rocm` GPUs:
-```yaml title="environments.yaml: GPU aware MPI"
-cuda-env:
-  mpi:
-    spec: cray-mpich
-    gpu: cuda
-  # ...
-rocm-env:
-  mpi:
-    spec: cray-mpich
-    gpu: rocm
-  # ...
-```
+    Rely on the defaults for the target system:
+    ```yaml title="environments.yaml"
+    network:
+      mpi: cray-mpich
+    ```
+
+    Provide a more explicit spec that disables `cuda` (this might be useful on a system where `cuda` support is the default).
+    Also request a specific version of `libfabric`
+    ```yaml title="environments.yaml"
+    network:
+      mpi: cray-mpich@9.0 ~cuda
+      specs: ['libfabric@1.2.2']
+    ```
+
+!!! example "openmpi"
+
+    ```yaml title="environments.yaml"
+    network:
+      mpi: openmpi@5.0.8
+      specs: ['libfabric@2.2.0']
+    ```
+
+It is only possible to have a single MPI implementation in an environment, specified through the `mpi` field.
+Behind the scenes, Stackinator adds a hard requirement that all packages in the environment use the chosen MPI, to help Spack concretise correctly.
+
+??? question "How do I provide cray-mpich and openmpi in my uenv?"
+    No problem!
+    Just add two environments in your `environments.yaml` file, for example:
+
+    ```
+    mpich:
+        compilers: [gcc]
+        network:
+          mpi: cray-mpich
+          specs: ['libfabric@1.2.2']
+        specs:
+          - hdf5+mpi+fortran
+        views:
+          cray-mpich:
+            ... # define
+    openmpi:
+        compilers: [gcc]
+        network:
+          mpi: openmpi@5.0.8
+          specs: ['libfabric@1.2.2']
+        specs: 
+          - hdf5+mpi+fortran
+        views:
+          openmpi:
+            ... # define
+    ```
+
+    The uenv will provide two views for the end user.
+
+
+The `network.yaml` file in the cluster config provides a set of default specs for MPI dependencies for each MPI distribution.
+See the [`network.yaml` documentation][ref-cluster-config-network] for more information about how the defaults are set.
+
+??? question "Why add a `network:specs` field instead of just adding `libfabric` and friends to the main `specs` list?"
+    It is easier to override these by providing a custom field for network dependencies.
 
 !!! alps
 
-    As new versions of cray-mpich are released with CPE, they are provided on Alps vClusters, via the Spack package repo in the [CSCS cluster configuration repo](https://github.com/eth-cscs/alps-cluster-config/tree/main/site/spack_repo/alps).
+    The recommended MPI distribution on Alps is `cray-mpich`, as it is the most widely tested MPI for the libfabric/Slingshot network.
 
-!!! note
-    The `cray-mpich` spec is added to the list of package specs automatically, and all packages that use the virtual dependency `+mpi` will use this `cray-mpich`.
+    OpenMPI's support for the Slingshot network is improving, however it may not be optimal for many applications, or requires more effort to fine tune.
+    As such, it is recommended as an option for applications that have performance issues or bugs with cray-mpich.
+
 
 ### Specs
 
@@ -224,7 +272,7 @@ cuda-env:
     Use `unify:true` when possible, then `unify:when_possible`, and finally `unify:false`.
 
 !!! warning
-    Don't provide a spec for MPI or Compilers, which are configured in the [`mpi:`](recipes.md#mpi) and [`compilers`](recipes.md#compilers) fields respecively.
+    Don't provide a spec for MPI or Compilers, which are configured in the [`network:`][ref-recipes-network] and [`compilers`](recipes.md#compilers) fields respectively.
 
 !!! warning
     Stackinator does not support "spec matrices", and likely won't, because they use multiple compiler toolchains in a manner that is contrary to the Stackinator "keep it simple" principle.

@@ -1,5 +1,6 @@
 import copy
 import pathlib
+import re
 
 import jinja2
 import yaml
@@ -8,16 +9,6 @@ from . import cache, root_logger, schema, spack_util
 
 
 class Recipe:
-    valid_mpi_specs = {
-        "cray-mpich": (None, None),
-        "mpich": ("4.1", "device=ch4 netmod=ofi +slurm"),
-        "mvapich2": (
-            "3.0a",
-            "+xpmem fabrics=ch4ofi ch4_max_vcis=4 process_managers=slurm",
-        ),
-        "openmpi": ("5", "+internal-pmix +legacylaunchers +orterunprefix fabrics=cma,ofi,xpmem schedulers=slurm"),
-    }
-
     @property
     def path(self):
         """the path of the recipe"""
@@ -70,27 +61,6 @@ class Recipe:
             schema.CompilersValidator.validate(raw)
             self.generate_compiler_specs(raw)
 
-        # required environments.yaml file
-        environments_path = self.path / "environments.yaml"
-        self._logger.debug(f"opening {environments_path}")
-        if not environments_path.is_file():
-            raise FileNotFoundError(f"The recipe path '{environments_path}' does not contain environments.yaml")
-
-        with environments_path.open() as fid:
-            raw = yaml.load(fid, Loader=yaml.Loader)
-            # add a special environment that installs tools required later in the build process.
-            # currently we only need squashfs for creating the squashfs file.
-            raw["uenv_tools"] = {
-                "compiler": ["gcc"],
-                "mpi": None,
-                "unify": True,
-                "deprecated": False,
-                "specs": ["squashfs"],
-                "views": {},
-            }
-            schema.EnvironmentsValidator.validate(raw)
-            self.generate_environment_specs(raw)
-
         # optional modules.yaml file
         modules_path = self.path / "modules.yaml"
         self._logger.debug(f"opening {modules_path}")
@@ -135,12 +105,51 @@ class Recipe:
         else:
             raise RuntimeError("The system packages.yaml file does not provide gcc")
 
+        # load the optional network.yaml from system config:
+        # - meta data about mpi
+        # - package information for network libraries (libfabric, openmpi, cray-mpich, ... etc)
+        network_path = self.system_config_path / "network.yaml"
+        network_packages = {}
+        mpi_templates = {}
+        if network_path.is_file():
+            self._logger.debug(f"opening {network_path}")
+            with network_path.open() as fid:
+                raw = yaml.load(fid, Loader=yaml.Loader)
+                if "packages" in raw:
+                    network_packages = raw["packages"]
+                if "mpi" in raw:
+                    mpi_templates = raw["mpi"]
+        self.mpi_templates = mpi_templates
+
+        # note that the order that package sets are specified in is significant.
+        # arguments to the right have higher precedence.
         self.packages = {
             # the package definition used in every environment
-            "global": {"packages": system_packages | recipe_packages},
+            "global": {"packages": system_packages | network_packages | recipe_packages},
             # the package definition used to build gcc (requires system gcc to bootstrap)
             "gcc": {"packages": system_packages | gcc_packages | recipe_packages},
         }
+
+        # required environments.yaml file
+        environments_path = self.path / "environments.yaml"
+        self._logger.debug(f"opening {environments_path}")
+        if not environments_path.is_file():
+            raise FileNotFoundError(f"The recipe path '{environments_path}' does not contain environments.yaml")
+
+        with environments_path.open() as fid:
+            raw = yaml.load(fid, Loader=yaml.Loader)
+            # add a special environment that installs tools required later in the build process.
+            # currently we only need squashfs for creating the squashfs file.
+            raw["uenv_tools"] = {
+                "compiler": ["gcc"],
+                "network": {"mpi": None, "specs": None},
+                "unify": True,
+                "deprecated": False,
+                "specs": ["squashfs"],
+                "views": {},
+            }
+            schema.EnvironmentsValidator.validate(raw)
+            self.generate_environment_specs(raw)
 
         # optional mirror configurtion
         mirrors_path = self.path / "mirrors.yaml"
@@ -292,38 +301,43 @@ class Recipe:
             if ("specs" not in config) or (config["specs"] is None):
                 environments[name]["specs"] = []
 
-            if "mpi" not in config:
-                environments[name]["mpi"] = {"spec": None, "gpu": None}
-
-        # complete configuration of MPI in each environment
+        # Complete configuration of MPI in each environment
+        # this involves generate specs for the chosen MPI implementation
+        # and (optionally) additional dependencies like libfabric, which are
+        # appended to the list of specs in the environment.
         for name, config in environments.items():
-            if config["mpi"]:
-                mpi = config["mpi"]
-                mpi_spec = mpi["spec"]
-                mpi_gpu = mpi["gpu"]
-                if mpi_spec:
-                    try:
-                        mpi_impl, mpi_ver = mpi_spec.strip().split(sep="@", maxsplit=1)
-                    except ValueError:
-                        mpi_impl = mpi_spec.strip()
-                        mpi_ver = None
+            # the "mpi" entry records the name of the MPI implementation used by the environment.
+            # set it to none by default, and have it set if the config["network"] description specifies
+            # an MPI implementation.
+            environments[name]["mpi"] = None
 
-                    if mpi_impl in Recipe.valid_mpi_specs:
-                        default_ver, options = Recipe.valid_mpi_specs[mpi_impl]
-                        if mpi_ver:
-                            version_opt = f"@{mpi_ver}"
-                        else:
-                            version_opt = f"@{default_ver}" if default_ver else ""
+            if config["network"]:
+                # we will build a list of additional specs related to MPI, libfabric, etc to add to the list of specs
+                # in the generated spack.yaml file.
+                # start with an empty list:
+                specs = []
 
-                        spec = f"{mpi_impl}{version_opt} {options or ''}".strip()
-
-                        if mpi_gpu:
-                            spec = f"{spec} +{mpi_gpu}"
-
-                        environments[name]["specs"].append(spec)
+                if config["network"]["mpi"] is not None:
+                    spec = config["network"]["mpi"].strip()
+                    # find the name of the MPI package
+                    match = re.match(r"^([A-Za-z][A-Za-z0-9_-]*)", spec)
+                    if match:
+                        mpi_name = match.group(1)
+                        supported_mpis = [k for k in self.mpi_templates.keys()]
+                        if mpi_name not in supported_mpis:
+                            raise Exception(f"{mpi_name} is not a supported MPI version: try one of {supported_mpis}.")
                     else:
-                        # TODO: Create a custom exception type
-                        raise Exception(f"Unsupported mpi: {mpi_impl}")
+                        raise Exception(f"{spec} is not a valid MPI spec")
+
+                    # if the recipe provided explicit specs for dependencies, inject them:
+                    if config["network"]["specs"]:
+                        specs += config["network"]["specs"]
+                    # otherwise inject dependencies from network.yaml (if they exist)
+                    elif self.mpi_templates[mpi_name]["specs"]:
+                        specs += self.mpi_templates[mpi_name]["specs"]
+
+                    environments[name]["mpi"] = mpi_name
+                    environments[name]["specs"] += specs
 
         # set constraints that ensure the the main compiler is always used to build packages
         # that do not explicitly request a compiler.

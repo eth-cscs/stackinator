@@ -8,9 +8,8 @@ gcc-env:
   - python@3.10
   - tree
   - libtree
-  mpi:
-    spec: cray-mpich
-    gpu: false
+  network:
+    mpi: cray-mpich
   views:
     default:
     run:

@@ -162,12 +162,11 @@ def test_environments_yaml(yaml_path):
         assert env["unify"] == True  # noqa: E712
         assert env["packages"] == []
         assert env["variants"] == []
-        assert env["mpi"] is None
+        assert env["network"] == {"mpi": None, "specs": None}
         assert env["views"] == {}
 
         env = raw["defaults-env-mpi-nogpu"]
-        assert env["mpi"]["spec"] is not None
-        assert env["mpi"]["gpu"] is None
+        assert env["network"]["mpi"] == "cray-mpich"
 
         # the full-env sets all of the fields
         # test that they have been read correctly
@@ -176,11 +175,11 @@ def test_environments_yaml(yaml_path):
         env = raw["full-env"]
         assert env["compiler"] == ["gcc"]
         assert env["specs"] == ["osu-micro-benchmarks@5.9", "hdf5 +mpi"]
+        assert env["network"] == {"mpi": "cray-mpich +cuda", "specs": ["libfabric@2.2.0"]}
 
         # test defaults were set correctly
         assert env["unify"] == "when_possible"
         assert env["packages"] == ["perl", "git"]
-        assert env["mpi"] == {"spec": "cray-mpich", "gpu": "cuda"}
         assert env["variants"] == ["+mpi", "+cuda"]
         assert env["views"] == {"default": None}
 

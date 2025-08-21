@@ -11,7 +11,7 @@ spack:
 {% for spec in config.specs %}
   - '{{ spec }}'
 {% endfor %}
-{% if config.prefer or config.variants or config.mpi.spec %}
+{% if config.prefer or config.variants or config.mpi %}
   packages:
 {% if config.prefer or config.variants %}
     all:
@@ -24,9 +24,9 @@ spack:
       variants: [{% for v in config.variants %}{{ separator() }}'{{ v }}'{% endfor %}]
     {% endif %}
 {% endif %}
-    {% if config.mpi.spec %}
+    {% if config.mpi %}
     mpi:
-      require: '{{ config.mpi.spec }}'
+      require: '{{ config.mpi }}'
     {% endif %}
 {% endif %}
 {% if config.view %}

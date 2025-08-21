@@ -46,22 +46,29 @@
                     ],
                     "default": null
                  },
-                 "mpi": {
-                     "oneOf": [
-                         {
-                             "type": "object",
-                             "additionalProperties": false,
-                             "properties": {
-                                 "spec": {"type": "string"},
-                                 "gpu":  {
-                                     "enum": ["cuda", "rocm", null, false],
-                                     "default": null
-                                 }
-                             }
+                 "network": {
+                     "type": "object",
+                     "additionalProperties": false,
+                     "default": {"mpi": null, "specs": null},
+                     "properties": {
+                         "mpi": {
+                             "oneOf": [
+                                 { "type": "string" },
+                                 { "type": "null" }
+                             ],
+                             "default": null
                          },
-                         {"enum": [null, false]}
-                     ],
-                     "default": null
+                         "specs": {
+                             "oneOf": [
+                                 {
+                                     "type": "array",
+                                     "items": {"type": "string"}
+                                 },
+                                 {"type": "null"}
+                             ],
+                             "default": null
+                         }
+                     }
                  },
                  "packages": {
                      "type": "array",
@@ -116,6 +123,6 @@
                  }
              }
          }
-     }
+    }
 }
 

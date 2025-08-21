@@ -87,7 +87,7 @@ def main():
         )
         return 0
     except Exception as e:
-        root_logger.debug(traceback.format_exc())
+        root_logger.info(traceback.format_exc())
         root_logger.error(str(e))
         root_logger.info(f"see {logfile} for more information")
         return 1
