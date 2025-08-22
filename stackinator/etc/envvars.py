@@ -538,11 +538,11 @@ def meta_impl(args):
         recipe_vars = data["recipe_variables"]
 
         # update the view environment variables by appending variables from the recipe
-        for name, value in recipe_vars["scalar"].items():
-            spack_vars["scalars"][name] = value
-        for name, updates in recipe_vars["list"].items():
-            spack_vars["list"].setdefault(name, [])
-            spack_vars["list"]["name"] += updates
+        for var_name, value in recipe_vars["scalar"].items():
+            spack_vars["values"]["scalar"][var_name] = value
+        for var_name, updates in recipe_vars["list"].items():
+            spack_vars["values"]["list"].setdefault(name, [])
+            spack_vars["values"]["list"][var_name] += updates
 
         # update the global meta data to include the environment variable state
         meta["views"][name]["env"] = spack_vars
