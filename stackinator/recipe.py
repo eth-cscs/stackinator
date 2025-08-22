@@ -6,6 +6,7 @@ import jinja2
 import yaml
 
 from . import cache, root_logger, schema, spack_util
+from .etc import envvars
 
 
 class Recipe:
@@ -270,10 +271,43 @@ class Recipe:
         view_meta = {}
         for _, env in self.environments.items():
             for view in env["views"]:
+                # TODO: generate the env_vars field, that is userd by envvars.py to generate results
+                print(f"view {view['name']}: {view['extra']['env_vars']}")
+                ev_inputs = view["extra"]["env_vars"]
+                env = envvars.EnvVarSet()
+
+                ## assert that unset and set do not overlap
+                for name in ev_inputs["unset"]:
+                    if envvars.is_list_var(name):
+                        env.set_list(name, [], envvars.EnvVarOp.SET)
+                    else:
+                        env.set_scalar(name, None)
+                for v in ev_inputs["set"]:
+                    ((name, value),) = v.items()
+                    if envvars.is_list_var(name):
+                        raise RuntimeError(
+                            f"{name} in the {view['name']} view a prefix path variable. Use unset, prepend_path and append_path to set it."
+                        )
+                    else:
+                        env.set_scalar(name, value)
+                for v in ev_inputs["prepend_path"]:
+                    ((name, value),) = v.items()
+                    if not envvars.is_list_var(name):
+                        raise RuntimeError(f"{name} in the {view['name']} view is not a known prefix path variable")
+
+                    env.set_list(name, [value], envvars.EnvVarOp.APPEND)
+                for v in ev_inputs["append_path"]:
+                    ((name, value),) = v.items()
+                    if not envvars.is_list_var(name):
+                        raise RuntimeError(f"{name} in the {view['name']} view is not a known prefix path variable")
+
+                    env.set_list(name, [value], envvars.EnvVarOp.PREPEND)
+
                 view_meta[view["name"]] = {
                     "root": view["config"]["root"],
                     "activate": view["config"]["root"] + "/activate.sh",
                     "description": "",  # leave the description empty for now
+                    "recipe_variables": env.as_dict()
                 }
 
         return view_meta
@@ -378,15 +412,18 @@ class Recipe:
                 # ["link"] = "roots"
                 # ["uenv"]["add_compilers"] = True
                 # ["uenv"]["prefix_paths"] = {}
-                # ["uenv"]["env_vars"] = []
+                # ["uenv"]["env_vars"] = {"set": [], "unset": [], "prepend_path": [], "append_path": []}
                 if view_config is None:
                     view_config = {}
                 view_config.setdefault("link", "roots")
                 view_config.setdefault("uenv", {})
                 view_config["uenv"].setdefault("add_compilers", True)
                 view_config["uenv"].setdefault("prefix_paths", {})
-                view_config["uenv"].setdefault("env_vars", [])
-                print(view_config["uenv"]["env_vars"])
+                view_config["uenv"].setdefault("env_vars", {})
+                view_config["uenv"]["env_vars"].setdefault("set", [])
+                view_config["uenv"]["env_vars"].setdefault("unset", [])
+                view_config["uenv"]["env_vars"].setdefault("prepend_path", [])
+                view_config["uenv"]["env_vars"].setdefault("append_path", [])
                 prefix_string = ",".join(
                     [f"{pname}={':'.join(paths)}" for pname, paths in view_config["uenv"]["prefix_paths"].items()]
                 )
@@ -512,14 +549,5 @@ class Recipe:
             spack_yaml_template = jenv.get_template("environments.spack.yaml")
             # generate the spack.yaml file
             files["config"][env] = spack_yaml_template.render(config=config, name=env, store=self.mount)
-            # generate the view inputs (if any)
-            for view in config["views"]:
-                env_vars = view["extra"]["env_vars"]
-                lines = [
-                    f"unset {name}" if value is None else f'export {name}="{value}"'
-                    for d in env_vars
-                    for (name, value) in d.items()
-                ]
-                print(lines)
 
         return files

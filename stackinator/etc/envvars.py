@@ -443,6 +443,7 @@ def view_impl(args):
 
     # force all prefix path style variables (list vars) to use PREPEND the first operation.
     envvars.make_dirty()
+    # remove all prefix path variable values that point to a location inside the build path.
     envvars.remove_root(args.build_path)
 
     if args.compilers is not None:
