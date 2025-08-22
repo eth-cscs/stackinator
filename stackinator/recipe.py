@@ -290,7 +290,7 @@ class Recipe:
                     ((name, value),) = v.items()
                     if envvars.is_list_var(name):
                         raise RuntimeError(
-                            f"{name} in the {view['name']} view a prefix path variable. Use unset, prepend_path and append_path to set it."
+                            f"{name} in the {view['name']} view a prefix path variable."
                         )
                     else:
                         env.set_scalar(name, value)
@@ -311,7 +311,7 @@ class Recipe:
                     "root": view["config"]["root"],
                     "activate": view["config"]["root"] + "/activate.sh",
                     "description": "",  # leave the description empty for now
-                    "recipe_variables": env.as_dict()
+                    "recipe_variables": env.as_dict(),
                 }
 
         return view_meta
