@@ -271,12 +271,16 @@ class Recipe:
         view_meta = {}
         for _, env in self.environments.items():
             for view in env["views"]:
-                # TODO: generate the env_vars field, that is userd by envvars.py to generate results
-                print(f"view {view['name']}: {view['extra']['env_vars']}")
                 ev_inputs = view["extra"]["env_vars"]
                 env = envvars.EnvVarSet()
 
-                ## assert that unset and set do not overlap
+                # TODO: one day this code will be revisited because we need to append_path
+                # or prepend_path to a variable that isn't in envvars.is_list_var
+                # On that day, extend the environments.yaml views:uenv:env_vars field
+                # to also accept a list of env var names to add to the blessed list of prefix paths
+
+                # process the unset options before set options - we have to assume that if both are set
+                # the intention was to ultimately set the variable
                 for name in ev_inputs["unset"]:
                     if envvars.is_list_var(name):
                         env.set_list(name, [], envvars.EnvVarOp.SET)
@@ -399,7 +403,6 @@ class Recipe:
         # the name default to generated the activation script.
         env_names = set()
         env_name_map = {}
-        print()
         for name, config in environments.items():
             env_name_map[name] = []
             views = []
@@ -436,7 +439,6 @@ class Recipe:
 
             config["views"] = views
 
-        print()
         self.environments = environments
 
     # creates the self.compilers field that describes the full specifications
