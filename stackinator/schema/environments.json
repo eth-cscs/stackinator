@@ -114,6 +114,22 @@
                                                     "items": {"type": "string"}
                                                 }
                                             }
+                                        },
+                                        "env_vars": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "patternProperties": {
+                                                    "^[A-Za-z_][A-Za-z0-9_]*$": {
+                                                        "oneOf": [
+                                                            {"type": "null"},
+                                                            {"type": "string"}
+                                                        ]
+                                                    }
+                                                },
+                                                "additionalProperties": false
+                                            },
+                                            "default": []
                                         }
                                     }
                                 }

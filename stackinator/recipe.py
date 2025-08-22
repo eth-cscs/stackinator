@@ -365,6 +365,7 @@ class Recipe:
         # the name default to generated the activation script.
         env_names = set()
         env_name_map = {}
+        print()
         for name, config in environments.items():
             env_name_map[name] = []
             views = []
@@ -377,12 +378,15 @@ class Recipe:
                 # ["link"] = "roots"
                 # ["uenv"]["add_compilers"] = True
                 # ["uenv"]["prefix_paths"] = {}
+                # ["uenv"]["env_vars"] = []
                 if view_config is None:
                     view_config = {}
                 view_config.setdefault("link", "roots")
                 view_config.setdefault("uenv", {})
                 view_config["uenv"].setdefault("add_compilers", True)
                 view_config["uenv"].setdefault("prefix_paths", {})
+                view_config["uenv"].setdefault("env_vars", [])
+                print(view_config["uenv"]["env_vars"])
                 prefix_string = ",".join(
                     [f"{pname}={':'.join(paths)}" for pname, paths in view_config["uenv"]["prefix_paths"].items()]
                 )
@@ -395,6 +399,7 @@ class Recipe:
 
             config["views"] = views
 
+        print()
         self.environments = environments
 
     # creates the self.compilers field that describes the full specifications
@@ -505,6 +510,16 @@ class Recipe:
         files["config"] = {}
         for env, config in self.environments.items():
             spack_yaml_template = jenv.get_template("environments.spack.yaml")
+            # generate the spack.yaml file
             files["config"][env] = spack_yaml_template.render(config=config, name=env, store=self.mount)
+            # generate the view inputs (if any)
+            for view in config["views"]:
+                env_vars = view["extra"]["env_vars"]
+                lines = [
+                    f"unset {name}" if value is None else f'export {name}="{value}"'
+                    for d in env_vars
+                    for (name, value) in d.items()
+                ]
+                print(lines)
 
         return files
