@@ -100,7 +100,7 @@ class Recipe:
 
         # extract gcc packages from system packages
         # remove gcc from packages afterwards
-        if system_packages["gcc"]:
+        if "gcc" in system_packages:
             gcc_packages = {"gcc": system_packages["gcc"]}
             del system_packages["gcc"]
         else:
@@ -427,6 +427,7 @@ class Recipe:
                 view_config["uenv"]["env_vars"].setdefault("unset", [])
                 view_config["uenv"]["env_vars"].setdefault("prepend_path", [])
                 view_config["uenv"]["env_vars"].setdefault("append_path", [])
+
                 prefix_string = ",".join(
                     [f"{pname}={':'.join(paths)}" for pname, paths in view_config["uenv"]["prefix_paths"].items()]
                 )
