@@ -29,10 +29,12 @@ spack:
       require: '{{ config.mpi }}'
     {% endif %}
 {% endif %}
-{% if config.view %}
+{% if config.views %}
   view:
-    default:
-      {{ config.view.config|py2yaml(6) }}
+{% for view in config.views %}
+    {{ view.name }}:
+      {{ view.config|py2yaml(6) }}
+{% endfor %}
 {% else %}
   view: false
 {% endif %}

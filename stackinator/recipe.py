@@ -269,8 +269,7 @@ class Recipe:
         # generate the view meta data that is presented in the squashfs image meta data
         view_meta = {}
         for _, env in self.environments.items():
-            view = env["view"]
-            if view is not None:
+            for view in env["views"]:
                 view_meta[view["name"]] = {
                     "root": view["config"]["root"],
                     "activate": view["config"]["root"] + "/activate.sh",
@@ -368,58 +367,33 @@ class Recipe:
         env_name_map = {}
         for name, config in environments.items():
             env_name_map[name] = []
-            for view, vc in config["views"].items():
-                if view in env_names:
-                    raise Exception(f"An environment view with the name '{view}' already exists.")
+            views = []
+            for view_name, vc in config["views"].items():
+                if view_name in env_names:
+                    raise Exception(f"An environment view with the name '{name}' already exists.")
+                env_names.add(view_name)
+                view_config = copy.deepcopy(vc)
                 # set some default values:
-                # vc["link"] = "roots"
-                # vc["uenv"]["add_compilers"] = True
-                # vc["uenv"]["prefix_paths"] = {}
-                if vc is None:
-                    vc = {}
-                vc.setdefault("link", "roots")
-                vc.setdefault("uenv", {})
-                vc["uenv"].setdefault("add_compilers", True)
-                vc["uenv"].setdefault("prefix_paths", {})
-                prefix_string = ",".join(
-                    [f"{name}={':'.join(paths)}" for name, paths in vc["uenv"]["prefix_paths"].items()]
-                )
-                vc["uenv"]["prefix_string"] = prefix_string
-                # save a copy of the view configuration
-                env_name_map[name].append((view, vc))
-
-        # Iterate over each environment:
-        # - creating copies of the env so that there is one copy per view.
-        # - configure each view
-        for name, views in env_name_map.items():
-            numviews = len(env_name_map[name])
-
-            # The configuration of the environment without views
-            base = copy.deepcopy(environments[name])
-
-            environments[name]["view"] = None
-            for i in range(numviews):
-                # pick a name for the environment
-                cname = name if i == 0 else name + f"-{i + 1}__"
-                if i > 0:
-                    environments[cname] = copy.deepcopy(base)
-
-                view_name, view_config = views[i]
-                # note: the root path is stored as a string, not as a pathlib.PosixPath
-                # to avoid serialisation issues when generating the spack.yaml file for
-                # each environment.
+                # ["link"] = "roots"
+                # ["uenv"]["add_compilers"] = True
+                # ["uenv"]["prefix_paths"] = {}
                 if view_config is None:
-                    view_config = {"root": str(self.mount / "env" / view_name)}
-                else:
-                    view_config["root"] = str(self.mount / "env" / view_name)
+                    view_config = {}
+                view_config.setdefault("link", "roots")
+                view_config.setdefault("uenv", {})
+                view_config["uenv"].setdefault("add_compilers", True)
+                view_config["uenv"].setdefault("prefix_paths", {})
+                prefix_string = ",".join(
+                    [f"{pname}={':'.join(paths)}" for pname, paths in view_config["uenv"]["prefix_paths"].items()]
+                )
+                view_config["uenv"]["prefix_string"] = prefix_string
+                view_config["root"] = str(self.mount / "env" / view_name)
 
-                # The "uenv" field is not spack configuration, it is additional information
-                # used by stackinator additionally set compiler paths and LD_LIBRARY_PATH
-                # Remove it from the view_config that will be passed directly to spack, and pass
-                # it separately for configuring the envvars.py helper during the uenv build.
                 extra = view_config.pop("uenv")
+                env_name_map[name].append((view_name, view_config))
+                views.append({"name": view_name, "config": view_config, "extra": extra})
 
-                environments[cname]["view"] = {"name": view_name, "config": view_config, "extra": extra}
+            config["views"] = views
 
         self.environments = environments
 
