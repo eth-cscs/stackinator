@@ -289,9 +289,7 @@ class Recipe:
                 for v in ev_inputs["set"]:
                     ((name, value),) = v.items()
                     if envvars.is_list_var(name):
-                        raise RuntimeError(
-                            f"{name} in the {view['name']} view a prefix path variable."
-                        )
+                        raise RuntimeError(f"{name} in the {view['name']} view a prefix path variable.")
                     else:
                         env.set_scalar(name, value)
                 for v in ev_inputs["prepend_path"]:
