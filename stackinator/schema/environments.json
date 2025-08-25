@@ -138,7 +138,10 @@
                                                 },
                                                 "unset": {
                                                     "type": "array",
-                                                    "items": {"type": "string"}
+                                                    "items": {
+                                                        "type": "string",
+                                                        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                                                    }
                                                 },
                                                 "prepend_path": {
                                                     "type": "array",
