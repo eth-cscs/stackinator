@@ -279,19 +279,17 @@ class Recipe:
                 # On that day, extend the environments.yaml views:uenv:env_vars field
                 # to also accept a list of env var names to add to the blessed list of prefix paths
 
-                # process the unset options before set options - we have to assume that if both are set
-                # the intention was to ultimately set the variable
-                for name in ev_inputs["unset"]:
-                    if envvars.is_list_var(name):
-                        env.set_list(name, [], envvars.EnvVarOp.SET)
-                    else:
-                        env.set_scalar(name, None)
                 for v in ev_inputs["set"]:
                     ((name, value),) = v.items()
-                    if envvars.is_list_var(name):
-                        raise RuntimeError(f"{name} in the {view['name']} view a prefix path variable.")
+                    # insist that the only 'set' operation on prefix variables is to unset/reset them
+                    # this requires that users use append and prepend to build up the variables
+                    if envvars.is_list_var(name) and value is not None:
+                        raise RuntimeError(f"{name} in the {view['name']} view is a prefix variable.")
                     else:
-                        env.set_scalar(name, value)
+                        if envvars.is_list_var(name):
+                            env.set_list(name, [], envvars.EnvVarOp.SET)
+                        else:
+                            env.set_scalar(name, value)
                 for v in ev_inputs["prepend_path"]:
                     ((name, value),) = v.items()
                     if not envvars.is_list_var(name):

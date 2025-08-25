@@ -16,6 +16,20 @@
             "minProperties": 1,
             "maxProperties": 1,
             "additionalProperties": false
+        },
+        "env_var_def_nullable": {
+            "type": "object",
+            "patternProperties": {
+                "^[A-Za-z_][A-Za-z0-9_]*$": {
+                    "oneOf": [
+                        {"type": "string"},
+                        {"type": "null"}
+                    ]
+                }
+            },
+            "minProperties": 1,
+            "maxProperties": 1,
+            "additionalProperties": false
         }
     },
     "patternProperties": {
@@ -136,14 +150,7 @@
                                             "properties": {
                                                 "set": {
                                                     "type": "array",
-                                                    "items": {"$ref": "#/defs/env_var_def"}
-                                                },
-                                                "unset": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
-                                                    }
+                                                    "items": {"$ref": "#/defs/env_var_def_nullable"}
                                                 },
                                                 "prepend_path": {
                                                     "type": "array",

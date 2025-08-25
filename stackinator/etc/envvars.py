@@ -89,7 +89,6 @@ class EnvVar:
     def name(self):
         return self._name
 
-
 class ListEnvVar(EnvVar):
     def __init__(self, name: str, value: List[str], op: EnvVarOp):
         super().__init__(name)
