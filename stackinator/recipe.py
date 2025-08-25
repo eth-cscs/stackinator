@@ -99,7 +99,7 @@ class Recipe:
 
         # extract gcc packages from system packages
         # remove gcc from packages afterwards
-        if system_packages["gcc"]:
+        if "gcc" in system_packages:
             gcc_packages = {"gcc": system_packages["gcc"]}
             del system_packages["gcc"]
         else:
