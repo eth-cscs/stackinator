@@ -395,7 +395,7 @@ The `set` field is a list of environment variables key-value pairs that specify 
   Set such variables to `null` (unset it), then provide `append_path` and `prefix_path` operations below to set the individual paths.
 
 !!! note "using `${@VAR@}` to use environment variables"
-    Sometimes you want to compase an environment variable **that has been set in the runtime environment** in your environment variable definition.
+    Sometimes you want to compose an environment variable **that has been set in the runtime environment** in your environment variable definition.
     For example, every user has a different `HOME` or `SCRATCH` value, and you might want to configure your view to store / read configuration from this path.
     The special syntax `${@VAR@}` will defer expanding the environment variable `VAR` until the view is loaded by uenv.
     The example above shows how to set the Juliaup install directory to be in the user's local scratch, i.e. a personalised private location for each user.
@@ -406,10 +406,10 @@ The `prepend_path` field takes a list of key-value pairs that define paths to pr
 * To prepend more than one path to a variable, pass multiple values (see `PKG_CONFIG_PATH` in `append_path` above)
 * The order in the list matters: paths will be prepended in the order that they appear in the list.
 
-The `prepend_path` field is the same as `prepend_path`, except it appends instead of prepending.
+The `append_path` field is the same as `prepend_path`, except it appends instead of prepending.
 
 !!! question "What are prefix path variables?"
-    Prefix path variables are variables are environment variables that are `:`-separated list of paths, like `PATH`, `LD_LIBRARY_PATH`, `PYTHONPATH` etc that provide a list of paths that typically searched in order.
+    Prefix path variables are environment variables that are `:`-separated list of paths, like `PATH`, `LD_LIBRARY_PATH`, `PYTHONPATH` etc that provide a list of paths that are typically searched in order.
 
     Currently the set of supported prefix path variables is hard coded in stackinator.
     If you need to set a prefix path that isn't on this list, contact the stackinator devs and we can implement support for user-defined prefix paths.
