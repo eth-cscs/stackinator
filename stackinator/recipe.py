@@ -6,6 +6,7 @@ import jinja2
 import yaml
 
 from . import cache, root_logger, schema, spack_util
+from .etc import envvars
 
 
 class Recipe:
@@ -270,10 +271,43 @@ class Recipe:
         view_meta = {}
         for _, env in self.environments.items():
             for view in env["views"]:
+                ev_inputs = view["extra"]["env_vars"]
+                env = envvars.EnvVarSet()
+
+                # TODO: one day this code will be revisited because we need to append_path
+                # or prepend_path to a variable that isn't in envvars.is_list_var
+                # On that day, extend the environments.yaml views:uenv:env_vars field
+                # to also accept a list of env var names to add to the blessed list of prefix paths
+
+                for v in ev_inputs["set"]:
+                    ((name, value),) = v.items()
+                    # insist that the only 'set' operation on prefix variables is to unset/reset them
+                    # this requires that users use append and prepend to build up the variables
+                    if envvars.is_list_var(name) and value is not None:
+                        raise RuntimeError(f"{name} in the {view['name']} view is a prefix variable.")
+                    else:
+                        if envvars.is_list_var(name):
+                            env.set_list(name, [], envvars.EnvVarOp.SET)
+                        else:
+                            env.set_scalar(name, value)
+                for v in ev_inputs["prepend_path"]:
+                    ((name, value),) = v.items()
+                    if not envvars.is_list_var(name):
+                        raise RuntimeError(f"{name} in the {view['name']} view is not a known prefix path variable")
+
+                    env.set_list(name, [value], envvars.EnvVarOp.APPEND)
+                for v in ev_inputs["append_path"]:
+                    ((name, value),) = v.items()
+                    if not envvars.is_list_var(name):
+                        raise RuntimeError(f"{name} in the {view['name']} view is not a known prefix path variable")
+
+                    env.set_list(name, [value], envvars.EnvVarOp.PREPEND)
+
                 view_meta[view["name"]] = {
                     "root": view["config"]["root"],
                     "activate": view["config"]["root"] + "/activate.sh",
                     "description": "",  # leave the description empty for now
+                    "recipe_variables": env.as_dict(),
                 }
 
         return view_meta
@@ -377,12 +411,19 @@ class Recipe:
                 # ["link"] = "roots"
                 # ["uenv"]["add_compilers"] = True
                 # ["uenv"]["prefix_paths"] = {}
+                # ["uenv"]["env_vars"] = {"set": [], "unset": [], "prepend_path": [], "append_path": []}
                 if view_config is None:
                     view_config = {}
                 view_config.setdefault("link", "roots")
                 view_config.setdefault("uenv", {})
                 view_config["uenv"].setdefault("add_compilers", True)
                 view_config["uenv"].setdefault("prefix_paths", {})
+                view_config["uenv"].setdefault("env_vars", {})
+                view_config["uenv"]["env_vars"].setdefault("set", [])
+                view_config["uenv"]["env_vars"].setdefault("unset", [])
+                view_config["uenv"]["env_vars"].setdefault("prepend_path", [])
+                view_config["uenv"]["env_vars"].setdefault("append_path", [])
+
                 prefix_string = ",".join(
                     [f"{pname}={':'.join(paths)}" for pname, paths in view_config["uenv"]["prefix_paths"].items()]
                 )
@@ -505,6 +546,7 @@ class Recipe:
         files["config"] = {}
         for env, config in self.environments.items():
             spack_yaml_template = jenv.get_template("environments.spack.yaml")
+            # generate the spack.yaml file
             files["config"][env] = spack_yaml_template.render(config=config, name=env, store=self.mount)
 
         return files

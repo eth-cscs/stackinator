@@ -139,6 +139,9 @@ class Builder:
               "root": /user-environment/env/default,
               "activate": /user-environment/env/default/activate.sh,
               "description": "simple devolpment env: compilers, MPI, python, cmake."
+              "env_vars": {
+                ...
+              }
             },
             "tools": {
               "root": /user-environment/env/tools,

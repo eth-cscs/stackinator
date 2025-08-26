@@ -359,14 +359,73 @@ cuda-env:
       add_compilers: true
       prefix_paths:
         LD_LIBRARY_PATH: [lib, lib64]
+      env_vars:
+          set:
+          - WOMBAT: null
+          - NOCOLOR: "1"
+          - JULIAUP_INSTALLDIR: "${@SCRATCH@}/.julia/gh200/juliaup"
+          - PKG_CONFIG_PATH: null
+          prepend_path:
+          - PATH: "${@HOME@}/.local/x86_4/bin/"
+          append_path:
+          - PKG_CONFIG_PATH: /usr/lib/pkgconfig
+          - PKG_CONFIG_PATH: /opt/cray/libfabric/1.15.2.0/lib64/pkgconfig
 ```
 
 * `add_compilers` (default `true`): by default Spack will not add compilers to the `PATH` variable. Stackinator automatically adds the `gcc` and/or `nvhpc` to path. This option can be used to explicitly disable or enable this feature.
 * `prefix_paths` (default empty): this option can be used to customise prefix style environment variables (`PATH`, `LD_LIBRARY_PATH`, `PKG_CONFIG_PATH`, `PYTHONPATH`, etc).
     * the key is the environment variable, and the value is a list of paths to search for in the environment view. All paths that match an entry in the list will be prepended to the prefix path environment variable.
     * the main use for this feature is to opt-in to setting `LD_LIBRARY_PATH`. By default Spack does not add `lib` and `lib64` to `LD_LIBRARY_PATH` because that can break system installed applications that depend on `LD_LIBRARY_PATH` or finding their dependencies in standard locations like `/usr/lib`.
+* `env_vars`: see below for a more detailed explanation of how to fine tune environment variables in the view.
 
-See the [interfaces documentation](interfaces.md#environment-views) for more information about how the environment views are provided to users of a stack.
+!!! info
+    See the [interfaces documentation](interfaces.md#environment-views) for more information about how the environment views are provided.
+
+#### Setting environment variables with `env_vars`
+
+The `views:<view_name>:uenv:env_vars` field can be used to further fine-tune the environment variables that are set when the view is started.
+There are three environment variable "operation" that can be specified - `set`, `prepend_path`, and `append_path` - as demonstrated in the example above.
+
+The `set` field is a list of environment variables key-value pairs that specify the variable name and the value to set it to.
+
+* Setting a field to `null` will unset the variable if it was set by the parent environment.
+* `set` is a list, and values will be applied in the order that they are provided.
+  It is possible to provide two values for a variable, and the last value will be the one used.
+* It is not possible to set an initial value that is not `null` for a prefix path variable.
+  Set such variables to `null` (unset it), then provide `append_path` and `prefix_path` operations below to set the individual paths.
+
+!!! note "using `${@VAR@}` to use environment variables"
+    Sometimes you want to compose an environment variable **that has been set in the runtime environment** in your environment variable definition.
+    For example, every user has a different `HOME` or `SCRATCH` value, and you might want to configure your view to store / read configuration from this path.
+    The special syntax `${@VAR@}` will defer expanding the environment variable `VAR` until the view is loaded by uenv.
+    The example above shows how to set the Juliaup install directory to be in the user's local scratch, i.e. a personalised private location for each user.
+
+The `prepend_path` field takes a list of key-value pairs that define paths to prepend to a prefix path variable.
+
+* Each entry is a single path
+* To prepend more than one path to a variable, pass multiple values (see `PKG_CONFIG_PATH` in `append_path` above)
+* The order in the list matters: paths will be prepended in the order that they appear in the list.
+
+The `append_path` field is the same as `prepend_path`, except it appends instead of prepending.
+
+!!! question "What are prefix path variables?"
+    Prefix path variables are environment variables that are `:`-separated list of paths, like `PATH`, `LD_LIBRARY_PATH`, `PYTHONPATH` etc that provide a list of paths that are typically searched in order.
+
+    Currently the set of supported prefix path variables is hard coded in stackinator.
+    If you need to set a prefix path that isn't on this list, contact the stackinator devs and we can implement support for user-defined prefix paths.
+
+    ??? info "the hard-coded prefix paths"
+
+        * `ACLOCAL_PATH`
+        * `CMAKE_PREFIX_PATH`
+        * `CPATH`
+        * `LD_LIBRARY_PATH`
+        * `LIBRARY_PATH`
+        * `MANPATH`
+        * `MODULEPATH`
+        * `PATH`
+        * `PKG_CONFIG_PATH`
+        * `PYTHONPATH`
 
 ## Modules
 

@@ -3,6 +3,35 @@
     "title": "Schema for Spack Stack environments.yaml recipe file",
     "type": "object",
     "additionalProperties": false,
+    "defs": {
+        "gcc_version_spec": {
+            "type": "string",
+            "pattern": "^gcc@\\d{1,2}(\\.\\d{1}(\\.\\d{1})?)?$"
+        },
+        "env_var_def": {
+            "type": "object",
+            "patternProperties": {
+                "^[A-Za-z_][A-Za-z0-9_]*$": { "type": "string" }
+            },
+            "minProperties": 1,
+            "maxProperties": 1,
+            "additionalProperties": false
+        },
+        "env_var_def_nullable": {
+            "type": "object",
+            "patternProperties": {
+                "^[A-Za-z_][A-Za-z0-9_]*$": {
+                    "oneOf": [
+                        {"type": "string"},
+                        {"type": "null"}
+                    ]
+                }
+            },
+            "minProperties": 1,
+            "maxProperties": 1,
+            "additionalProperties": false
+        }
+    },
     "patternProperties": {
          "\\w[\\w-]*": {
              "type": "object",
@@ -112,6 +141,24 @@
                                                 "\\w+": {
                                                     "type": "array",
                                                     "items": {"type": "string"}
+                                                }
+                                            }
+                                        },
+                                        "env_vars": {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "properties": {
+                                                "set": {
+                                                    "type": "array",
+                                                    "items": {"$ref": "#/defs/env_var_def_nullable"}
+                                                },
+                                                "prepend_path": {
+                                                    "type": "array",
+                                                    "items": {"$ref": "#/defs/env_var_def"}
+                                                },
+                                                "append_path": {
+                                                    "type": "array",
+                                                    "items": {"$ref": "#/defs/env_var_def"}
                                                 }
                                             }
                                         }
