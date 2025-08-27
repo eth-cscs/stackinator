@@ -362,6 +362,9 @@ class Recipe:
                     else:
                         raise Exception(f"{spec} is not a valid MPI spec")
 
+                    # add the mpi spec to the list of explicit specs
+                    specs.append(spec)
+
                     # if the recipe provided explicit specs for dependencies, inject them:
                     if config["network"]["specs"]:
                         specs += config["network"]["specs"]
