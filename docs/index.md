@@ -29,15 +29,14 @@ To run stackinator [uv](https://docs.astral.sh/uv/getting-started/installation/)
 
 ### Versions
 
-Stackinator version 6 will be the first release of Stackinator to support Spack 1.0, released in July 2025.
-There will be significant changes introduced in Spack 1.0, which will require making some non-trivial changes to Stackinator, and possibly adding breaking changes to the Stackinator recipe specification.
+The two supported versions of Stackinator are:
 
-The git branch `releases/v5` will be maintained to provide support for all versions 0.21, 0.22 and 0.23 of Spack and existing recipes.
+* **v6**: the latest release, which supports Spack 1.0.
+    * Introduces breaking changes to the recipe format from v5.
+    * [Check out the guide][ref-porting] for porting recipes to the new format.
+* **v5**: supports Spack v0.23 (also v0.21 and v0.22) and earlier.
+    * Maintained in the git branch `releases/v5`.
 
-The `main` branch of Stackinator will contain 
-
-!!! info "Porting recipes to Spack 1.0"
-    [Check out the guide][ref-porting] for porting recipes from Stackinator 5/Spack 0.23 to Stackinator 6/Spack 1.0.
 
 ## Quick Start
 
