@@ -55,7 +55,7 @@ Once configured, the build stack is built in the build path using make:
 ```bash
 # build the spack stack
 cd $BUILD_PATH
-env --ignore-environment PATH=/usr/bin:/bin:`pwd`/spack/bin make modules store.squashfs -j64
+env --ignore-environment PATH=/usr/bin:/bin:`pwd -P`/spack/bin make modules store.squashfs -j64
 ```
 
 See the documentation on [building Spack stacks](building.md) for more information.

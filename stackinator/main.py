@@ -90,7 +90,7 @@ def main():
         root_logger.info("\nConfiguration finished, run the following to build the environment:\n")
         root_logger.info(f"cd {builder.path}")
         root_logger.info(
-            "env --ignore-environment PATH=/usr/bin:/bin:`pwd`/spack/bin HOME=$HOME make store.squashfs -j32"
+            "env --ignore-environment PATH=/usr/bin:/bin:`pwd -P`/spack/bin HOME=$HOME make store.squashfs -j32"
         )
         root_logger.info(f"see logfile for more information {logfile}")
         return 0
