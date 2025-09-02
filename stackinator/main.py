@@ -1,4 +1,5 @@
 import argparse
+import getpass
 import logging
 import os
 import sys
@@ -17,7 +18,13 @@ def generate_logfile_name(name=""):
     logfile = f"log_stackinator_{timestring}"
 
     # create the path where the log file is stored
-    user_tmpdir = os.path.join(tempfile.gettempdir(), os.getenv("USER") or os.getlogin())
+    username = 'uenv-log-anon'
+    try:
+        username = getpass.getuser()
+    except Exception as e:
+        print("warning: unable to find username for logging")
+
+    user_tmpdir = os.path.join(tempfile.gettempdir(), username)
     os.makedirs(user_tmpdir, exist_ok=True)
 
     return os.path.join(user_tmpdir, logfile)
@@ -85,6 +92,7 @@ def main():
         root_logger.info(
             "env --ignore-environment PATH=/usr/bin:/bin:`pwd`/spack/bin HOME=$HOME make store.squashfs -j32"
         )
+        root_logger.info(f"see logfile for more information {logfile}")
         return 0
     except Exception as e:
         root_logger.info(traceback.format_exc())
