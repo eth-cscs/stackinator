@@ -18,10 +18,10 @@ def generate_logfile_name(name=""):
     logfile = f"log_stackinator_{timestring}"
 
     # create the path where the log file is stored
-    username = 'uenv-log-anon'
+    username = "uenv-log-anon"
     try:
         username = getpass.getuser()
-    except Exception as e:
+    except Exception:
         print("warning: unable to find username for logging")
 
     user_tmpdir = os.path.join(tempfile.gettempdir(), username)
