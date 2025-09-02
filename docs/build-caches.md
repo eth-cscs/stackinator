@@ -97,5 +97,5 @@ When debugging a recipe, where failing builds have to be run multiple times, the
 To force push all packages that have been built, use the `cache-force` makefile target:
 
 ```bash
-env --ignore-environment PATH=/usr/bin:/bin:`pwd`/spack/bin make cache-force
+env --ignore-environment PATH=/usr/bin:/bin:`pwd -P`/spack/bin make cache-force
 ```
