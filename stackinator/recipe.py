@@ -268,7 +268,9 @@ class Recipe:
         if commit.find("0.20") >= 0:
             raise ValueError(f"spack minimum version is v0.21 - recipe uses {commit}")
 
-        return "unknown"
+        # return 0.24 as the default, with the assumption that references to shas
+        # point to a "post 0.23" version.
+        return "0.24"
 
     @property
     def environment_view_meta(self):
