@@ -390,20 +390,9 @@ class Recipe:
                     f"%[when=%c] c={compiler} %[when=%cxx] cxx={compiler} %[when=%fortran] fortran={compiler}"
                 ]
 
-        # An awkward hack to work around spack not supporting creating activation
-        # scripts for each file system view in an environment: it only generates them
-        # for the "default" view.
-        # The workaround is to create multiple versions of the same environment, one
-        # for each view.
-        # TODO: remove when the minimum supported version of spack is v0.21, in which
-        # this issue was fixed, see https://github.com/spack/spack/pull/40549
-        # we have a `--develop` workaround that uses the current approach of generating
-        # a separate environment for each view, with a view named "default", and uses
-        # the name default to generated the activation script.
+        # Create all meta data for all of the views.
         env_names = set()
-        env_name_map = {}
         for name, config in environments.items():
-            env_name_map[name] = []
             views = []
             for view_name, vc in config["views"].items():
                 if view_name in env_names:
@@ -434,7 +423,6 @@ class Recipe:
                 view_config["root"] = str(self.mount / "env" / view_name)
 
                 extra = view_config.pop("uenv")
-                env_name_map[name].append((view_name, view_config))
                 views.append({"name": view_name, "config": view_config, "extra": extra})
 
             config["views"] = views
