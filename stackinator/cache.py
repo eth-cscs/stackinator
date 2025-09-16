@@ -47,15 +47,9 @@ def generate_mirrors_yaml(config):
             "alpscache": {
                 "fetch": {
                     "url": f"file://{path}",
-                    "access_pair": [None, None],
-                    "profile": None,
-                    "endpoint_url": None,
                 },
                 "push": {
                     "url": f"file://{path}",
-                    "access_pair": [None, None],
-                    "profile": None,
-                    "endpoint_url": None,
                 },
             }
         }
