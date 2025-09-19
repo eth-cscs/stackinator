@@ -17,7 +17,7 @@ store:
 
 # Concretization
 %/spack.lock: %/spack.yaml %/config.yaml %/packages.yaml
-	$(SPACK_ENV) concretize -f
+	/usr/bin/time -f '"%C" took %e seconds.' $(SPACK_ENV) concretize -f
 
 # Generate Makefiles for the environment install
 %/Makefile: %/spack.lock
