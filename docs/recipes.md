@@ -103,6 +103,7 @@ prgenv-gnu:
   network:    # ... network configuration
   deprecated: # ... whether to allow usage of deprecated packages or not
   unify:      # ... configure Spack concretizer
+# TODO: duplicates: strategy
   specs:      # ... list of packages to install
   variants:   # ... variants to apply to packages (e.g. +mpi)
   packages:   # ... list of external packages to use

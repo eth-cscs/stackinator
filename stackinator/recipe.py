@@ -145,6 +145,7 @@ class Recipe:
                 "compiler": ["gcc"],
                 "network": {"mpi": None, "specs": None},
                 "unify": True,
+                "duplicates": { "strategy": "minimal" },
                 "deprecated": False,
                 "specs": ["squashfs"],
                 "views": {},

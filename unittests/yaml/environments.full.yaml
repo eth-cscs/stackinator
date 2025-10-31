@@ -1,6 +1,8 @@
 full-env:
   compiler: [gcc]
   unify: when_possible
+  duplicates:
+    strategy: full
   specs:
   - osu-micro-benchmarks@5.9
   - hdf5 +mpi

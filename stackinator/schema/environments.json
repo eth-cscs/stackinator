@@ -46,6 +46,16 @@
                      "enum": ["when_possible", true, false],
                      "default": true
                  },
+                 "duplicates": {
+                     "type": "object",
+                     "additionalProperties": false,
+                     "properties": {
+                         "strategy": {
+                             "enum": ["minimal", "full", "none"],
+                             "default": "minimal"
+                         }
+                     }
+                 },
                  "compiler": {
                      "type": "array",
                      "items": {
