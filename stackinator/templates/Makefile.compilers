@@ -46,6 +46,11 @@ llvm/packages.yaml: gcc/generated/env
 	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK_HELPER) -e ./gcc find --explicit --format '{prefix}' {{ compilers.llvm.requires }}))
 {% endif %}
 
+{% if compilers.get('llvm-amdgpu') %}
+llvm-amdgpu/packages.yaml: gcc/generated/env
+	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK_HELPER) -e ./gcc find --explicit --format '{prefix}' {{ compilers.get('llvm-amdgpu').requires }}))
+{% endif %}
+
 {% if compilers.nvhpc %}
 nvhpc/packages.yaml: gcc/generated/env
 	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK_HELPER) -e ./gcc find --explicit --format '{prefix}' {{ compilers.nvhpc.requires }}))
@@ -63,6 +68,12 @@ include gcc/Makefile
 {% if compilers.llvm %}
 ifneq (,$(wildcard gcc/Makefile))
 include llvm/Makefile
+endif
+{% endif %}
+
+{% if compilers.get('llvm-amdgpu') %}
+ifneq (,$(wildcard gcc/Makefile))
+include llvm-amdgpu/Makefile
 endif
 {% endif %}
 

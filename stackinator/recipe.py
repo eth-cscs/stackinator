@@ -463,6 +463,15 @@ class Recipe:
             llvm["exclude_from_cache"] = cache_exclude
             compilers["llvm"] = llvm
 
+        if raw["llvm-amdgpu"] is not None:
+            llvm_amdgpu = {}
+            llvm_amdgpu_version = raw["llvm-amdgpu"]["version"]
+            llvm_amdgpu["packages"] = False
+            llvm_amdgpu["specs"] = [f"llvm-amdgpu@{llvm_amdgpu_version}"]
+
+            llvm_amdgpu["exclude_from_cache"] = cache_exclude
+            compilers["llvm-amdgpu"] = llvm_amdgpu
+
         self.compilers = compilers
 
     # The path of the default configuration for the target system/cluster

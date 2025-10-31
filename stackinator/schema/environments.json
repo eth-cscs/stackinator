@@ -50,7 +50,7 @@
                      "type": "array",
                      "items": {
                          "type": "string",
-                         "enum": ["gcc", "nvhpc", "llvm"]
+                         "enum": ["gcc", "nvhpc", "llvm", "llvm-amdgpu"]
                      }
                  },
                  "specs": {

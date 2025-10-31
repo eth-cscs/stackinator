@@ -4,3 +4,5 @@ llvm:
   version: "13"
 nvhpc:
   version: "25.1"
+llvm-amdgpu:
+  version: "6.3"
