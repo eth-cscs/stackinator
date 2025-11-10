@@ -54,6 +54,9 @@
                              "enum": ["minimal", "full", "none"],
                              "default": "minimal"
                          }
+                     },
+                     "default": {
+                         "strategy": "minimal"
                      }
                  },
                  "compiler": {
