@@ -1,6 +1,49 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=61.2"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "Stackinator"
+authors = [{name = "Swiss National Supercomputing Center (CSCS/ETH Zurich)"}]
+description = "Stackinator is a tool for building a scientific software stack from a recipe for vClusters on CSCS' Alps infrastructure"
+license = "BSD-3-Clause"
+dynamic = ["version"]
+requires-python = ">=3.6"
+dependencies = [
+    "Jinja2",
+    "jsonschema",
+    "PyYAML",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: BSD License", # TODO probably deprecated
+    "Operating System :: POSIX :: Linux",
+    "Environment :: Console",
+]
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.urls]
+homepage = "https://github.com/eth-cscs/stackinator"
+documentation = "https://eth-cscs.github.io/stackinator/"
+
+[project.scripts]
+stack-config = "stackinator.main:main"
+
+[tool.setuptools]
+packages = ["stackinator"]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "stackinator.VERSION"}
 
 [tool.ruff]
 line-length = 120
