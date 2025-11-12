@@ -37,6 +37,11 @@ documentation = "https://eth-cscs.github.io/stackinator/"
 [project.scripts]
 stack-config = "stackinator.main:main"
 
+[dependency-groups]
+dev = [
+    "pytest",
+]
+
 [tool.setuptools]
 packages = ["stackinator"]
 include-package-data = true
@@ -52,3 +57,7 @@ exclude = ["unittests/recipes/with-repo/repo/packages"]
 [tool.ruff.lint]
 select = ["E", "F"]
 ignore = ["E203"]
+
+[tool.pytest.ini_options]
+addopts = "-ra -q"
+testpaths = ["unittests"]

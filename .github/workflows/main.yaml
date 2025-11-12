@@ -19,6 +19,7 @@ jobs:
           errors=$(($errors + $?))
         done
         exit $errors
+    - name: Install Dependencies
+      run: uv sync --group dev
     - name: Generic Unittests
-      run: |
-        ./test_stackinator.py
+      run: uv run pytest
