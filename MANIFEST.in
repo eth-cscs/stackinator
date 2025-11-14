@@ -1,4 +1,0 @@
-graft stackinator/etc
-graft stackinator/schema
-graft stackinator/share
-graft stackinator/templates

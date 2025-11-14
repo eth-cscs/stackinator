@@ -41,7 +41,10 @@ dev = [
 
 [tool.setuptools]
 packages = ["stackinator"]
-include-package-data = true
+include-package-data = false
+
+[tool.setuptools.package-data]
+stackinator = ["schema/*.json", "templates/*", "etc/*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "stackinator.VERSION"}
