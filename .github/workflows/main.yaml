@@ -7,9 +7,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version-file: ".python-version"
     - name: Install uv
-      run: |
-        curl -LsSf https://astral.sh/uv/install.sh | sh
+      uses: astral-sh/setup-uv@v6
     - name: Validate Schemas
       run: |
         errors=0
@@ -21,5 +24,5 @@ jobs:
         exit $errors
     - name: Install Dependencies
       run: uv sync --group dev
-    - name: Generic Unittests
+    - name: Run Unit Tests
       run: uv run pytest
