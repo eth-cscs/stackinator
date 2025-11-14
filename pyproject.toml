@@ -7,6 +7,7 @@ name = "Stackinator"
 authors = [{name = "Swiss National Supercomputing Center (CSCS/ETH Zurich)"}]
 description = "Stackinator is a tool for building a scientific software stack from a recipe for vClusters on CSCS' Alps infrastructure"
 license = "BSD-3-Clause"
+license-files = ["LICENSE"]
 dynamic = ["version"]
 requires-python = ">=3.12"
 dependencies = [
