@@ -12,12 +12,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
-          python-version: 3.x
-      - run: pip install --upgrade pip
-      - run: |
-          pip install -r requirements-docs.txt
+          python-version-file: ".python-version"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      - name: Install Dependencies
+        run: uv sync --group docs
+        # TODO is it needed to cleanup site folder?
       - run: rm -rf site
-      - run: mkdocs gh-deploy --force
-      - run: mkdocs --version
+      - name: Deploy Docs
+        run: |
+          uv run mkdocs gh-deploy --force
+          uv run mkdocs --version
