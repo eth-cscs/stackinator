@@ -59,5 +59,4 @@ select = ["E", "F"]
 ignore = ["E203"]
 
 [tool.pytest.ini_options]
-addopts = "-ra -q"
 testpaths = ["unittests"]
