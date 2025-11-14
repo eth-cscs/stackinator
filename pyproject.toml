@@ -52,6 +52,9 @@ include-package-data = false
 [tool.setuptools.package-data]
 stackinator = ["schema/*.json", "templates/*", "etc/*"]
 
+[tool.setuptools.exclude-package-data]
+"*" = ["__pycache__/*", "*.pyc"]
+
 [tool.setuptools.dynamic]
 version = {attr = "stackinator.VERSION"}
 
