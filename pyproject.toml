@@ -8,7 +8,7 @@ authors = [{name = "Swiss National Supercomputing Center (CSCS/ETH Zurich)"}]
 description = "Stackinator is a tool for building a scientific software stack from a recipe for vClusters on CSCS' Alps infrastructure"
 license = "BSD-3-Clause"
 dynamic = ["version"]
-requires-python = ">=3.6"
+requires-python = ">=3.12"
 dependencies = [
     "Jinja2",
     "jsonschema",
@@ -16,12 +16,9 @@ dependencies = [
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Operating System :: POSIX :: Linux",
     "Environment :: Console",
 ]
