@@ -1,4 +1,0 @@
-Jinja2
-jsonschema
-pytest
-PyYAML

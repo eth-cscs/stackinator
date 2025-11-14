@@ -39,6 +39,11 @@ stack-config = "stackinator.main:main"
 dev = [
   "pytest",
 ]
+docs = [
+  "mkdocs",
+  "mkdocs-material",
+  "mkdocs-autorefs",
+]
 
 [tool.setuptools]
 packages = ["stackinator"]
