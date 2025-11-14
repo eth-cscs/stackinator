@@ -51,8 +51,10 @@ version = {attr = "stackinator.VERSION"}
 
 [tool.ruff]
 line-length = 120
-extend-exclude = ["external/", "unittests/recipes"]
-exclude = ["unittests/recipes/with-repo/repo/packages"]
+extend-exclude = [
+  "unittests/recipes/**/scripts/**/*.py",
+  "unittests/recipes/**/repo/packages/*/*.py",
+]
 
 [tool.ruff.lint]
 select = ["E", "F"]
