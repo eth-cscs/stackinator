@@ -11,17 +11,17 @@ license-files = ["LICENSE"]
 dynamic = ["version"]
 requires-python = ">=3.12"
 dependencies = [
-    "Jinja2",
-    "jsonschema",
-    "PyYAML",
+  "Jinja2",
+  "jsonschema",
+  "PyYAML",
 ]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
-    "Operating System :: POSIX :: Linux",
-    "Environment :: Console",
+  "Development Status :: 5 - Production/Stable",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Operating System :: POSIX :: Linux",
+  "Environment :: Console",
 ]
 
 [project.readme]
@@ -37,7 +37,7 @@ stack-config = "stackinator.main:main"
 
 [dependency-groups]
 dev = [
-    "pytest",
+  "pytest",
 ]
 
 [tool.setuptools]
