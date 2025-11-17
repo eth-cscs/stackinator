@@ -44,6 +44,22 @@
                 }
             ],
             "default": null
+        },
+        "llvm-amdgpu": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "version": {"type": "string"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["version"]
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null
         }
     }
 }
