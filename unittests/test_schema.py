@@ -268,3 +268,14 @@ def test_valid_modules_yaml(recipe):
 def test_invalid_modules_yaml(recipe):
     with pytest.raises(Exception):
         schema.ModulesValidator.validate(yaml.load(recipe, Loader=yaml.Loader))
+
+def test_unique_properties():
+    invalid_config = dedent(
+        """
+        name: invalid-config
+        name: duplicate-name
+        """
+    )
+
+    with pytest.raises(Exception):
+        yaml.load(invalid_config, Loader=yaml.Loader)
