@@ -286,7 +286,7 @@ In mixed compiler environments, `minimal` can sometimes be insufficient to allow
 !!! warning
     The `full` strategy is still experimental and may produce surprising concretizations.
     In particular, the concretiser will more happily mix compilers using the `full` strategy.
-    Please check to concretization when using this strategy to make sure looks as you'd expect.
+    Please check the concretization when using this strategy to make sure it looks as you'd expect.
 
 ### Packages
 
