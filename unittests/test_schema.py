@@ -5,9 +5,11 @@ from textwrap import dedent
 
 import jsonschema
 import pytest
-import yaml
+from ruamel.yaml import YAML
 
 import stackinator.schema as schema
+
+yaml = YAML()
 
 
 @pytest.fixture
@@ -38,7 +40,7 @@ def recipe_paths(test_path, recipes):
 def test_config_yaml(yaml_path):
     # test that the defaults are set as expected
     with open(yaml_path / "config.defaults.yaml") as fid:
-        raw = yaml.load(fid, Loader=yaml.Loader)
+        raw = yaml.load(fid)
         schema.ConfigValidator.validate(raw)
         assert raw["store"] == "/user-environment"
         assert raw["spack"]["commit"] is None
@@ -57,10 +59,7 @@ def test_config_yaml(yaml_path):
             repo: https://github.com/spack/spack.git
             commit: develop-packages
     """)
-    raw = yaml.load(
-        config,
-        Loader=yaml.Loader,
-    )
+    raw = yaml.load(config)
     schema.ConfigValidator.validate(raw)
     assert raw["spack"]["commit"] is None
     assert raw["spack"]["packages"]["commit"] is not None
@@ -78,10 +77,7 @@ def test_config_yaml(yaml_path):
         packages:
             repo: https://github.com/spack/spack.git
     """)
-    raw = yaml.load(
-        config,
-        Loader=yaml.Loader,
-    )
+    raw = yaml.load(config)
     schema.ConfigValidator.validate(raw)
     assert raw["spack"]["commit"] == "develop"
     assert raw["spack"]["packages"]["commit"] is None
@@ -91,7 +87,7 @@ def test_config_yaml(yaml_path):
 
     # full config
     with open(yaml_path / "config.full.yaml") as fid:
-        raw = yaml.load(fid, Loader=yaml.Loader)
+        raw = yaml.load(fid)
         schema.ConfigValidator.validate(raw)
         assert raw["store"] == "/alternative-point"
         assert raw["spack"]["commit"] == "6408b51"
@@ -107,7 +103,7 @@ def test_config_yaml(yaml_path):
         spack:
             repo: https://github.com/spack/spack.git
         """)
-        raw = yaml.load(config, Loader=yaml.Loader)
+        raw = yaml.load(config)
         schema.ConfigValidator.validate(raw)
 
 
@@ -115,20 +111,20 @@ def test_recipe_config_yaml(recipe_paths):
     # validate the config.yaml in the test recipes
     for p in recipe_paths:
         with open(p / "config.yaml") as fid:
-            raw = yaml.load(fid, Loader=yaml.Loader)
+            raw = yaml.load(fid)
             schema.ConfigValidator.validate(raw)
 
 
 def test_compilers_yaml(yaml_path):
     # test that the defaults are set as expected
     with open(yaml_path / "compilers.defaults.yaml") as fid:
-        raw = yaml.load(fid, Loader=yaml.Loader)
+        raw = yaml.load(fid)
         schema.CompilersValidator.validate(raw)
         assert raw["gcc"] == {"version": "10.2"}
         assert raw["llvm"] is None
 
     with open(yaml_path / "compilers.full.yaml") as fid:
-        raw = yaml.load(fid, Loader=yaml.Loader)
+        raw = yaml.load(fid)
         schema.CompilersValidator.validate(raw)
         assert raw["gcc"] == {"version": "11"}
         assert raw["llvm"] == {"version": "13"}
@@ -139,13 +135,13 @@ def test_recipe_compilers_yaml(recipe_paths):
     # validate the compilers.yaml in the test recipes
     for p in recipe_paths:
         with open(p / "compilers.yaml") as fid:
-            raw = yaml.load(fid, Loader=yaml.Loader)
+            raw = yaml.load(fid)
             schema.CompilersValidator.validate(raw)
 
 
 def test_environments_yaml(yaml_path):
     with open(yaml_path / "environments.full.yaml") as fid:
-        raw = yaml.load(fid, Loader=yaml.Loader)
+        raw = yaml.load(fid)
         schema.EnvironmentsValidator.validate(raw)
 
         # the defaults-env does not set fields
@@ -186,7 +182,7 @@ def test_environments_yaml(yaml_path):
     # check that only allowed fields are accepted
     # from an example that was silently validated
     with open(yaml_path / "environments.err-providers.yaml") as fid:
-        raw = yaml.load(fid, Loader=yaml.Loader)
+        raw = yaml.load(fid)
         with pytest.raises(
             jsonschema.exceptions.ValidationError,
             match=r"Additional properties are not allowed \('providers' was unexpected",
@@ -198,7 +194,7 @@ def test_recipe_environments_yaml(recipe_paths):
     # validate the environments.yaml in the test recipes
     for p in recipe_paths:
         with open(p / "environments.yaml") as fid:
-            raw = yaml.load(fid, Loader=yaml.Loader)
+            raw = yaml.load(fid)
             schema.EnvironmentsValidator.validate(raw)
 
 
@@ -210,5 +206,7 @@ def test_unique_properties():
         """
     )
 
-    with pytest.raises(Exception):
-        yaml.load(invalid_config, Loader=yaml.Loader)
+    from ruamel.yaml.constructor import DuplicateKeyError
+
+    with pytest.raises(DuplicateKeyError):
+        yaml.load(invalid_config)

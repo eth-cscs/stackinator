@@ -1,15 +1,17 @@
 import os
 import pathlib
 
-import yaml
+from ruamel.yaml import YAML
 
 from . import schema
+
+yaml = YAML()
 
 
 def configuration_from_file(file, mount):
     with file.open() as fid:
         # load the raw yaml input
-        raw = yaml.load(fid, Loader=yaml.Loader)
+        raw = yaml.load(fid)
 
         # validate the yaml
         schema.CacheValidator.validate(raw)

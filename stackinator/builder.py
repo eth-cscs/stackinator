@@ -9,9 +9,11 @@ import sys
 from datetime import datetime
 
 import jinja2
-import yaml
+from ruamel.yaml import YAML
 
 from . import VERSION, cache, root_logger, spack_util
+
+yaml = YAML()
 
 
 def install(src, dst, *, ignore=None, symlinks=False):
@@ -345,7 +347,7 @@ class Builder:
         if repo_yaml.exists() and repo_yaml.is_file():
             # open repos.yaml file and reat the list of repos
             with repo_yaml.open() as fid:
-                raw = yaml.load(fid, Loader=yaml.Loader)
+                raw = yaml.load(fid)
                 P = raw["repos"]
 
             self._logger.debug(f"the system configuration has a repo file {repo_yaml} refers to {P}")

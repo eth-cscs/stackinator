@@ -5,7 +5,7 @@
 #   "jinja2",
 #   "jsonschema",
 #   "pytest",
-#   "pyYAML",
+#   "ruamel.yaml >=0.15.1, <0.18.0",
 # ]
 # ///
 
