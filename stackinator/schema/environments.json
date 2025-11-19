@@ -48,6 +48,7 @@
                  },
                  "duplicates": {
                      "type": "object",
+                     "required": ["strategy"],
                      "additionalProperties": false,
                      "properties": {
                          "strategy": {
