@@ -200,3 +200,15 @@ def test_recipe_environments_yaml(recipe_paths):
         with open(p / "environments.yaml") as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
             schema.EnvironmentsValidator.validate(raw)
+
+
+def test_unique_properties():
+    invalid_config = dedent(
+        """
+        name: invalid-config
+        name: duplicate-name
+        """
+    )
+
+    with pytest.raises(Exception):
+        yaml.load(invalid_config, Loader=yaml.Loader)
