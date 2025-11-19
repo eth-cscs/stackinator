@@ -413,6 +413,7 @@ class Recipe:
                 # ["uenv"]["env_vars"] = {"set": [], "unset": [], "prepend_path": [], "append_path": []}
                 if view_config is None:
                     view_config = {}
+
                 view_config.setdefault("link", "roots")
                 view_config.setdefault("uenv", {})
                 view_config["uenv"].setdefault("add_compilers", True)

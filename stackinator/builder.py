@@ -141,7 +141,7 @@ class Builder:
               "root": /user-environment/env/default,
               "activate": /user-environment/env/default/activate.sh,
               "description": "simple devolpment env: compilers, MPI, python, cmake."
-              "env_vars": {
+              "recipe_variables": {
                 ...
               }
             },
