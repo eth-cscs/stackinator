@@ -292,17 +292,17 @@ class Recipe:
                             env.set_list(name, [], envvars.EnvVarOp.SET)
                         else:
                             env.set_scalar(name, value)
+
                 for v in ev_inputs["prepend_path"]:
                     ((name, value),) = v.items()
                     if not envvars.is_list_var(name):
                         raise RuntimeError(f"{name} in the {view['name']} view is not a known prefix path variable")
-
                     env.set_list(name, [value], envvars.EnvVarOp.APPEND)
+
                 for v in ev_inputs["append_path"]:
                     ((name, value),) = v.items()
                     if not envvars.is_list_var(name):
                         raise RuntimeError(f"{name} in the {view['name']} view is not a known prefix path variable")
-
                     env.set_list(name, [value], envvars.EnvVarOp.PREPEND)
 
                 view_meta[view["name"]] = {
@@ -408,6 +408,7 @@ class Recipe:
                 # ["uenv"]["env_vars"] = {"set": [], "unset": [], "prepend_path": [], "append_path": []}
                 if view_config is None:
                     view_config = {}
+
                 view_config.setdefault("link", "roots")
                 view_config.setdefault("uenv", {})
                 view_config["uenv"].setdefault("add_compilers", True)
