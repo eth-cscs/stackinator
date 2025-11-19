@@ -51,8 +51,7 @@
                      "additionalProperties": false,
                      "properties": {
                          "strategy": {
-                             "enum": ["minimal", "full", "none"],
-                             "default": "minimal"
+                             "enum": ["minimal", "full", "none"]
                          }
                      },
                      "default": {
