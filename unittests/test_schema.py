@@ -160,6 +160,7 @@ def test_environments_yaml(yaml_path):
 
         # test defaults were set correctly
         assert env["unify"] == True  # noqa: E712
+        assert env["duplicates"]["strategy"] == "minimal"
         assert env["packages"] == []
         assert env["variants"] == []
         assert env["network"] == {"mpi": None, "specs": None}
@@ -179,6 +180,7 @@ def test_environments_yaml(yaml_path):
 
         # test defaults were set correctly
         assert env["unify"] == "when_possible"
+        assert env["duplicates"]["strategy"] == "full"
         assert env["packages"] == ["perl", "git"]
         assert env["variants"] == ["+mpi", "+cuda"]
         assert env["views"] == {"default": None}

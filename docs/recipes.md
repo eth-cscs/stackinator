@@ -103,6 +103,7 @@ prgenv-gnu:
   network:    # ... network configuration
   deprecated: # ... whether to allow usage of deprecated packages or not
   unify:      # ... configure Spack concretizer
+  duplicates: # ... configure how the concretizer should handle duplicates
   specs:      # ... list of packages to install
   variants:   # ... variants to apply to packages (e.g. +mpi)
   packages:   # ... list of external packages to use
@@ -276,6 +277,16 @@ cuda-env:
 
 !!! warning
     Stackinator does not support "spec matrices", and likely won't, because they use multiple compiler toolchains in a manner that is contrary to the Stackinator "keep it simple" principle.
+
+The `duplicates:strategy` field [controls how the concretiser handles duplicates](https://spack.readthedocs.io/en/latest/build_settings.html).
+The default strategy is `minimal` which is typically the right choice.
+In mixed compiler environments, `minimal` can sometimes be insufficient to allow concretization.
+`full` slightly relaxes the constraints that Spack imposes on the environment which can allow concretization.
+
+!!! warning
+    The `full` strategy is still experimental and may produce surprising concretizations.
+    In particular, the concretiser will more happily mix compilers using the `full` strategy.
+    Please check the concretization when using this strategy to make sure it looks as you'd expect.
 
 ### Packages
 
