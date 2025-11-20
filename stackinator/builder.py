@@ -9,9 +9,11 @@ import sys
 from datetime import datetime
 
 import jinja2
-import yaml
+from ruamel.yaml import YAML
 
 from . import VERSION, cache, root_logger, spack_util
+
+yaml = YAML()
 
 
 def install(src, dst, *, ignore=None, symlinks=False):
@@ -139,7 +141,7 @@ class Builder:
               "root": /user-environment/env/default,
               "activate": /user-environment/env/default/activate.sh,
               "description": "simple devolpment env: compilers, MPI, python, cmake."
-              "env_vars": {
+              "recipe_variables": {
                 ...
               }
             },
@@ -306,17 +308,17 @@ class Builder:
         # the packages.yaml configuration that will be used when building all environments
         # - the system packages.yaml with gcc removed
         # - plus additional packages provided by the recipe
-        global_packages_yaml = yaml.dump(recipe.packages["global"])
+
         global_packages_path = config_path / "packages.yaml"
         with global_packages_path.open("w") as fid:
-            fid.write(global_packages_yaml)
+            yaml.dump(recipe.packages["global"], fid)
 
         # generate a mirrors.yaml file if build caches have been configured
         if recipe.mirror:
             dst = config_path / "mirrors.yaml"
             self._logger.debug(f"generate the build cache mirror: {dst}")
             with dst.open("w") as fid:
-                fid.write(cache.generate_mirrors_yaml(recipe.mirror))
+                cache.generate_mirrors_yaml(recipe.mirror, fid)
 
         # Add custom spack package recipes, configured via Spack repos.
         # Step 1: copy Spack repos to store_path where they will be used to
@@ -345,7 +347,7 @@ class Builder:
         if repo_yaml.exists() and repo_yaml.is_file():
             # open repos.yaml file and reat the list of repos
             with repo_yaml.open() as fid:
-                raw = yaml.load(fid, Loader=yaml.Loader)
+                raw = yaml.load(fid)
                 P = raw["repos"]
 
             self._logger.debug(f"the system configuration has a repo file {repo_yaml} refers to {P}")
@@ -437,7 +439,10 @@ repo:
             compiler_config_path.mkdir(exist_ok=True)
             for file, raw in files.items():
                 with (compiler_config_path / file).open(mode="w") as f:
-                    f.write(raw)
+                    if type(raw) is str:
+                        f.write(raw)
+                    else:
+                        yaml.dump(raw, f)
 
         # generate the makefile and spack.yaml files that describe the environments
         environment_files = recipe.environment_files
@@ -471,11 +476,10 @@ repo:
             )
 
         # write modules/modules.yaml
-        modules_yaml = recipe.modules_yaml
         generate_modules_path = self.path / "modules"
         generate_modules_path.mkdir(exist_ok=True)
         with (generate_modules_path / "modules.yaml").open("w") as f:
-            f.write(modules_yaml)
+            yaml.dump(recipe.modules_yaml_data, f)
 
         # write the meta data
         meta_path = store_path / "meta"

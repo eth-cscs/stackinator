@@ -4,7 +4,7 @@
 # dependencies = [
 #   "jinja2",
 #   "jsonschema",
-#   "pyYAML",
+#   "ruamel.yaml >=0.15.1"
 # ]
 # ///
 

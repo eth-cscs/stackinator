@@ -1,4 +1,4 @@
 Jinja2
 jsonschema
 pytest
-PyYAML
+ruamel.yaml >=0.15.1
