@@ -315,11 +315,11 @@ class Recipe:
         return view_meta
 
     @property
-    def modules_yaml(self):
+    def modules_yaml_data(self):
         with self.modules.open() as fid:
             raw = yaml.load(fid)
             raw["modules"]["default"]["roots"]["tcl"] = (pathlib.Path(self.mount) / "modules").as_posix()
-            return yaml.dump(raw)
+            return raw
 
     # creates the self.environments field that describes the full specifications
     # for all of the environments sets, grouped in environments, from the raw
@@ -514,7 +514,7 @@ class Recipe:
             files["config"][compiler]["spack.yaml"] = spack_yaml_template.render(config=config)
             # compilers/gcc/packages.yaml
             if compiler == "gcc":
-                files["config"][compiler]["packages.yaml"] = yaml.dump(self.packages["gcc"])
+                files["config"][compiler]["packages.yaml"] = self.packages["gcc"]
 
         return files
 

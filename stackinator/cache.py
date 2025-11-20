@@ -42,7 +42,7 @@ def configuration_from_file(file, mount):
         return raw
 
 
-def generate_mirrors_yaml(config):
+def generate_mirrors_yaml(config, out):
     path = config["path"].as_posix()
     mirrors = {
         "mirrors": {
@@ -57,4 +57,6 @@ def generate_mirrors_yaml(config):
         }
     }
 
-    return yaml.dump(mirrors, default_flow_style=False)
+    yaml = YAML()
+    yaml.default_flow_style = True
+    yaml.dump(mirrors, out)
