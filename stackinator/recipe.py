@@ -66,7 +66,7 @@ class Recipe:
         modules_path = self.path / "modules.yaml"
         self._logger.debug(f"opening {modules_path}")
         if not modules_path.is_file():
-            modules_path = pathlib.Path(args.build) / "spack/etc/spack/defaults/modules.yaml"
+            modules_path = pathlib.Path(args.build) / "spack/etc/spack/defaults/base/modules.yaml"
             self._logger.debug(f"no modules.yaml provided - using the {modules_path}")
 
         self.modules = modules_path
