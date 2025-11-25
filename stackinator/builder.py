@@ -463,6 +463,7 @@ repo:
         with (generate_config_path / "Makefile").open("w") as f:
             f.write(
                 make_config_template.render(
+                    modules=recipe.config["modules"],
                     build_path=self.path.as_posix(),
                     all_compilers=all_compilers,
                     release_compilers=all_compilers,
@@ -471,11 +472,12 @@ repo:
             )
 
         # write modules/modules.yaml
-        modules_yaml = recipe.modules_yaml
-        generate_modules_path = self.path / "modules"
-        generate_modules_path.mkdir(exist_ok=True)
-        with (generate_modules_path / "modules.yaml").open("w") as f:
-            f.write(modules_yaml)
+        if recipe.config["modules"]:
+            modules_yaml = recipe.modules_yaml
+            generate_modules_path = self.path / "modules"
+            generate_modules_path.mkdir(exist_ok=True)
+            with (generate_modules_path / "modules.yaml").open("w") as f:
+                f.write(modules_yaml)
 
         # write the meta data
         meta_path = store_path / "meta"

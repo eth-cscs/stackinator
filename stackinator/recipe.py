@@ -63,13 +63,13 @@ class Recipe:
             self.generate_compiler_specs(raw)
 
         # optional modules.yaml file
-        modules_path = self.path / "modules.yaml"
-        self._logger.debug(f"opening {modules_path}")
-        if not modules_path.is_file():
-            modules_path = pathlib.Path(args.build) / "spack/etc/spack/defaults/base/modules.yaml"
-            self._logger.debug(f"no modules.yaml provided - using the {modules_path}")
-
-        self.modules = modules_path
+        if self.config["modules"]:
+            modules_path = self.path / "modules.yaml"
+            self._logger.debug(f"opening {modules_path}")
+            if not modules_path.is_file():
+                modules_path = pathlib.Path(args.build) / "spack/etc/spack/defaults/base/modules.yaml"
+                self._logger.debug(f"no modules.yaml provided - using the {modules_path}")
+            self.modules = modules_path
 
         # optional packages.yaml file
         packages_path = self.path / "packages.yaml"
@@ -314,7 +314,11 @@ class Recipe:
         return view_meta
 
     @property
-    def modules_yaml(self):
+    def modules_yaml(self) -> str:
+        if not self.config["modules"]:
+            self._logger.critical("modules are not enabled in config.yaml")
+            raise RuntimeError("no modules data can be generated")
+
         with self.modules.open() as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
             raw["modules"]["default"]["roots"]["tcl"] = (pathlib.Path(self.mount) / "modules").as_posix()
