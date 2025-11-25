@@ -69,8 +69,18 @@ class Recipe:
         if modules_path.is_file():
             with modules_path.open() as fid:
                 self.modules = yaml.load(fid, Loader=yaml.Loader)
+
                 # Note: it should match MODULEPATH set by envvars and used by uenv view "modules"
                 self.modules["modules"]["default"]["roots"]["tcl"] = (pathlib.Path(self.mount) / "modules").as_posix()
+
+                # Note:
+                # Differently from spack, uenv does not support "arch_folder".
+                # With `uenv --view modules`, MODULEPATH is set by uenv (metadata provided by envvars.py)
+                # to `/{self.mount}/modules`, differently from spack that, by default, adds to MODULEPATH
+                # all arch_folder paths available on the system (e.g. linux-sles15-neoverse_v2).
+                if self.modules["modules"]["default"].get("arch_folder", True):
+                    self._logger.critical("modules:default:arch_folder:true is not supported")
+                    raise RuntimeError("modules.yaml with arch_folder enabled is not supported")
 
         # DEPRECATED field `config:modules`
         if "modules" in self.config:
