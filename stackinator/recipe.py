@@ -63,13 +63,22 @@ class Recipe:
             self.generate_compiler_specs(raw)
 
         # optional modules.yaml file
+        self.modules = None
+        modules_path = self.path / "modules.yaml"
         if self.config["modules"]:
-            modules_path = self.path / "modules.yaml"
             self._logger.debug(f"opening {modules_path}")
-            if not modules_path.is_file():
-                modules_path = pathlib.Path(args.build) / "spack/etc/spack/defaults/base/modules.yaml"
-                self._logger.debug(f"no modules.yaml provided - using the {modules_path}")
-            self.modules = modules_path
+            if modules_path.is_file():
+                with modules_path.open() as fid:
+                    self.modules = yaml.load(fid, Loader=yaml.Loader)
+                    # Note: it should match MODULEPATH set by envvars and used by uenv view "modules"
+                    self.modules["modules"]["default"]["roots"]["tcl"] = (
+                        pathlib.Path(self.mount) / "modules"
+                    ).as_posix()
+        else:
+            self._logger.debug("modules are not enabled in config.yaml")
+            if modules_path.exists():
+                self._logger.warning("modules.yaml exists with config:modules:false")
+                raise RuntimeError("modules.yaml exists in the recipe but modules are not enabled in config.yaml")
 
         # optional packages.yaml file
         packages_path = self.path / "packages.yaml"
@@ -312,17 +321,6 @@ class Recipe:
                 }
 
         return view_meta
-
-    @property
-    def modules_yaml(self) -> str:
-        if not self.config["modules"]:
-            self._logger.critical("modules are not enabled in config.yaml")
-            raise RuntimeError("no modules data can be generated")
-
-        with self.modules.open() as fid:
-            raw = yaml.load(fid, Loader=yaml.Loader)
-            raw["modules"]["default"]["roots"]["tcl"] = (pathlib.Path(self.mount) / "modules").as_posix()
-            return yaml.dump(raw)
 
     # creates the self.environments field that describes the full specifications
     # for all of the environments sets, grouped in environments, from the raw

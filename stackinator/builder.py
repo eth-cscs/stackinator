@@ -472,12 +472,11 @@ repo:
             )
 
         # write modules/modules.yaml
-        if recipe.config["modules"]:
-            modules_yaml = recipe.modules_yaml
+        if recipe.modules is not None:
             generate_modules_path = self.path / "modules"
             generate_modules_path.mkdir(exist_ok=True)
             with (generate_modules_path / "modules.yaml").open("w") as f:
-                f.write(modules_yaml)
+                yaml.dump(recipe.modules, f)
 
         # write the meta data
         meta_path = store_path / "meta"
