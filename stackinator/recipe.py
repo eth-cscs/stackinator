@@ -69,7 +69,14 @@ class Recipe:
         if modules_path.is_file():
             with modules_path.open() as fid:
                 self.modules = yaml.load(fid, Loader=yaml.Loader)
-                schema.ModulesValidator(pathlib.Path(self.mount)).validate(self.modules)
+                schema.ModulesValidator.validate(self.modules)
+
+                # Note:
+                # modules root should match MODULEPATH set by envvars and used by uenv view "modules"
+                # so we enforce that the user does not override it in modules.yaml
+                self.modules["modules"].setdefault("default", {}).setdefault("roots", {}).setdefault(
+                    "tcl", (self.mount / "modules").as_posix()
+                )
 
         # DEPRECATED field `config:modules`
         if "modules" in self.config:

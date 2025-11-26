@@ -64,11 +64,9 @@ class ValidationError(jsonschema.ValidationError):
 
 
 class SchemaValidator:
-    def __init__(self, schema_filepath: pathlib.Path, precheck=None, postcheck=None, postcheck_args=()):
+    def __init__(self, schema_filepath: pathlib.Path, precheck=None):
         self._validator = validator(json.load(open(schema_filepath)))
         self._precheck = precheck
-        self._postcheck = postcheck
-        self._postcheck_args = postcheck_args
 
     def validate(self, instance: dict):
         if self._precheck:
@@ -78,9 +76,6 @@ class SchemaValidator:
 
         if len(errors) != 0:
             raise ValidationError(self._validator.schema.get("title", "no-title"), errors)
-
-        if self._postcheck:
-            self._postcheck(instance, *self._postcheck_args)
 
 
 def check_config_version(instance):
@@ -117,18 +112,4 @@ ConfigValidator = SchemaValidator(prefix / "schema/config.json", check_config_ve
 CompilersValidator = SchemaValidator(prefix / "schema/compilers.json")
 EnvironmentsValidator = SchemaValidator(prefix / "schema/environments.json")
 CacheValidator = SchemaValidator(prefix / "schema/cache.json")
-
-
-def modules_constraints(instance: dict, mount: pathlib.Path):
-    # Note:
-    # modules root should match MODULEPATH set by envvars and used by uenv view "modules"
-    # so we enforce that the user does not override it in modules.yaml
-    instance["modules"].setdefault("default", {}).setdefault("roots", {}).setdefault(
-        "tcl", (mount / "modules").as_posix()
-    )
-
-
-def ModulesValidator(mountpoint):
-    return SchemaValidator(
-        prefix / "schema/modules.json", None, postcheck=modules_constraints, postcheck_args=(mountpoint,)
-    )
+ModulesValidator = SchemaValidator(prefix / "schema/modules.json")

@@ -201,23 +201,14 @@ def test_recipe_environments_yaml(recipe_paths):
             schema.EnvironmentsValidator.validate(raw)
 
 
-def test_modules_yaml():
-    instance = yaml.load(
+@pytest.mark.parametrize(
+    "recipe",
+    [
         dedent(
             """
             modules: {}
             """
         ),
-        Loader=yaml.Loader,
-    )
-    schema.ModulesValidator(pathlib.Path("/my/mount/point")).validate(
-        instance,
-    )
-
-    assert instance["modules"]["default"]["roots"]["tcl"] == "/my/mount/point/modules"
-    assert not instance["modules"]["default"]["arch_folder"]
-
-    instance = yaml.load(
         dedent(
             """
             modules:
@@ -225,25 +216,59 @@ def test_modules_yaml():
                 arch_folder: false
             """
         ),
-        Loader=yaml.Loader,
-    )
-    schema.ModulesValidator(pathlib.Path("/my/mount/point")).validate(
-        instance,
-    )
+        dedent(
+            """
+            modules:
+              # Paths tomodules: check when creating modules for all module sets
+              prefix_insmodules:pections:
+                bin:
+                  - PATH
+                lib:
+                  - LD_LIBRARY_PATH
+                lib64:
+                  - LD_LIBRARY_PATH
 
-    assert instance["modules"]["default"]["roots"]["tcl"] == "/my/mount/point/modules"
+              default:
+                arch_folder: false
+                # Where to install modules
+                tcl:
+                  all:
+                    autoload: none
+                  hash_length: 0
+                  exclude_implicits: true
+                  exclude: []
+                  projections:
+                    all: '{name}/{version}'
+            """
+        ),
+    ],
+)
+def test_valid_modules_yaml(recipe):
+    instance = yaml.load(recipe, Loader=yaml.Loader)
+    schema.ModulesValidator.validate(instance)
     assert not instance["modules"]["default"]["arch_folder"]
 
+
+@pytest.mark.parametrize(
+    "recipe",
+    [
+        dedent(
+            """
+            modules:
+              default:
+                arch_folder: true
+            """
+        ),
+        dedent(
+            """
+            modules:
+              default:
+                roots:
+                  tcl: /user/path/modules
+            """
+        ),
+    ],
+)
+def test_invalid_modules_yaml(recipe):
     with pytest.raises(Exception):
-        schema.ModulesValidator(pathlib.Path("/my/mount/point")).validate(
-            yaml.load(
-                dedent(
-                    """
-                    modules:
-                      default:
-                        arch_folder: true
-                    """
-                ),
-                Loader=yaml.Loader,
-            ),
-        )
+        schema.ModulesValidator.validate(yaml.load(recipe, Loader=yaml.Loader))
