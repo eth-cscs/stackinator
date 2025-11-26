@@ -112,3 +112,36 @@ ConfigValidator = SchemaValidator(prefix / "schema/config.json", check_config_ve
 CompilersValidator = SchemaValidator(prefix / "schema/compilers.json")
 EnvironmentsValidator = SchemaValidator(prefix / "schema/environments.json")
 CacheValidator = SchemaValidator(prefix / "schema/cache.json")
+
+
+class ModulesSchemaValidator:
+    def validate(self, instance: dict, mount: pathlib.Path):
+        # Note:
+        # modules root should match MODULEPATH set by envvars and used by uenv view "modules"
+        # so we enforce that the user does not override it in modules.yaml
+        try:
+            instance["modules"]["default"]["roots"]["tcl"]
+            root_logger.critical("stackinator must set modules:default:roots:tcl")
+            raise RuntimeError("stackinator requires modules:default:roots:tcl to be unset")
+        except RuntimeError as e:
+            raise e
+        except Exception:
+            print("Setting modules:default:roots:tcl to match uenv mount point")
+            instance["modules"]["default"]["roots"]["tcl"] = (mount / "modules").as_posix()
+
+        # Note:
+        # Differently from spack, uenv does not support "arch_folder".
+        # With `uenv --view modules`, MODULEPATH is set by uenv (metadata provided by envvars.py)
+        # to `/{self.mount}/modules`, differently from spack that, by default, adds to MODULEPATH
+        # all arch_folder paths available on the system (e.g. linux-sles15-neoverse_v2).
+        try:
+            if instance["modules"]["default"]["arch_folder"]:
+                root_logger.critical("stackinator does not support arch_folder")
+                raise RuntimeError("stackinator requires modules:default:arch_folder:false")
+        except RuntimeError as e:
+            raise e
+        except Exception:
+            instance["modules"]["default"]["arch_folder"] = False
+
+
+ModulesValidator = ModulesSchemaValidator()
