@@ -76,7 +76,7 @@ class Recipe:
         if "modules" in self.config:
             self._logger.warning("boolean field config.yaml:modules has been deprecated")
 
-            if not (self.with_modules and self.config["modules"]):
+            if self.with_modules != self.config["modules"]:
                 self._logger.error(f"config.yaml:modules:{self.config['modules']}")
                 self._logger.error(f"modules.yaml:{self.with_modules}")
                 raise RuntimeError("conflicting modules configuration detected")
