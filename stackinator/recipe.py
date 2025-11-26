@@ -65,20 +65,21 @@ class Recipe:
         # optional modules.yaml file
         self.modules = None
         modules_path = self.path / "modules.yaml"
-        if self.config["modules"]:
-            self._logger.debug(f"opening {modules_path}")
-            if modules_path.is_file():
-                with modules_path.open() as fid:
-                    self.modules = yaml.load(fid, Loader=yaml.Loader)
-                    # Note: it should match MODULEPATH set by envvars and used by uenv view "modules"
-                    self.modules["modules"]["default"]["roots"]["tcl"] = (
-                        pathlib.Path(self.mount) / "modules"
-                    ).as_posix()
-        else:
-            self._logger.debug("modules are not enabled in config.yaml")
-            if modules_path.exists():
-                self._logger.warning("modules.yaml exists with config:modules:false")
-                raise RuntimeError("modules.yaml exists in the recipe but modules are not enabled in config.yaml")
+        self._logger.debug(f"opening {modules_path}")
+        if modules_path.is_file():
+            with modules_path.open() as fid:
+                self.modules = yaml.load(fid, Loader=yaml.Loader)
+                # Note: it should match MODULEPATH set by envvars and used by uenv view "modules"
+                self.modules["modules"]["default"]["roots"]["tcl"] = (pathlib.Path(self.mount) / "modules").as_posix()
+
+        # DEPRECATED field `config:modules`
+        if "modules" in self.config:
+            self._logger.warning("boolean field config.yaml:modules has been deprecated")
+
+            if not (self.with_modules and self.config["modules"]):
+                self._logger.error(f"config.yaml:modules:{self.config['modules']}")
+                self._logger.error(f"modules.yaml:{self.with_modules}")
+                raise RuntimeError("conflicting modules configuration detected")
 
         # optional packages.yaml file
         packages_path = self.path / "packages.yaml"
@@ -269,6 +270,10 @@ class Recipe:
             raw = yaml.load(fid, Loader=yaml.Loader)
             schema.ConfigValidator.validate(raw)
             self._config = raw
+
+    @property
+    def with_modules(self) -> bool:
+        return self.modules is not None
 
     # In Stackinator 6 we replaced logic required to determine the
     # pre 1.0 Spack version.

@@ -65,8 +65,7 @@
             }
         },
         "modules" : {
-            "type": "boolean",
-            "default": true
+            "type": "boolean"
         },
         "description" : {
             "oneOf": [
