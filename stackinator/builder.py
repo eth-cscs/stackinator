@@ -472,7 +472,7 @@ repo:
             )
 
         # write modules/modules.yaml
-        if recipe.modules is not None:
+        if recipe.with_modules:
             generate_modules_path = self.path / "modules"
             generate_modules_path.mkdir(exist_ok=True)
             with (generate_modules_path / "modules.yaml").open("w") as f:
