@@ -34,7 +34,7 @@ version: 2
 * `name`: a plain text name for the environment
 * `store`: the location where the environment will be mounted.
 * `spack`: which spack and package repositories to use for installation.
-* `modules`: _optional_ enable/diasble module file generation (default `true`).
+* `modules`: _optional_ enable/disable module file generation (default `true`).
 * `description`: _optional_ a string that describes the environment (default empty).
 * `version`:  _default = 1_ the version of the uenv recipe (see below)
 
@@ -440,9 +440,9 @@ The `append_path` field is the same as `prepend_path`, except it appends instead
 
 ## Modules
 
-Modules are generated for the installed compilers and packages by spack. The default module generation rules set by the version of spack specified in `config.yaml` will be used if no `modules.yaml` file is provided.
+Modules are generated for the installed compilers and packages by spack.
 
-To set rules for module generation, provide a `modules.yaml` file as per the [spack documentation](https://spack.readthedocs.io/en/latest/module_file_support.html).
+To set rules for module generation, a `modules.yaml` file should be provided as per the [spack documentation](https://spack.readthedocs.io/en/latest/module_file_support.html).
 
 To disable module generation, set the field `config:modules:False` in `config.yaml`.
 
