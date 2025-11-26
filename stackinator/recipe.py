@@ -69,7 +69,7 @@ class Recipe:
         if modules_path.is_file():
             with modules_path.open() as fid:
                 self.modules = yaml.load(fid, Loader=yaml.Loader)
-                schema.ModulesValidator.validate(self.modules, pathlib.Path(self.mount))
+                schema.ModulesValidator(pathlib.Path(self.mount)).validate(self.modules)
 
         # DEPRECATED field `config:modules`
         if "modules" in self.config:

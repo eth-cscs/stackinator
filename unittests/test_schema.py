@@ -205,50 +205,45 @@ def test_modules_yaml():
     instance = yaml.load(
         dedent(
             """
-            modules:
-              default:
-                roots: {}
-                arch_folder: false
+            modules: {}
             """
         ),
         Loader=yaml.Loader,
     )
-    schema.ModulesValidator.validate(
+    schema.ModulesValidator(pathlib.Path("/my/mount/point")).validate(
         instance,
-        pathlib.Path("/my/mount/point"),
     )
 
     assert instance["modules"]["default"]["roots"]["tcl"] == "/my/mount/point/modules"
     assert not instance["modules"]["default"]["arch_folder"]
 
-    with pytest.raises(RuntimeError):
-        schema.ModulesValidator.validate(
+    instance = yaml.load(
+        dedent(
+            """
+            modules:
+              default:
+                arch_folder: false
+            """
+        ),
+        Loader=yaml.Loader,
+    )
+    schema.ModulesValidator(pathlib.Path("/my/mount/point")).validate(
+        instance,
+    )
+
+    assert instance["modules"]["default"]["roots"]["tcl"] == "/my/mount/point/modules"
+    assert not instance["modules"]["default"]["arch_folder"]
+
+    with pytest.raises(Exception):
+        schema.ModulesValidator(pathlib.Path("/my/mount/point")).validate(
             yaml.load(
                 dedent(
                     """
                     modules:
                       default:
-                        roots:
-                          tcl: {}
                         arch_folder: true
                     """
                 ),
                 Loader=yaml.Loader,
             ),
-            pathlib.Path("/my/mount/point"),
-        )
-    with pytest.raises(RuntimeError):
-        schema.ModulesValidator.validate(
-            yaml.load(
-                dedent(
-                    """
-                    modules:
-                      default:
-                        roots:
-                          tcl: {}
-                    """
-                ),
-                Loader=yaml.Loader,
-            ),
-            pathlib.Path("/my/mount/point"),
         )
