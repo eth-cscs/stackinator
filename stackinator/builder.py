@@ -158,7 +158,7 @@ class Builder:
         meta["views"] = recipe.environment_view_meta
         meta["mount"] = str(recipe.mount)
         modules = None
-        if conf["modules"]:
+        if recipe.with_modules:
             modules = {"root": str(recipe.mount / "modules")}
         meta["modules"] = modules
         self._environment_meta = meta
@@ -227,7 +227,7 @@ class Builder:
             f.write(
                 makefile_template.render(
                     cache=recipe.mirror,
-                    modules=recipe.config["modules"],
+                    modules=recipe.with_modules,
                     post_install_hook=recipe.post_install_hook,
                     pre_install_hook=recipe.pre_install_hook,
                     spack_version=spack_version,
@@ -463,6 +463,7 @@ repo:
         with (generate_config_path / "Makefile").open("w") as f:
             f.write(
                 make_config_template.render(
+                    modules=recipe.with_modules,
                     build_path=self.path.as_posix(),
                     all_compilers=all_compilers,
                     release_compilers=all_compilers,
@@ -471,11 +472,11 @@ repo:
             )
 
         # write modules/modules.yaml
-        modules_yaml = recipe.modules_yaml
-        generate_modules_path = self.path / "modules"
-        generate_modules_path.mkdir(exist_ok=True)
-        with (generate_modules_path / "modules.yaml").open("w") as f:
-            f.write(modules_yaml)
+        if recipe.with_modules:
+            generate_modules_path = self.path / "modules"
+            generate_modules_path.mkdir(exist_ok=True)
+            with (generate_modules_path / "modules.yaml").open("w") as f:
+                yaml.dump(recipe.modules, f)
 
         # write the meta data
         meta_path = store_path / "meta"

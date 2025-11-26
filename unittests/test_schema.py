@@ -43,7 +43,6 @@ def test_config_yaml(yaml_path):
         assert raw["store"] == "/user-environment"
         assert raw["spack"]["commit"] is None
         assert raw["spack"]["packages"]["commit"] is None
-        assert raw["modules"] == True  # noqa: E712
         assert raw["mirror"] == {"enable": True, "key": None}
         assert raw["description"] is None
 
@@ -64,7 +63,6 @@ def test_config_yaml(yaml_path):
     schema.ConfigValidator.validate(raw)
     assert raw["spack"]["commit"] is None
     assert raw["spack"]["packages"]["commit"] is not None
-    assert raw["modules"] == True  # noqa: E712
     assert raw["mirror"] == {"enable": True, "key": None}
     assert raw["description"] is None
 
@@ -85,7 +83,6 @@ def test_config_yaml(yaml_path):
     schema.ConfigValidator.validate(raw)
     assert raw["spack"]["commit"] == "develop"
     assert raw["spack"]["packages"]["commit"] is None
-    assert raw["modules"] == True  # noqa: E712
     assert raw["mirror"] == {"enable": True, "key": None}
     assert raw["description"] is None
 

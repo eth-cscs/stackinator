@@ -10,7 +10,7 @@ ALL_COMPILER_PREFIXES ={% for compiler in all_compilers %} $$($(SPACK_HELPER) -e
 COMPILER_PREFIXES ={% for compiler in release_compilers %} $$($(SPACK_HELPER) -e ../compilers/{{ compiler }} find --explicit --format='{prefix}' gcc llvm llvm-amdgpu nvhpc){% endfor %}
 
 
-all: $(CONFIG_DIR)/upstreams.yaml $(CONFIG_DIR)/packages.yaml $(CONFIG_DIR)/repos.yaml $(MODULE_DIR)/upstreams.yaml $(MODULE_DIR)/compilers.yaml
+all: $(CONFIG_DIR)/upstreams.yaml $(CONFIG_DIR)/packages.yaml $(CONFIG_DIR)/repos.yaml{% if modules %} $(MODULE_DIR)/upstreams.yaml $(MODULE_DIR)/compilers.yaml{% endif %}
 
 # Generate the upstream configuration that will be provided by the mounted image
 $(CONFIG_DIR)/upstreams.yaml:
