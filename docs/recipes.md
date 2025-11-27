@@ -452,7 +452,7 @@ Modules are generated for the installed compilers and packages by spack.
     But, **there are some differences**:
 
     - `modules:default:arch_folder` defaults to `false`. If set to `true` an error is raised, as Stackinator does not support this feature;
-    - `modules:default:roots:tcl` must not be specified, as Stackinator automatically configures the module root to be inside the uenv mount point.
+    - `modules:default:roots:tcl` is ignored, as Stackinator automatically configures the module root to be inside the uenv mount point.
 
 ## Custom Spack Packages
 

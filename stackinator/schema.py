@@ -108,8 +108,16 @@ def check_config_version(instance):
             raise RuntimeError("incompatible uenv recipe version")
 
 
+def check_module_paths(instance):
+    try:
+        instance["modules"]["default"]["roots"]["tcl"]
+        root_logger.warning("'modules:default:roots:tcl' field is ignored and overwritten by stackinator.")
+    except KeyError:
+        pass
+
+
 ConfigValidator = SchemaValidator(prefix / "schema/config.json", check_config_version)
 CompilersValidator = SchemaValidator(prefix / "schema/compilers.json")
 EnvironmentsValidator = SchemaValidator(prefix / "schema/environments.json")
 CacheValidator = SchemaValidator(prefix / "schema/cache.json")
-ModulesValidator = SchemaValidator(prefix / "schema/modules.json")
+ModulesValidator = SchemaValidator(prefix / "schema/modules.json", check_module_paths)

@@ -241,6 +241,14 @@ def test_recipe_environments_yaml(recipe_paths):
                     all: '{name}/{version}'
             """
         ),
+        dedent(
+            """
+            modules:
+              default:
+                roots:
+                  tcl: /path/which/is/going/to/be/ignored
+            """
+        ),
     ],
 )
 def test_valid_modules_yaml(recipe):
@@ -257,14 +265,6 @@ def test_valid_modules_yaml(recipe):
             modules:
               default:
                 arch_folder: true
-            """
-        ),
-        dedent(
-            """
-            modules:
-              default:
-                roots:
-                  tcl: /user/path/modules
             """
         ),
     ],

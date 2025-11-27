@@ -16,7 +16,7 @@
               "additionalProperties": true,
               "properties": {
                 "tcl": {
-                  "not": {}
+                  "type": "string"
                 }
               }
             },
