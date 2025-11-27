@@ -7,7 +7,7 @@ A recipe is comprised of the following yaml files in a directory:
 * `compilers.yaml`: the compilers provided by the stack.
 * `environments.yaml`: environments that contain all the software packages.
 * `modules.yaml`: _optional_ module generation rules
-    * follows the spec for [spack module configuration](https://spack.readthedocs.io/en/latest/module_file_support.html)
+    * follows the spec for [spack module configuration](https://spack.readthedocs.io/en/latest/module_file_support.html#the-modules-yaml-config-file-and-module-sets) with small exceptions (see [Modules](#modules) for more details).
 * `packages.yaml`: _optional_ define external packages
     * follows the spec for [spack package configuration](https://spack.readthedocs.io/en/latest/build_settings.html)
 * `repo`: _optional_ custom spack package definitions.
@@ -445,7 +445,14 @@ The presence of a `modules.yaml` file in the recipe is a necessary and sufficien
 !!! warning
     `config:modules` field has been deprecated. It can still be specified, but it has to be consistent with the presence of `modules.yaml` file.
 
-Modules are generated for the installed compilers and packages by spack. Rules for module generation in `modules.yaml` file should be provided as per the [spack documentation](https://spack.readthedocs.io/en/latest/module_file_support.html).
+Modules are generated for the installed compilers and packages by spack.
+
+!!! info "Rules for module generation in `modules.yaml`"
+    Stackinator relies on Spack's module generation capabilities, that's the reason why the `modules.yaml` file has to follow [Spack's specification](https://spack.readthedocs.io/en/latest/module_file_support.html#the-modules-yaml-config-file-and-module-sets).
+    But, **there are some differences**:
+
+    - `modules:default:arch_folder` defaults to `false`. If set to `true` an error is raised, as Stackinator does not support this feature;
+    - `modules:default:roots:tcl` must not be specified, as Stackinator automatically configures the module root to be inside the uenv mount point.
 
 ## Custom Spack Packages
 
