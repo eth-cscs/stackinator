@@ -21,12 +21,6 @@
               }
             },
             "arch_folder": {
-              "_comment": [
-                "Differently from spack, uenv does not support 'arch_folder'.",
-                "With `uenv --view modules`, MODULEPATH is set by uenv (metadata provided by envvars.py)",
-                "to `/{self.mount}/modules`, differently from spack that, by default, adds to MODULEPATH",
-                " all arch_folder paths available on the system (e.g. linux-sles15-neoverse_v2)"
-              ],
               "type": "boolean",
               "const": false,
               "default": false
