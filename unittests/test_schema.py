@@ -199,3 +199,76 @@ def test_recipe_environments_yaml(recipe_paths):
         with open(p / "environments.yaml") as fid:
             raw = yaml.load(fid, Loader=yaml.Loader)
             schema.EnvironmentsValidator.validate(raw)
+
+
+@pytest.mark.parametrize(
+    "recipe",
+    [
+        dedent(
+            """
+            modules: {}
+            """
+        ),
+        dedent(
+            """
+            modules:
+              default:
+                arch_folder: false
+            """
+        ),
+        dedent(
+            """
+            modules:
+              # Paths tomodules: check when creating modules for all module sets
+              prefix_insmodules:pections:
+                bin:
+                  - PATH
+                lib:
+                  - LD_LIBRARY_PATH
+                lib64:
+                  - LD_LIBRARY_PATH
+
+              default:
+                arch_folder: false
+                # Where to install modules
+                tcl:
+                  all:
+                    autoload: none
+                  hash_length: 0
+                  exclude_implicits: true
+                  exclude: []
+                  projections:
+                    all: '{name}/{version}'
+            """
+        ),
+        dedent(
+            """
+            modules:
+              default:
+                roots:
+                  tcl: /path/which/is/going/to/be/ignored
+            """
+        ),
+    ],
+)
+def test_valid_modules_yaml(recipe):
+    instance = yaml.load(recipe, Loader=yaml.Loader)
+    schema.ModulesValidator.validate(instance)
+    assert not instance["modules"]["default"]["arch_folder"]
+
+
+@pytest.mark.parametrize(
+    "recipe",
+    [
+        dedent(
+            """
+            modules:
+              default:
+                arch_folder: true
+            """
+        ),
+    ],
+)
+def test_invalid_modules_yaml(recipe):
+    with pytest.raises(Exception):
+        schema.ModulesValidator.validate(yaml.load(recipe, Loader=yaml.Loader))
