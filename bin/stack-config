@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+STACKINATOR_ROOT=$(dirname `realpath $0`)/..
+uv run --directory $STACKINATOR_ROOT --with . python -m stackinator.main $@
