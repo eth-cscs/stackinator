@@ -399,7 +399,7 @@ def read_activation_script(filename: str, env: Optional[EnvVarSet] = None) -> En
                     continue
 
                 # rhs the value that is assigned to the environment variable
-                rhs = fields[1]
+                rhs = fields[1].lstrip("'").rstrip("'")
                 if name in list_variables:
                     fields = [f for f in rhs.split(":") if len(f.strip()) > 0]
                     # look for $name as one of the fields (only works for append or prepend)
