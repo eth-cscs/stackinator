@@ -1,21 +1,4 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.12"
-# dependencies = [
-#   "jinja2",
-#   "jsonschema",
-#   "pyYAML",
-# ]
-# ///
+#!/usr/bin/env bash
 
-import pathlib
-import sys
-
-prefix = pathlib.Path(__file__).parent.parent.resolve()
-sys.path = [prefix.as_posix()] + sys.path
-
-from stackinator.main import main
-
-# Once we've set up the system path, run the tool's main method
-if __name__ == "__main__":
-    sys.exit(main())
+STACKINATOR_ROOT=$(dirname `realpath $0`)/..
+uv run --directory $STACKINATOR_ROOT --with . python -m stackinator.main $@

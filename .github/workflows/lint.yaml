@@ -7,10 +7,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: 3.12
     - name: Install uv
-      run: |
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-    - name: ruff
-      run: |
-        uvx ruff format --check
-        uvx ruff check
+      uses: astral-sh/setup-uv@v6
+    - run: uvx ruff format --check
+    - run: uvx ruff check

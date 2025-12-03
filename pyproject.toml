@@ -1,12 +1,73 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=61.2"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "Stackinator"
+authors = [{name = "Swiss National Supercomputing Center (CSCS/ETH Zurich)"}]
+description = "Stackinator is a tool for building a scientific software stack from a recipe for vClusters on CSCS' Alps infrastructure"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+dynamic = ["version"]
+requires-python = ">=3.12"
+dependencies = [
+  "Jinja2",
+  "jsonschema",
+  "PyYAML",
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Operating System :: POSIX :: Linux",
+  "Environment :: Console",
+]
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.urls]
+homepage = "https://github.com/eth-cscs/stackinator"
+documentation = "https://eth-cscs.github.io/stackinator/"
+
+[project.scripts]
+stack-config = "stackinator.main:main"
+
+[dependency-groups]
+dev = [
+  "pytest",
+]
+docs = [
+  "mkdocs",
+  "mkdocs-material",
+  "mkdocs-autorefs",
+]
+
+[tool.setuptools]
+packages = ["stackinator"]
+include-package-data = false
+
+[tool.setuptools.package-data]
+stackinator = ["schema/*.json", "templates/*", "etc/*"]
+
+[tool.setuptools.exclude-package-data]
+"*" = ["__pycache__/*", "*.pyc"]
+
+[tool.setuptools.dynamic]
+version = {attr = "stackinator.VERSION"}
 
 [tool.ruff]
 line-length = 120
-extend-exclude = ["external/", "unittests/recipes"]
-exclude = ["unittests/recipes/with-repo/repo/packages"]
+extend-exclude = [
+  "unittests/recipes/**/scripts/**/*.py",
+  "unittests/recipes/**/repo/packages/*/*.py",
+]
 
 [tool.ruff.lint]
 select = ["E", "F"]
 ignore = ["E203"]
+
+[tool.pytest.ini_options]
+testpaths = ["unittests"]
