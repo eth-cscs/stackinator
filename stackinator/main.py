@@ -33,10 +33,31 @@ def generate_logfile_name(name=""):
 def configure_logging(logfile):
     root_logger.setLevel(logging.DEBUG)
 
+    class ColoredFormatter(logging.Formatter):
+        # ANSI escape codes (CSI Control Sequence Introducer)
+        COLORS = {
+            logging.WARNING: "\033[1;33m",
+            logging.ERROR: "\033[1;31m",
+            logging.CRITICAL: "\033[1;41m",
+        }
+        RESET = "\033[0m"
+
+        def format(self, record):
+            message = super().format(record)
+
+            # Prepend level name for warnings and above
+            if record.levelno >= logging.WARNING:
+                message = f"{record.levelname}: {message}"
+
+            # Apply color based on log level
+            color = self.COLORS.get(record.levelno, self.RESET)
+
+            return f"{color}{message}{self.RESET}"
+
     # create stdout handler and set level to info
     ch = logging.StreamHandler(stream=sys.stdout)
     ch.setLevel(logging.INFO)
-    ch.setFormatter(logging.Formatter("%(message)s"))
+    ch.setFormatter(ColoredFormatter())
     root_logger.addHandler(ch)
 
     # create log file handler and set level to debug
