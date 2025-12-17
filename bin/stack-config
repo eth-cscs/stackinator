@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 
+export UV_PROJECT_ENVIRONMENT=.venv-`uname -m`
+
 STACKINATOR_ROOT=$(dirname `realpath $0`)/..
 uv run --directory $STACKINATOR_ROOT --with . python -m stackinator.main $@
