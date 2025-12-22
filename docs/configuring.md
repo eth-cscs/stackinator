@@ -5,7 +5,7 @@ It can be thought of as equivalent to calling `cmake` or `configure`, performed 
 
 ```bash
 # configure the build
-./bin/stack-config --build $BUILD_PATH --recipe $RECIPE_PATH --system $SYSTEM_CONFIG_PATH
+stack-config --build $BUILD_PATH --recipe $RECIPE_PATH --system $SYSTEM_CONFIG_PATH
 ```
 
 The following flags are required:
