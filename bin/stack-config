@@ -5,8 +5,7 @@ STACKINATOR_ROOT=$(dirname `realpath $0`)/..
 
 # Notes:
 # - --project: make `uv run` run in "project" mode, using the specified project directory
-# - --with-editable: install the project in editable mode, so that changes to the source code are reflected immediately without needing to reinstall
 # - UV_PROJECT_ENVIRONMENT: specify a custom name for the project virtual environment, based on the architecture (avoiding conflicts between x86_64 and arm64)
 
 export UV_PROJECT_ENVIRONMENT=.venv-`uname -m`
-uv run --project $STACKINATOR_ROOT --with-editable $STACKINATOR_ROOT python -m stackinator.main $@
+uv run --project $STACKINATOR_ROOT stack-config $@
