@@ -4,6 +4,10 @@ A tool for building a scientific software stack from a recipe on HPE Cray EX sys
 
 It is used to build software vClusters on Alps infrastructure at CSCS.
 
+## Requirements
+
+To run stackinator [uv](https://docs.astral.sh/uv/getting-started/installation/) needs to be [installed](https://docs.cscs.ch/guides/terminal/#managing-x86-and-arm).
+
 ## Getting Stackinator
 
 To get the latest version, download directly from GitHub.
@@ -12,10 +16,10 @@ To get the latest version, download directly from GitHub.
 git clone https://github.com/eth-cscs/stackinator.git
 ```
 
-Once installed, add the `bin` sub-directory to your path:
+Once checked out, it can be installed as an application with
 
 ```bash
-export PATH="<stackinator-install-path>/bin:$PATH"
+uv tool install --editable <path-to-stackinator-repo>
 ```
 
 !!! info
@@ -23,9 +27,9 @@ export PATH="<stackinator-install-path>/bin:$PATH"
 
     For existing recipes use Spack v0.23 and earlier, use [version 5](#versions)
 
-### Requirements
-
-To run stackinator [uv](https://docs.astral.sh/uv/getting-started/installation/) needs to be [installed](https://docs.cscs.ch/guides/terminal/#managing-x86-and-arm).
+!!! warning
+    Be careful not to share the same `uv` installation on clusters with different architectures (e.g. aarch64 vs x86_64).
+    You might want to install `uv` separately on each cluster and install stackinator in each `uv` installation (see [requirements](#requirements)).
 
 ### Versions
 
