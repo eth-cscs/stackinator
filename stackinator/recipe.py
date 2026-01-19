@@ -326,7 +326,6 @@ class Recipe:
 
                 view_meta[view["name"]] = {
                     "root": view["config"]["root"],
-                    "activate": view["config"]["root"] + "/activate.sh",
                     "description": "",  # leave the description empty for now
                     "recipe_variables": env.as_dict(),
                 }
