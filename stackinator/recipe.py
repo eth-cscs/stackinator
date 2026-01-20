@@ -300,11 +300,14 @@ class Recipe:
                     "mount": str(self.mount),
                     "view_path": str(view["config"]["root"]),
                 }
-                fill = lambda s: re.sub(
-                    r"\$@(\w+)@",
-                    lambda m: substitutions.get(m.group(1), m.group(0)),
-                    s,
-                )
+
+                def fill(s):
+                    re.sub(
+                        r"\$@(\w+)@",
+                        lambda m: substitutions.get(m.group(1), m.group(0)),
+                        s,
+                    )
+                    return s
 
                 ev_inputs = view["extra"]["env_vars"]
                 env = envvars.EnvVarSet()
