@@ -18,3 +18,5 @@ site
 # distribution/packaging files
 *.egg-info/
 build/
+uv.lock
+.venv*

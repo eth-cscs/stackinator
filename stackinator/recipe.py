@@ -292,6 +292,22 @@ class Recipe:
         view_meta = {}
         for _, env in self.environments.items():
             for view in env["views"]:
+                # recipe authors can substitute the name of the view, the mount
+                # and view path into environment variables using '$@key@' where
+                # key is one of view_name, mount and view_path.
+                substitutions = {
+                    "view_name": str(view["name"]),
+                    "mount": str(self.mount),
+                    "view_path": str(view["config"]["root"]),
+                }
+
+                def fill(s):
+                    return re.sub(
+                        r"\$@(\w+)@",
+                        lambda m: substitutions.get(m.group(1), m.group(0)),
+                        s,
+                    )
+
                 ev_inputs = view["extra"]["env_vars"]
                 env = envvars.EnvVarSet()
 
@@ -302,6 +318,9 @@ class Recipe:
 
                 for v in ev_inputs["set"]:
                     ((name, value),) = v.items()
+                    if value is not None:
+                        value = fill(value)
+
                     # insist that the only 'set' operation on prefix variables is to unset/reset them
                     # this requires that users use append and prepend to build up the variables
                     if envvars.is_list_var(name) and value is not None:
@@ -313,12 +332,16 @@ class Recipe:
                             env.set_scalar(name, value)
                 for v in ev_inputs["prepend_path"]:
                     ((name, value),) = v.items()
+                    if value is not None:
+                        value = fill(value)
                     if not envvars.is_list_var(name):
                         raise RuntimeError(f"{name} in the {view['name']} view is not a known prefix path variable")
 
                     env.set_list(name, [value], envvars.EnvVarOp.APPEND)
                 for v in ev_inputs["append_path"]:
                     ((name, value),) = v.items()
+                    if value is not None:
+                        value = fill(value)
                     if not envvars.is_list_var(name):
                         raise RuntimeError(f"{name} in the {view['name']} view is not a known prefix path variable")
 
@@ -326,7 +349,6 @@ class Recipe:
 
                 view_meta[view["name"]] = {
                     "root": view["config"]["root"],
-                    "activate": view["config"]["root"] + "/activate.sh",
                     "description": "",  # leave the description empty for now
                     "recipe_variables": env.as_dict(),
                 }
