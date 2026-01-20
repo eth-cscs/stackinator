@@ -296,9 +296,9 @@ class Recipe:
                 # and view path into environment variables using '$@key@' where
                 # key is one of view_name, mount and view_path.
                 substitutions = {
-                        "view_name": view["name"],
-                        "mount": self.mount,
-                        "view_path": view["config"]["root"]
+                        "view_name": str(view["name"]),
+                        "mount": str(self.mount),
+                        "view_path": str(view["config"]["root"])
                 }
                 fill = lambda s: re.sub(r"\$@(\w+)@", lambda m: substitutions.get(m.group(1), m.group(0)), s,)
 
