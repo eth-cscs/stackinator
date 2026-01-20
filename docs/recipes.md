@@ -405,11 +405,23 @@ The `set` field is a list of environment variables key-value pairs that specify 
 * It is not possible to set an initial value that is not `null` for a prefix path variable.
   Set such variables to `null` (unset it), then provide `append_path` and `prefix_path` operations below to set the individual paths.
 
-!!! note "using `${@VAR@}` to use environment variables"
+!!! info "use `${@VAR@}` to set environment variables at runtime"
     Sometimes you want to compose an environment variable **that has been set in the runtime environment** in your environment variable definition.
     For example, every user has a different `HOME` or `SCRATCH` value, and you might want to configure your view to store / read configuration from this path.
     The special syntax `${@VAR@}` will defer expanding the environment variable `VAR` until the view is loaded by uenv.
     The example above shows how to set the Juliaup install directory to be in the user's local scratch, i.e. a personalised private location for each user.
+
+!!! info "use `$@var@` to configure environment variables at configure time"
+    The special syntax `$@var@` can be used to substitute information about the view when configuring the recipe.
+    This is useful if you want to set an environment variable that refers to the mount point or mounted location of the view.
+
+    The following values are available:
+
+    | key | description |
+    | --- | ----------- |
+    | `mount` | the mount point of the image, e.g. `/user-environment` |
+    | `view_name` | the name of the view, e.g. `cuda-env` in the example above |
+    | `view_path` | the prefix path of the view, e.g. `/user-environment/env/cuda-env` |
 
 The `prepend_path` field takes a list of key-value pairs that define paths to prepend to a prefix path variable.
 
