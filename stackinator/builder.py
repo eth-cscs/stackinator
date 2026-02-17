@@ -232,6 +232,8 @@ class Builder:
                     pre_install_hook=recipe.pre_install_hook,
                     spack_version=spack_version,
                     spack_meta=spack_meta,
+                    # pass source_mirrors to Makefile render
+                    source_mirrors=recipe.config.get("source_mirrors", {}),
                     exclude_from_cache=["nvhpc", "cuda", "perl"],
                     verbose=False,
                 )

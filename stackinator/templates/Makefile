@@ -39,6 +39,16 @@ mirror-setup: spack-setup{% if pre_install_hook %} pre-install{% endif %}
 	$(SANDBOX) $(SPACK) gpg trust {{ cache.key }}
 	{% endif %}
 	{% endif %}
+	{% if source_mirrors %}
+	echo "Replacing all instances of mirror.spack.io...  Just in case"
+	grep -rl "https://mirror.spack.io" . | xargs sed -i 's/https:\/\/mirror.spack.io/https:\/\/pe-serve.lanl.gov\/spack-mirror/g'
+	echo "Adding mirrors"
+	{% for name, url in source_mirrors.items() %}
+	$(SANDBOX) $(SPACK) mirror add {{ name }} {{ url }}
+	{% endfor %}
+	echo "Current mirror list:"
+	spack mirror list
+	{% endif %}
 	touch mirror-setup
 
 compilers: mirror-setup
