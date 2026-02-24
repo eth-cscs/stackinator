@@ -34,22 +34,20 @@ pre-install: spack-setup
 mirror-setup: spack-setup{% if pre_install_hook %} pre-install{% endif %}
 
 	{% if cache %}
-	$(SANDBOX) $(SPACK) buildcache keys --install --trust
-	{% if cache.key %}
-	$(SANDBOX) $(SPACK) gpg trust {{ cache.key }}
-	{% endif %}
-	{% endif %}
-	{% if source_mirrors %}
-	echo "Removing all instances of mirror.spack.io...  Just in case"
-	grep -rl "https://mirror.spack.io" . | xargs sed -i 's|https://mirror.spack.io||g'
-	echo "Adding mirrors"
-	{% for name, url in source_mirrors.items() %}
-	$(SANDBOX) $(SPACK) mirror add {{ name }} {{ url }}
-	{% endfor %}
-	echo "Spack mirrors for this recipe:"
-	spack mirror list
-	{% endif %}
-	touch mirror-setup
+    $(SANDBOX) $(SPACK) buildcache keys --install --trust
+    {% if cache.key %}
+    $(SANDBOX) $(SPACK) gpg trust {{ cache.key }}
+    {% endif %}
+    {% endif %}
+    {% if source_mirrors %}
+    @echo "Adding mirrors"
+    {% for name, url in source_mirrors.items() | reverse %}
+    $(SANDBOX) $(SPACK) mirror add --scope=site {{ name }} {{ url }}
+    {% endfor %}
+    @echo "Current mirror list:"
+    $(SANDBOX) $(SPACK) mirror list
+    {% endif %}
+    touch mirror-setup
 
 compilers: mirror-setup
 	$(SANDBOX) $(MAKE) -C $@
