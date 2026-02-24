@@ -1,0 +1,21 @@
+[0mStackinator[0m
+[0m  recipe path: /usr/projects/hpctools/grodzki/uenv/my-recipes/recipes/prgenv-gnu-openmpi[0m
+[0m  build path : /dev/shm/grodzki/build[0m
+[0m  system     : /usr/projects/hpctools/grodzki/uenv/my-recipes/cluster-config/venadito[0m
+[0m  mount      : default[0m
+[0m  build cache: None[0m
+[0m  develop    : False[0m
+[0mspack: https://github.com/spack/spack.git already cloned to /dev/shm/grodzki/build/spack[0m
+[0mspack: fetching releases/v1.0[0m
+[0mspack: checking out releases/v1.0[0m
+[0mspack: commit hash is f36409b78591f8b02e8332eb4ad78da62c02571e[0m
+[0mspack-packages: https://github.com/spack/spack-packages.git already cloned to /dev/shm/grodzki/build/spack-packages[0m
+[0mspack-packages: fetching develop[0m
+[0mspack-packages: checking out develop[0m
+[0mspack-packages: commit hash is fc656595ff4c7e9c7e5045625dfdd3e92e97b10e[0m
+[0m
+Configuration finished, run the following to build the environment:
+[0m
+[0mcd /dev/shm/grodzki/build[0m
+[0menv --ignore-environment PATH=/usr/bin:/bin:`pwd -P`/spack/bin HOME=$HOME make store.squashfs -j32[0m
+[0msee logfile for more information /tmp/grodzki/log_stackinator_20260428-112546[0m
