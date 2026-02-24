@@ -40,14 +40,12 @@ mirror-setup: spack-setup{% if pre_install_hook %} pre-install{% endif %}
 	{% endif %}
 	{% endif %}
 	{% if source_mirrors %}
-	echo "Removing all instances of mirror.spack.io...  Just in case"
-	grep -rl "https://mirror.spack.io" . | xargs sed -i 's|https://mirror.spack.io||g'
-	echo "Adding mirrors"
-	{% for name, url in source_mirrors.items() %}
-	$(SANDBOX) $(SPACK) mirror add {{ name }} {{ url }}
+	@echo "Adding mirrors"
+	{% for name, url in source_mirrors.items() | reverse %}
+	$(SANDBOX) $(SPACK) mirror add --scope=site {{ name }} {{ url }}
 	{% endfor %}
-	echo "Spack mirrors for this recipe:"
-	spack mirror list
+	@echo "Current mirror list:"
+	$(SANDBOX) $(SPACK) mirror list
 	{% endif %}
 	touch mirror-setup
 
