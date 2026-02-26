@@ -64,6 +64,13 @@
                 }
             }
         },
+        "source_mirrors" : {
+            "type" : "object",
+            "additionalProperties": {
+                "type" : "string"
+            },
+            "default": {}
+        },
         "modules" : {
             "type": "boolean"
         },
