@@ -1,0 +1,1650 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../installing/">
+      
+      
+        <link rel="next" href="../cluster-config/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>Recipes - Stackinator</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#recipes" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Stackinator" class="md-header__button md-logo" aria-label="Stackinator" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Stackinator
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Recipes
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/eth-cscs/stackinator" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../configuring/" class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../development/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Development
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Stackinator" class="md-nav__button md-logo" aria-label="Stackinator" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Stackinator
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/eth-cscs/stackinator" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuring Stacks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../building/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building Stacks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installing Stacks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recipes
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recipes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compilers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compilers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environments
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Environments">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#compilers_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compilers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mpi-and-networking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MPI and networking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#specs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Specs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#packages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Packages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#variants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#views" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Views
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Views">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setting-environment-variables-with-env_vars" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setting environment variables with env_vars
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-spack-packages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Spack Packages
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#post-install-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Post install configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pre-install-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pre install configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#meta-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Meta-Data
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cluster-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cluster Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interfaces/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interfaces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build-caches/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build Caches
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../porting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Spack 1.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compilers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compilers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environments
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Environments">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#compilers_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compilers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mpi-and-networking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MPI and networking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#specs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Specs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#packages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Packages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#variants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#views" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Views
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Views">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setting-environment-variables-with-env_vars" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setting environment variables with env_vars
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-spack-packages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Spack Packages
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#post-install-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Post install configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pre-install-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pre install configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#meta-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Meta-Data
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="recipes">Recipes<a class="headerlink" href="#recipes" title="Permanent link">&para;</a></h1>
+<p>A recipe is a description of all of the compilers and software packages to be installed, along with configuration of modules and environment scripts the stack will provide to users.
+A recipe is comprised of the following yaml files in a directory:</p>
+<ul>
+<li><code>config.yaml</code>: common configuration for the stack.</li>
+<li><code>compilers.yaml</code>: the compilers provided by the stack.</li>
+<li><code>environments.yaml</code>: environments that contain all the software packages.</li>
+<li><code>modules.yaml</code>: <em>optional</em> module generation rules<ul>
+<li>follows the spec for <a href="https://spack.readthedocs.io/en/latest/module_file_support.html#the-modules-yaml-config-file-and-module-sets">spack module configuration</a> with small exceptions (see <a href="#modules">Modules</a> for more details).</li>
+</ul>
+</li>
+<li><code>packages.yaml</code>: <em>optional</em> define external packages<ul>
+<li>follows the spec for <a href="https://spack.readthedocs.io/en/latest/build_settings.html">spack package configuration</a></li>
+</ul>
+</li>
+<li><code>repo</code>: <em>optional</em> custom spack package definitions.</li>
+<li><code>extra</code>: <em>optional</em> additional meta data to copy to the meta data of the stack.</li>
+<li><code>post-install</code>: <em>optional</em> a script to run after Spack has been executed to build the stack.</li>
+<li><code>pre-install</code>: <em>optional</em> a script to run before any packages have been built.</li>
+</ul>
+<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
+<div class="language-yaml highlight"><span class="filename">config.yaml</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">prgenv-gnu</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nt">store</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/user-environment</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nt">spack</span><span class="p">:</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/spack/spack.git</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="nt">commit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">releases/v1.0</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="nt">packages</span><span class="p">:</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">        </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/spack/spack-packages.git</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">        </span><span class="nt">commit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">develop</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="nt">modules</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;HPC</span><span class="nv"> </span><span class="s">development</span><span class="nv"> </span><span class="s">tools</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="s">building</span><span class="nv"> </span><span class="s">MPI</span><span class="nv"> </span><span class="s">applications</span><span class="nv"> </span><span class="s">with</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">GNU</span><span class="nv"> </span><span class="s">compiler</span><span class="nv"> </span><span class="s">toolchain&quot;</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</span></code></pre></div>
+<ul>
+<li><code>name</code>: a plain text name for the environment</li>
+<li><code>store</code>: the location where the environment will be mounted.</li>
+<li><code>spack</code>: which spack and package repositories to use for installation.</li>
+<li><code>modules</code>: (<em>deprecated</em>) <em>optional</em> enable/disable module file generation.</li>
+<li><code>description</code>: <em>optional</em> a string that describes the environment (default empty).</li>
+<li><code>version</code>:  <em>default = 1</em> the version of the uenv recipe (see below)</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">uenv recipe versions</p>
+<p>Stackinator 6 introduces breaking changes to the uenv recipe format, introduced to support Spack v1.0.</p>
+<p>We have started versioning uenv recipes:</p>
+<ul>
+<li><strong>version 1</strong>: original uenv recipes for Spack v0.23 and earlier, supported by Stackinator version 5.</li>
+<li><strong>version 2</strong>: uenv recipes for Spack v1.0 and later, supported by Stackinator version 6.</li>
+</ul>
+<p>The default version is 1, so that old recipes that do not set a version are supported.</p>
+<div class="admonition warning">
+<p class="admonition-title">You must set version 2 explicitly to use Spack v1.0</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Version 1 recipes must be configured using Stackinator v5</p>
+<p>Version 5 of Stackinator is maintained in the <code>releases/v5</code> branch of stackinator.</p>
+<p>You must also use the <code>releases/v5</code> branch of <a href="https://github.com/eth-cscs/alps-cluster-config">Alps cluster config</a>.</p>
+</div>
+</div>
+<h2 id="compilers">Compilers<a class="headerlink" href="#compilers" title="Permanent link">&para;</a></h2>
+<p>Take an example configuration:
+<div class="language-yaml highlight"><span class="filename">compilers.yaml</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">gcc</span><span class="p">:</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;13&quot;</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nt">llvm</span><span class="p">:</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;16&quot;</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nt">nvhpc</span><span class="p">:</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;25.1&quot;</span>
+</span></code></pre></div></p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The version must be a string in quotes, i.e. <code>"13"</code> not <code>13</code>.</p>
+</div>
+<p>The compilers are built in multiple stages:</p>
+<ol>
+<li><em>gcc</em>: gcc is built using the system compiler.<ul>
+<li><code>gcc:version</code>: The version of gcc</li>
+</ul>
+</li>
+<li><em>llvm</em>: (optional) The llvm toolchain is built using the gcc toolchain installed in step 1.<ul>
+<li><code>llvm:version</code>: The version of llvm</li>
+</ul>
+</li>
+<li><em>nvhpc</em>: (optional) The nvhpc toolchain is built using the gcc toolchain installed in step 1.<ul>
+<li><code>nvhpc:version</code>: The version of nvhpc</li>
+</ul>
+</li>
+</ol>
+<p>The first step - building <code>gcc</code> - is required, so that the simplest stack will provide at least one version of gcc compiled for the target architecture.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Don't provide full specs, because the tool will insert "opinionated" specs for the target node type, for example:</p>
+<ul>
+<li><code>nvhpc:version:"21.7"</code> generates <code>nvhpc@21.7 ~mpi~blas~lapack</code></li>
+<li><code>llvm:version:"14"</code> generates <code>llvm@14 +clang ~gold</code></li>
+<li><code>gcc:version:"13"</code> generates <code>gcc@13 build_type=Release +profiled +strip +bootstrap</code></li>
+</ul>
+</div>
+<h2 id="environments">Environments<a class="headerlink" href="#environments" title="Permanent link">&para;</a></h2>
+<p>The software packages to install using the compiler toolchains are configured as disjoint environments, each built with the same compiler, and configured with an optional implementation of MPI.
+These are specified in the <code>environments.yaml</code> file.</p>
+<p>For example, consider a workflow that has to build more multiple applications - some of which require Fortran+OpenACC and others that are CPU only C code that can be built with GCC.
+To provide a single Spack stack that meets the workflow's needs, we would create two environments, one for each of the <code>nvhpc</code> and <code>gcc</code> compiler toolchains:</p>
+<div class="language-yaml highlight"><span class="filename">environments.yaml high level overview</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># A GCC-based programming environment</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nt">prgenv-gnu</span><span class="p">:</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">compiler</span><span class="p">:</span><span class="w">   </span><span class="c1"># ... compiler toolchain</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">network</span><span class="p">:</span><span class="w">    </span><span class="c1"># ... network configuration</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">deprecated</span><span class="p">:</span><span class="w"> </span><span class="c1"># ... whether to allow usage of deprecated packages or not</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nt">unify</span><span class="p">:</span><span class="w">      </span><span class="c1"># ... configure Spack concretizer</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nt">duplicates</span><span class="p">:</span><span class="w"> </span><span class="c1"># ... configure how the concretizer should handle duplicates</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nt">specs</span><span class="p">:</span><span class="w">      </span><span class="c1"># ... list of packages to install</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="nt">variants</span><span class="p">:</span><span class="w">   </span><span class="c1"># ... variants to apply to packages (e.g. +mpi)</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span><span class="nt">packages</span><span class="p">:</span><span class="w">   </span><span class="c1"># ... list of external packages to use</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="nt">views</span><span class="p">:</span><span class="w">      </span><span class="c1"># ... environment views to provide to users</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="c1"># An NVIDIA programming environment</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="nt">prgenv-nvgpu</span><span class="p">:</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">  </span><span class="c1"># ... same structure as prgenv-gnu</span>
+</span></code></pre></div>
+<p>In the following sections, we will explore each of the environment configuration fields in detail.</p>
+<h3 id="compilers_1">Compilers<a class="headerlink" href="#compilers_1" title="Permanent link">&para;</a></h3>
+<p>The <code>compiler</code> field describes a list compilers to use to build the software stack.
+Each compiler toolchain is specified using toolchain and spec</p>
+<div class="language-yaml highlight"><span class="filename">compile all packages with gcc</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="w">  </span><span class="nt">compiler</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">gcc</span><span class="p p-Indicator">]</span>
+</span></code></pre></div>
+<p>Sometimes two compiler toolchains are required, for example when using the <code>nvhpc</code> compilers, there are often dependencies that can't be built using the NVIDIA, or are better being built with GCC (for example <code>cmake</code>, <code>perl</code> and <code>netcdf-c</code>).
+The example below uses the <code>nvhpc</code> compilers with <code>gcc@11</code>.</p>
+<div class="language-yaml highlight"><span class="filename">compile all packages with gcc and nvhpc</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="w">  </span><span class="nt">compiler</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">gcc</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">nvhpc</span><span class="p p-Indicator">]</span>
+</span></code></pre></div>
+<p>The order of the compilers is significant.
+The first compiler is the default, and the other compilers will only be used to build packages when explicitly added to a spec.
+For example, in the recipe below, only <code>netcdf-fortran</code> will be built with the <code>nvhpc</code> toolchain, while the root specs <code>cmake</code> and <code>netcdf-c</code> and all dependencies will be built using the <code>gcc</code> toolchain.</p>
+<div class="language-yaml highlight"><span class="filename">compile all packages with gcc@11</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="w">  </span><span class="nt">compiler</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">gcc</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">nvhpc</span><span class="p p-Indicator">]</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">specs</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cmake</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">netcdf-c</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">netcdf-fortran%nvhpc</span>
+</span></code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This approach is typically used to build Fortran applications and packages with one toolchain (e.g. <code>nvhpc</code>), and all of the C/C++ dependencies with a different toolchain (e.g. <code>gcc</code>).</p>
+</div>
+<p><a href="" id="ref-recipes-network"></a></p>
+<h3 id="mpi-and-networking">MPI and networking<a class="headerlink" href="#mpi-and-networking" title="Permanent link">&para;</a></h3>
+<p>Stackinator can configure MPI (cray-mpich and OpenMPI) its dependencies (libfabric, cxi, etc) through the <code>network</code> field.</p>
+<div class="admonition note">
+<p>The <code>network</code> field replaces the <code>mpi</code> field in Stackinator 6.
+See the <a class="autorefs autorefs-internal" href="../porting/#environmentsyaml">porting guide</a> for guidance on updating uenv recipes for Spack 1.0.</p>
+</div>
+<p>If the <code>network</code> field is not set, MPI will not be configured in an environment.</p>
+<p>The <code>network</code> field has a field for defining MPI and additional custom package definitions</p>
+<div class="language-yaml highlight"><span class="filename">enironments.yaml overview of options</span><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">&lt;env-name&gt;</span><span class="p">:</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">network</span><span class="p">:</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="nt">mpi</span><span class="p">:</span><span class="w">        </span><span class="c1"># provide the spec for MPI</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="nt">specs</span><span class="p">:</span><span class="w">      </span><span class="c1"># additional custom specs for dependencies (libfabric etc)</span>
+</span></code></pre></div>
+<div class="admonition example">
+<p class="admonition-title">cray-mpich</p>
+<p>Rely on the defaults for the target system:
+<div class="language-yaml highlight"><span class="filename">environments.yaml</span><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">network</span><span class="p">:</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">mpi</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cray-mpich</span>
+</span></code></pre></div></p>
+<p>Provide a more explicit spec that disables <code>cuda</code> (this might be useful on a system where <code>cuda</code> support is the default).
+Also request a specific version of <code>libfabric</code>
+<div class="language-yaml highlight"><span class="filename">environments.yaml</span><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nt">network</span><span class="p">:</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="nt">mpi</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cray-mpich@9.0 ~cuda</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span><span class="nt">specs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;libfabric@1.2.2&#39;</span><span class="p p-Indicator">]</span>
+</span></code></pre></div></p>
+</div>
+<div class="admonition example">
+<p class="admonition-title">openmpi</p>
+<div class="language-yaml highlight"><span class="filename">environments.yaml</span><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nt">network</span><span class="p">:</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="nt">mpi</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">openmpi@5.0.8</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="nt">specs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;libfabric@2.2.0&#39;</span><span class="p p-Indicator">]</span>
+</span></code></pre></div>
+</div>
+<p>It is only possible to have a single MPI implementation in an environment, specified through the <code>mpi</code> field.
+Behind the scenes, Stackinator adds a hard requirement that all packages in the environment use the chosen MPI, to help Spack concretise correctly.</p>
+<details class="question">
+<summary>How do I provide cray-mpich and openmpi in my uenv?</summary>
+<p>No problem!
+Just add two environments in your <code>environments.yaml</code> file, for example:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>mpich:
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    compilers: [gcc]
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    network:
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>      mpi: cray-mpich
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>      specs: [&#39;libfabric@1.2.2&#39;]
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>    specs:
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>      - hdf5+mpi+fortran
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    views:
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>      cray-mpich:
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>        ... # define
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>openmpi:
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>    compilers: [gcc]
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>    network:
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>      mpi: openmpi@5.0.8
+</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a>      specs: [&#39;libfabric@1.2.2&#39;]
+</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a>    specs: 
+</span><span id="__span-10-17"><a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a>      - hdf5+mpi+fortran
+</span><span id="__span-10-18"><a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a>    views:
+</span><span id="__span-10-19"><a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a>      openmpi:
+</span><span id="__span-10-20"><a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a>        ... # define
+</span></code></pre></div>
+<p>The uenv will provide two views for the end user.</p>
+</details>
+<p>The <code>network.yaml</code> file in the cluster config provides a set of default specs for MPI dependencies for each MPI distribution.
+See the <a class="autorefs autorefs-internal" title="Configuring MPI and network libraries: " href="../cluster-config/#configuring-mpi-and-network-libraries-networkyaml"><code>network.yaml</code> documentation</a> for more information about how the defaults are set.</p>
+<details class="question">
+<summary>Why add a <code>network:specs</code> field instead of just adding <code>libfabric</code> and friends to the main <code>specs</code> list?</summary>
+<p>It is easier to override these by providing a custom field for network dependencies.</p>
+</details>
+<div class="admonition alps">
+<p class="admonition-title">Alps</p>
+<p>The recommended MPI distribution on Alps is <code>cray-mpich</code>, as it is the most widely tested MPI for the libfabric/Slingshot network.</p>
+<p>OpenMPI's support for the Slingshot network is improving, however it may not be optimal for many applications, or requires more effort to fine tune.
+As such, it is recommended as an option for applications that have performance issues or bugs with cray-mpich.</p>
+</div>
+<h3 id="specs">Specs<a class="headerlink" href="#specs" title="Permanent link">&para;</a></h3>
+<p>The list of software packages to install is configured in the <code>spec:</code> field of an environment. The specs follow the <a href="https://spack.readthedocs.io/en/latest/environments.html#spec-concretization">standard Spack practice</a>.</p>
+<p>The <code>deprecated:</code> field controls if Spack should consider versions marked as deprecated, and can be set to <code>true</code> or <code>false</code> (for considering or not considering deprecated versions, respectively).</p>
+<p>The <code>unify:</code> field controls the Spack concretiser, and can be set to three values <code>true</code>, <code>false</code> or <code>when_possible</code>.
+The </p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nt">cuda-env</span><span class="p">:</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="nt">specs</span><span class="p">:</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cmake</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hdf5</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">python@3.10</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">  </span><span class="nt">unify</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span></code></pre></div>
+<p>To install more than one version of the same package, or to concretise some more challenging combinations of packages, you might have to relax the concretiser to <code>when_possible</code> or <code>false</code>.
+For example, this environment provides <code>hdf5</code> both with and without MPI support:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nt">cuda-env</span><span class="p">:</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">specs</span><span class="p">:</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cmake</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hdf5~mpi</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hdf5+mpi</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">python@3.10</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">  </span><span class="nt">unify</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">when_possible</span>
+</span></code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Use <code>unify:true</code> when possible, then <code>unify:when_possible</code>, and finally <code>unify:false</code>.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Don't provide a spec for MPI or Compilers, which are configured in the <a class="autorefs autorefs-internal" title="MPI and networking" href="#mpi-and-networking"><code>network:</code></a> and <a href="./#compilers"><code>compilers</code></a> fields respectively.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Stackinator does not support "spec matrices", and likely won't, because they use multiple compiler toolchains in a manner that is contrary to the Stackinator "keep it simple" principle.</p>
+</div>
+<p>The <code>duplicates:strategy</code> field <a href="https://spack.readthedocs.io/en/latest/build_settings.html">controls how the concretiser handles duplicates</a>.
+The default strategy is <code>minimal</code> which is typically the right choice.
+In mixed compiler environments, <code>minimal</code> can sometimes be insufficient to allow concretization.
+<code>full</code> slightly relaxes the constraints that Spack imposes on the environment which can allow concretization.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The <code>full</code> strategy is still experimental and may produce surprising concretizations.
+In particular, the concretiser will more happily mix compilers using the <code>full</code> strategy.
+Please check the concretization when using this strategy to make sure it looks as you'd expect.</p>
+</div>
+<h3 id="packages">Packages<a class="headerlink" href="#packages" title="Permanent link">&para;</a></h3>
+<p>To specify external packages that should be used instead of building them, use the <code>packages</code> field.
+For example, if the <code>perl</code>, <code>python@3</code> and <code>git</code> packages are build dependencies of an environment and the versions that are available in the base CrayOS installation are sufficient, the following spec would be specified:</p>
+<div class="language-yaml highlight"><span class="filename">environments.yaml: specifying external packages</span><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nt">my-env</span><span class="p">:</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="nt">packages</span><span class="p">:</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">perl</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">git</span>
+</span></code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If a package is not found, it will be built by Spack.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>External packages specified in this manner will only be used when concretising this environment, and will not affect downstream users.</p>
+</div>
+<details class="note">
+<summary>expand if you are curious how Stackinator configures Spack for packages</summary>
+<p>The following Spack call is used to generate <code>packages.yaml</code> in the Spack environment that Stackinator generates in the build path to concretise and build the packages in the example above:</p>
+<div class="language-bash highlight"><span class="filename">Makefile target for external packages in an environment</span><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>packages.yaml:
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">    </span>spack<span class="w"> </span>external<span class="w"> </span>find<span class="w"> </span>--not-buildable<span class="w"> </span>--scope<span class="o">=</span>user<span class="w"> </span>perl<span class="w"> </span>git
+</span></code></pre></div>
+</details>
+<h3 id="variants">Variants<a class="headerlink" href="#variants" title="Permanent link">&para;</a></h3>
+<p>To specify variants that should be applied to all package specs in the environment by default (unless overridden explicitly in a package spec), use the <code>variants</code> field.
+For example, to concretise all specs in an environment that support MPI or CUDA and target A100 GPUs, the following <code>variants</code> could be set:</p>
+<div class="language-yaml highlight"><span class="filename">environments.yaml: variants for MPI and CUDA on A100</span><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nt">cuda-env</span><span class="p">:</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span><span class="nt">variants</span><span class="p">:</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">+mpi</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">+cuda</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cuda_arch=80</span>
+</span></code></pre></div>
+<details class="note">
+<summary>expand if you are curious how Stackinator configures Spack for variants</summary>
+<p>The above will add the following to the generated <code>spack.yaml</code> file used internally by Spack.</p>
+<div class="language-yaml highlight"><span class="filename">spack.yaml: packages spec generated for variants</span><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nt">spack</span><span class="p">:</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">  </span><span class="nt">packages</span><span class="p">:</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">    </span><span class="nt">all</span><span class="p">:</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">      </span><span class="nt">variants</span><span class="p">:</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">+mpi</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">+cuda</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cuda_arch=80</span>
+</span></code></pre></div>
+</details>
+<h3 id="views">Views<a class="headerlink" href="#views" title="Permanent link">&para;</a></h3>
+<p>File system views are an optional way to provide the software from an environment in a directory structure similar to <code>/usr/local</code>, based on Spack's <a href="https://spack.readthedocs.io/en/latest/environments.html#filesystem-views">filesystem views</a>.</p>
+<p>Each environment can provide more than one view, and the structure of the YAML is the same as used by the version of Spack used to build the Spack stack.
+For example, the <code>views</code> description:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nt">cuda-env</span><span class="p">:</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span><span class="nt">views</span><span class="p">:</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">    </span><span class="nt">default</span><span class="p">:</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">    </span><span class="nt">no-python</span><span class="p">:</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="w">      </span><span class="nt">exclude</span><span class="p">:</span>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;python&#39;</span>
+</span></code></pre></div>
+<p>will configure two views:</p>
+<ul>
+<li><code>default</code>: a view of all the software in the environment using the default settings of Spack.</li>
+<li><code>no-python</code>: everything in the default view, except any versions of <code>python</code>.</li>
+</ul>
+<p>Stackinator provides some additional options that are not provided by Spack, to fine tune the view, that can be set in the <code>uenv:</code> field:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nt">cuda-env</span><span class="p">:</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">  </span><span class="nt">views</span><span class="p">:</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">    </span><span class="nt">uenv</span><span class="p">:</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">      </span><span class="nt">add_compilers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">      </span><span class="nt">prefix_paths</span><span class="p">:</span>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="w">        </span><span class="nt">LD_LIBRARY_PATH</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">lib</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">lib64</span><span class="p p-Indicator">]</span>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="w">      </span><span class="nt">env_vars</span><span class="p">:</span>
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="w">          </span><span class="nt">set</span><span class="p">:</span>
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">WOMBAT</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">NOCOLOR</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1&quot;</span>
+</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">JULIAUP_INSTALLDIR</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;${@SCRATCH@}/.julia/gh200/juliaup&quot;</span>
+</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">PKG_CONFIG_PATH</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+</span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a><span class="w">          </span><span class="nt">prepend_path</span><span class="p">:</span>
+</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">PATH</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;${@HOME@}/.local/x86_4/bin/&quot;</span>
+</span><span id="__span-18-15"><a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="w">          </span><span class="nt">append_path</span><span class="p">:</span>
+</span><span id="__span-18-16"><a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">PKG_CONFIG_PATH</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/usr/lib/pkgconfig</span>
+</span><span id="__span-18-17"><a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">PKG_CONFIG_PATH</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/opt/cray/libfabric/1.15.2.0/lib64/pkgconfig</span>
+</span></code></pre></div>
+<ul>
+<li><code>add_compilers</code> (default <code>true</code>): by default Spack will not add compilers to the <code>PATH</code> variable. Stackinator automatically adds the <code>gcc</code> and/or <code>nvhpc</code> to path. This option can be used to explicitly disable or enable this feature.</li>
+<li><code>prefix_paths</code> (default empty): this option can be used to customise prefix style environment variables (<code>PATH</code>, <code>LD_LIBRARY_PATH</code>, <code>PKG_CONFIG_PATH</code>, <code>PYTHONPATH</code>, etc).<ul>
+<li>the key is the environment variable, and the value is a list of paths to search for in the environment view. All paths that match an entry in the list will be prepended to the prefix path environment variable.</li>
+<li>the main use for this feature is to opt-in to setting <code>LD_LIBRARY_PATH</code>. By default Spack does not add <code>lib</code> and <code>lib64</code> to <code>LD_LIBRARY_PATH</code> because that can break system installed applications that depend on <code>LD_LIBRARY_PATH</code> or finding their dependencies in standard locations like <code>/usr/lib</code>.</li>
+</ul>
+</li>
+<li><code>env_vars</code>: see below for a more detailed explanation of how to fine tune environment variables in the view.</li>
+</ul>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>See the <a href="../interfaces/#environment-views">interfaces documentation</a> for more information about how the environment views are provided.</p>
+</div>
+<h4 id="setting-environment-variables-with-env_vars">Setting environment variables with <code>env_vars</code><a class="headerlink" href="#setting-environment-variables-with-env_vars" title="Permanent link">&para;</a></h4>
+<p>The <code>views:&lt;view_name&gt;:uenv:env_vars</code> field can be used to further fine-tune the environment variables that are set when the view is started.
+There are three environment variable "operation" that can be specified - <code>set</code>, <code>prepend_path</code>, and <code>append_path</code> - as demonstrated in the example above.</p>
+<p>The <code>set</code> field is a list of environment variables key-value pairs that specify the variable name and the value to set it to.</p>
+<ul>
+<li>Setting a field to <code>null</code> will unset the variable if it was set by the parent environment.</li>
+<li><code>set</code> is a list, and values will be applied in the order that they are provided.
+  It is possible to provide two values for a variable, and the last value will be the one used.</li>
+<li>It is not possible to set an initial value that is not <code>null</code> for a prefix path variable.
+  Set such variables to <code>null</code> (unset it), then provide <code>append_path</code> and <code>prefix_path</code> operations below to set the individual paths.</li>
+</ul>
+<div class="admonition info">
+<p class="admonition-title">use <code>${@VAR@}</code> to set environment variables at runtime</p>
+<p>Sometimes you want to compose an environment variable <strong>that has been set in the runtime environment</strong> in your environment variable definition.
+For example, every user has a different <code>HOME</code> or <code>SCRATCH</code> value, and you might want to configure your view to store / read configuration from this path.
+The special syntax <code>${@VAR@}</code> will defer expanding the environment variable <code>VAR</code> until the view is loaded by uenv.
+The example above shows how to set the Juliaup install directory to be in the user's local scratch, i.e. a personalised private location for each user.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title">use <code>$@var@</code> to configure environment variables at configure time</p>
+<p>The special syntax <code>$@var@</code> can be used to substitute information about the view when configuring the recipe.
+This is useful if you want to set an environment variable that refers to the mount point or mounted location of the view.</p>
+<p>The following values are available:</p>
+<table>
+<thead>
+<tr>
+<th>key</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mount</code></td>
+<td>the mount point of the image, e.g. <code>/user-environment</code></td>
+</tr>
+<tr>
+<td><code>view_name</code></td>
+<td>the name of the view, e.g. <code>cuda-env</code> in the example above</td>
+</tr>
+<tr>
+<td><code>view_path</code></td>
+<td>the prefix path of the view, e.g. <code>/user-environment/env/cuda-env</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The <code>prepend_path</code> field takes a list of key-value pairs that define paths to prepend to a prefix path variable.</p>
+<ul>
+<li>Each entry is a single path</li>
+<li>To prepend more than one path to a variable, pass multiple values (see <code>PKG_CONFIG_PATH</code> in <code>append_path</code> above)</li>
+<li>The order in the list matters: paths will be prepended in the order that they appear in the list.</li>
+</ul>
+<p>The <code>append_path</code> field is the same as <code>prepend_path</code>, except it appends instead of prepending.</p>
+<div class="admonition question">
+<p class="admonition-title">What are prefix path variables?</p>
+<p>Prefix path variables are environment variables that are <code>:</code>-separated list of paths, like <code>PATH</code>, <code>LD_LIBRARY_PATH</code>, <code>PYTHONPATH</code> etc that provide a list of paths that are typically searched in order.</p>
+<p>Currently the set of supported prefix path variables is hard coded in stackinator.
+If you need to set a prefix path that isn't on this list, contact the stackinator devs and we can implement support for user-defined prefix paths.</p>
+<details class="info">
+<summary>the hard-coded prefix paths</summary>
+<ul>
+<li><code>ACLOCAL_PATH</code></li>
+<li><code>CMAKE_PREFIX_PATH</code></li>
+<li><code>CPATH</code></li>
+<li><code>LD_LIBRARY_PATH</code></li>
+<li><code>LIBRARY_PATH</code></li>
+<li><code>MANPATH</code></li>
+<li><code>MODULEPATH</code></li>
+<li><code>PATH</code></li>
+<li><code>PKG_CONFIG_PATH</code></li>
+<li><code>PYTHONPATH</code></li>
+</ul>
+</details>
+</div>
+<h2 id="modules">Modules<a class="headerlink" href="#modules" title="Permanent link">&para;</a></h2>
+<p>The presence of a <code>modules.yaml</code> file in the recipe is a necessary and sufficient condition to enable module generation.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><code>config:modules</code> field has been deprecated. It can still be specified, but it has to be consistent with the presence of <code>modules.yaml</code> file.</p>
+</div>
+<p>Modules are generated for the installed compilers and packages by spack.</p>
+<div class="admonition info">
+<p class="admonition-title">Rules for module generation in <code>modules.yaml</code></p>
+<p>Stackinator relies on Spack's module generation capabilities, that's the reason why the <code>modules.yaml</code> file has to follow <a href="https://spack.readthedocs.io/en/latest/module_file_support.html#the-modules-yaml-config-file-and-module-sets">Spack's specification</a>.
+But, <strong>there are some differences</strong>:</p>
+<ul>
+<li><code>modules:default:arch_folder</code> defaults to <code>false</code>. If set to <code>true</code> an error is raised, as Stackinator does not support this feature;</li>
+<li><code>modules:default:roots:tcl</code> is ignored, as Stackinator automatically configures the module root to be inside the uenv mount point.</li>
+</ul>
+</div>
+<h2 id="custom-spack-packages">Custom Spack Packages<a class="headerlink" href="#custom-spack-packages" title="Permanent link">&para;</a></h2>
+<p>An optional package repository can be added to a recipe to provide new or customized Spack packages in addition to Spack's <code>builtin</code> package repository, if a <code>repo</code> path is provided in the recipe.</p>
+<p>For example, the following <code>repo</code> path will add custom package definitions for the <code>hdf5</code> and <code>nvhpc</code> packages:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>repo
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>└─ packages
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>   ├─ hdf5
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>   │  └─ package.py
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>   └─ nvhpc
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>      └─ package.py
+</span></code></pre></div>
+<p>Additional custom packages can be provided as part of the cluster configuration, as well as additional site packages.
+These packages are all optional, and will be installed together in a single Spack package repository that is made available to downstream users of the generated uenv stack.
+See the documentation for <a href="../cluster-config/">cluster configuration</a> for more detail.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you need to backport a spack package from a more recent spack version, you can do it by using an already checked out spack repository like this</p>
+<p>(disclaimer: the package might need adjustments due to spack directives changes)</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a># ensure to have the folder for custom packages in your recipe
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>mkdir -p stackinator-recipe/repo/packages
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a># switch to the already checked out spack repository
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>cd $SPACK_ROOT
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a># use git to extract package files into your &quot;custom packages&quot; section of the stackinator recipe
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>git archive origin/develop `spack location -p fmt` | tar -x --strip-components=5 -C stackinator-recipe/repo/packages
+</span></code></pre></div>
+<p>In the above case, the package <code>fmt</code> is backported from <code>origin/develop</code> into the <code>stackinator-recipe</code>.</p>
+</div>
+<div class="admonition alps">
+<p class="admonition-title">Alps</p>
+<p>All packages are installed under a single spack package repository called <code>alps</code>.
+The CSCS configurations in <a href="https://github.com/eth-cscs/alps-cluster-config">github.com/eth-cscs/alps-cluster-config</a> provides a site configuration that defines cray-mpich, its dependencies, and the most up to date versions of cuda, nvhpc etc to all clusters on Alps.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Unlike Spack package repositories, any <code>repos.yaml</code> file in the <code>repo</code> path will be ignored.
+This is because the provided packages are added to the <code>alps</code> namespace.</p>
+</div>
+<h2 id="post-install-configuration">Post install configuration<a class="headerlink" href="#post-install-configuration" title="Permanent link">&para;</a></h2>
+<p>If a script <code>post-install</code> is provided in the recipe, it will be run during the build process: after the stack has been built, and just before the final squashfs image is generated.
+Post install scripts can be used to modify or extend an environment with operations that can't be performed in Spack, for example:</p>
+<ul>
+<li>configure a license file;</li>
+<li>install additional software outside of Spack;</li>
+<li>generate activation scripts.</li>
+</ul>
+<p>The following steps are effectively run, where we assume that the recipe is in <code>$recipe</code> and the mount point is the default <code>/user-environment</code>:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># copy the post-install script to the mount point</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>cp<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$recipe</span><span class="s2">&quot;</span>/post-install<span class="w"> </span>/user-environment
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>chmod<span class="w"> </span>+x<span class="w"> </span>/user-environment/post-install
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="c1"># apply Jinja templates</span>
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>jinja<span class="w"> </span>-d<span class="w"> </span>env.json<span class="w"> </span>/user-environment/post-install<span class="w"> </span>&gt;<span class="w"> </span>/user-environment/post-install
+</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a>
+</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a><span class="c1"># execute the script from the mount point</span>
+</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a><span class="nb">cd</span><span class="w"> </span>/user-environment
+</span><span id="__span-21-10"><a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a>/user-environment/post-install
+</span></code></pre></div>
+<p>The post-install script is templated using Jinja, with the following variables available for use in a script:</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>env.mount</code></td>
+<td>The mount point of the image - default <code>/user-environment</code></td>
+</tr>
+<tr>
+<td><code>env.config</code></td>
+<td>The installation tree of the Spack installation that was built in previous steps</td>
+</tr>
+<tr>
+<td><code>env.build</code></td>
+<td>The build path</td>
+</tr>
+<tr>
+<td><code>env.spack</code></td>
+<td>The location of Spack used to build the software stack (only available during installation)</td>
+</tr>
+</tbody>
+</table>
+<p>The use of Jinja templates is demonstrated in the following example of a bash script that generates an activation script that adds the installation path of GROMACS to the system PATH:</p>
+<div class="language-bash highlight"><span class="filename">post-install script that generates a simple activation script.</span><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="ch">#!/bin/bash</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="nv">gmx_path</span><span class="o">=</span><span class="k">$(</span>spack<span class="w"> </span>-C<span class="w"> </span><span class="o">{{</span><span class="w"> </span>env.config<span class="w"> </span><span class="o">}}</span><span class="w"> </span>location<span class="w"> </span>-i<span class="w"> </span>gromacs<span class="k">)</span>/bin
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;export PATH=</span><span class="nv">$gmx_path</span><span class="s2">:</span><span class="nv">$PATH</span><span class="s2">&quot;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span><span class="o">{{</span><span class="w"> </span>env.mount<span class="w"> </span><span class="o">}}</span>/activate.sh
+</span></code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The copy of Spack used to build the stack is available in the environment in which <code>post-install</code> runs, and can be called directly.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The script does not have to be bash - it can be in any scripting language, such as Python or Perl, that is available on the target system.</p>
+</div>
+<h2 id="pre-install-configuration">Pre install configuration<a class="headerlink" href="#pre-install-configuration" title="Permanent link">&para;</a></h2>
+<p>Similarly to the post-install hook, if a <code>pre-install</code> script is provided in the recipe, it will be run during the build process:</p>
+<ul>
+<li>directly after the initial test that Spack has been installed correctly;</li>
+<li>directly before the build cache is configured, and/or the first compiler environment is concretised.</li>
+</ul>
+<p>The pre-install script is copied, templated and executed similarly to the post-install hook (see above).</p>
+<h2 id="meta-data">Meta-Data<a class="headerlink" href="#meta-data" title="Permanent link">&para;</a></h2>
+<p>Stackinator generates meta-data about the stack to the <code>extra</code> path of the installation path.
+A recipe can install arbitrary meta data by providing a <code>extra</code> path, the contents of which will be copied to the <code>meta/extra</code> path in the installation path.</p>
+<div class="admonition alps">
+<p class="admonition-title">Alps</p>
+<p>This is used to provide additional information required by ReFrame as part of the CI/CD pipeline for software stacks on Alps, defined in the <a href="https://github.com/eth-cscs/alps-spack-stacks">GitHub eth-cscs/alps-spack-stacks</a> repository.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy", "content.code.annotate", "navigation.tabs"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
