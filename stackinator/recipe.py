@@ -330,22 +330,22 @@ class Recipe:
                             env.set_list(name, [], envvars.EnvVarOp.SET)
                         else:
                             env.set_scalar(name, value)
+
                 for v in ev_inputs["prepend_path"]:
                     ((name, value),) = v.items()
                     if value is not None:
                         value = fill(value)
                     if not envvars.is_list_var(name):
                         raise RuntimeError(f"{name} in the {view['name']} view is not a known prefix path variable")
+                    env.set_list(name, [value], envvars.EnvVarOp.PREPEND)
 
-                    env.set_list(name, [value], envvars.EnvVarOp.APPEND)
                 for v in ev_inputs["append_path"]:
                     ((name, value),) = v.items()
                     if value is not None:
                         value = fill(value)
                     if not envvars.is_list_var(name):
                         raise RuntimeError(f"{name} in the {view['name']} view is not a known prefix path variable")
-
-                    env.set_list(name, [value], envvars.EnvVarOp.PREPEND)
+                    env.set_list(name, [value], envvars.EnvVarOp.APPEND)
 
                 view_meta[view["name"]] = {
                     "root": view["config"]["root"],
