@@ -70,19 +70,16 @@ def configuration_from_file(path: pathlib.Path, cmdline_cache: Optional[str] = N
     return mirrors
 
 
-def generate_mirrors_yaml(config):
-    path = config["path"].as_posix()
-    mirrors = {
-        "mirrors": {
-            "alpscache": {
-                "fetch": {
-                    "url": f"file://{path}",
-                },
-                "push": {
-                    "url": f"file://{path}",
-                },
-            }
-        }
-    }
+def generate_mirrors_yaml(mirrors):
+    yaml = {"mirrors": {}}
 
-    return yaml.dump(mirrors, default_flow_style=False)
+    for m in mirrors:
+        name = m["name"]
+        url = m["url"]
+
+        yaml["mirrors"][name] = {
+            "fetch": {"url": url},
+            "push": {"url": url},
+        }
+
+    return yaml.dump(yaml, default_flow_style=False)
