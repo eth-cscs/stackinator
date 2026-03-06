@@ -226,14 +226,12 @@ class Builder:
         with (self.path / "Makefile").open("w") as f:
             f.write(
                 makefile_template.render(
-                    cache=recipe.mirror,
                     modules=recipe.with_modules,
                     post_install_hook=recipe.post_install_hook,
                     pre_install_hook=recipe.pre_install_hook,
                     spack_version=spack_version,
                     spack_meta=spack_meta,
-                    # pass source_mirrors to Makefile render
-                    source_mirrors=recipe.config.get("source_mirrors", {}),
+                    mirrors=recipe.mirrors
                     exclude_from_cache=["nvhpc", "cuda", "perl"],
                     verbose=False,
                 )
@@ -314,11 +312,11 @@ class Builder:
             fid.write(global_packages_yaml)
 
         # generate a mirrors.yaml file if build caches have been configured
-        if recipe.mirror:
+        if recipe.mirrors:
             dst = config_path / "mirrors.yaml"
-            self._logger.debug(f"generate the build cache mirror: {dst}")
+            self._logger.debug(f"generate the spack mirrors.yaml: {dst}")
             with dst.open("w") as fid:
-                fid.write(cache.generate_mirrors_yaml(recipe.mirror))
+                fid.write(cache.generate_mirrors_yaml(recipe.mirrors))
 
         # Add custom spack package recipes, configured via Spack repos.
         # Step 1: copy Spack repos to store_path where they will be used to

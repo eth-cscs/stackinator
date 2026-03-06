@@ -67,7 +67,20 @@ def configuration_from_file(path: pathlib.Path, cmdline_cache: Optional[str] = N
             except urllib.error.URLError as e:
                 print(f'Error: {e.reason}')
 
-    return mirrors
+            if mirror["key"]:
+                #if path, check if exists
+                path = pathlib.Path(os.path.expandvars(mirror["key"]))
+                if path.exists():
+                    if not path.is_file():
+                        raise FileNotFoundError(f"The key path '{path}' is not a file")
+                else
+                    #if key, save to file, change to path
+
+            if mirror["bootstrap"]:
+                #make bootstrap dirs
+                #bootstrap/<mirror name>/metadata.yaml
+
+        return mirrors
 
 
 def generate_mirrors_yaml(mirrors):
