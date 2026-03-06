@@ -7,7 +7,7 @@ import yaml
 from . import schema
 
 
-def configuration_from_file(file, mount):
+def configuration_from_file(file):
     with file.open() as fid:
         # load the raw yaml input
         raw = yaml.load(fid, Loader=yaml.Loader)

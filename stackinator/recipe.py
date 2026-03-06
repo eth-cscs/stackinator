@@ -4,8 +4,9 @@ import re
 
 import jinja2
 import yaml
+from typing import Optional
 
-from . import cache, root_logger, schema, spack_util
+from . import cache, root_logger, schema, spack_util, mirror
 from .etc import envvars
 
 
@@ -169,21 +170,11 @@ class Recipe:
             schema.EnvironmentsValidator.validate(raw)
             self.generate_environment_specs(raw)
 
-        # optional mirror configurtion
-        if mirrors_path.is_file():zx
-        mirrors_path = self.path / "mirrors.yaml"
-            self._logger.warning(
-                "mirrors.yaml have been removed from recipes, use the --cache option on stack-config instead."
-            )
-            raise RuntimeError("Unsupported mirrors.yaml file in recipe.")
-
-        # self.mirror = (args.cache, self.mount)
+        mirrors_path = self.system_config_path/'mirrors.yaml'
+        self._logger.debug(f"opening {mirrors_path}")
 
         # load the optional mirrors.yaml from system config:
-        mirrors_path = self.system_config_path / "mirrors.yaml"
-        if mirrors_path.is_file():
-            self.mirrors = (mirrors_path, self.mount)
-        # update mirror setter and cache.configuration_from_file()
+        self.mirrors = self.system_config_path / "mirrors.yaml"
 
         # optional post install hook
         if self.post_install_hook is not None:
@@ -242,54 +233,25 @@ class Recipe:
             return hook_path
         return None
 
-    # Returns a dictionary with the following fields
-    #
-    # root: /path/to/cache
-    # path: /path/to/cache/user-environment
-    # key: /path/to/private-pgp-key
     @property
-    def mirror(self):
-        return self._mirror
+    def mirrors(self):
+        return self._mirrors
 
     # configuration is a tuple with two fields:
     # - a Path of the yaml file containing the cache configuration
     # - the mount point of the image
-    @mirror.setter
-    def mirror(self, configuration):
-        self._logger.debug(f"configuring build cache mirror with {configuration}")
-        self._mirror = None
-
-        file, mount = configuration
-
-        if file is not None:
-            mirror_config_path = pathlib.Path(file)
-            if not mirror_config_path.is_file():
-                raise FileNotFoundError(f"The cache configuration '{file}' is not a file")
-
-            self._mirror = cache.configuration_from_file(mirror_config_path, pathlib.Path(mount))
-
-    @property
-    def mirrors(self):
-        return self._mirrors
-    
-    # old: self.mirror = (args.cache, self.mount)
-    # new: self.mirror = (mirrors_yaml_path, self.mount)
-
     @mirrors.setter
-    def (self, configuration):
-        self._logger.debug(f"configuring mirrors with {configuration}")
+    def mirrors(self, path: Optional[pathlib.Path]):
+        """Initialize the mirrors property from config."""
         self._mirrors = None
+        if path is not None:
+            if not path.is_file():
+                raise FileNotFoundError("The system config 'mirrors.yaml' file exists, but isn't a "
+                                        "readable file.")
 
-        file, mount = configuration
-
-        if file is not None:
-            mirror_config_path = pathlib.Path(file)
-            if not mirror_config_path.is_file():
-                raise FileNotFoundError(f"The mirror configuration '{file}' is not a file")
-
-            self._mirrors = cache.configuration_from_file(mirror_config_path, pathlib.Path(mount))
-
-
+            self._logger.debug(f"configuring mirrors from {path}")
+            self._mirrors = mirror.configuration_from_file(path)
+    
     @property
     def config(self):
         return self._config
@@ -569,7 +531,7 @@ class Recipe:
         )
 
         makefile_template = env.get_template("Makefile.compilers")
-        push_to_cache = self.mirror is not None
+        push_to_cache = self.mirrors
         files["makefile"] = makefile_template.render(
             compilers=self.compilers,
             push_to_cache=push_to_cache,
