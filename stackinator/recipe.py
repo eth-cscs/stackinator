@@ -170,14 +170,20 @@ class Recipe:
             self.generate_environment_specs(raw)
 
         # optional mirror configurtion
+        if mirrors_path.is_file():zx
         mirrors_path = self.path / "mirrors.yaml"
-        if mirrors_path.is_file():
             self._logger.warning(
                 "mirrors.yaml have been removed from recipes, use the --cache option on stack-config instead."
             )
             raise RuntimeError("Unsupported mirrors.yaml file in recipe.")
 
-        self.mirror = (args.cache, self.mount)
+        # self.mirror = (args.cache, self.mount)
+
+        # load the optional mirrors.yaml from system config:
+        mirrors_path = self.system_config_path / "mirrors.yaml"
+        if mirrors_path.is_file():
+            self.mirrors = (mirrors_path, self.mount)
+        # update mirror setter and cache.configuration_from_file()
 
         # optional post install hook
         if self.post_install_hook is not None:
@@ -261,6 +267,28 @@ class Recipe:
                 raise FileNotFoundError(f"The cache configuration '{file}' is not a file")
 
             self._mirror = cache.configuration_from_file(mirror_config_path, pathlib.Path(mount))
+
+    @property
+    def mirrors(self):
+        return self._mirrors
+    
+    # old: self.mirror = (args.cache, self.mount)
+    # new: self.mirror = (mirrors_yaml_path, self.mount)
+
+    @mirrors.setter
+    def (self, configuration):
+        self._logger.debug(f"configuring mirrors with {configuration}")
+        self._mirrors = None
+
+        file, mount = configuration
+
+        if file is not None:
+            mirror_config_path = pathlib.Path(file)
+            if not mirror_config_path.is_file():
+                raise FileNotFoundError(f"The mirror configuration '{file}' is not a file")
+
+            self._mirrors = cache.configuration_from_file(mirror_config_path, pathlib.Path(mount))
+
 
     @property
     def config(self):
