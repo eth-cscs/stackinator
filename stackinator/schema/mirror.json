@@ -23,7 +23,12 @@
                 "type": "boolean",
                 "default": false,
                 "description": "Whether to use as a mirror for bootstrapping. Will also use as a regular mirror.",
-            }
+            },
+            "buildcache": {
+                "type": "boolean",
+                "default": false,
+                "description": "Use this mirror as the buildcache push destination. Can only be enabled on a single mirror."
+            },
             "public_key": {
                 "type": "string",
                 "description": "Public PGP key for validating binary cache packages.",

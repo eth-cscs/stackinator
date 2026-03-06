@@ -170,11 +170,11 @@ class Recipe:
             schema.EnvironmentsValidator.validate(raw)
             self.generate_environment_specs(raw)
 
-        mirrors_path = self.system_config_path/'mirrors.yaml'
-        self._logger.debug(f"opening {mirrors_path}")
-
-        # load the optional mirrors.yaml from system config:
-        self.mirrors = self.system_config_path / "mirrors.yaml"
+        # load the optional mirrors.yaml from system config, and add any additional 
+        # mirrors specified on the command line.
+        self._mirrors = None
+        self._logger.debug("Configuring mirrors.")
+        self._mirrors = mirror.configuration_from_file(self.system_config_path/"mirrors.yaml", args.cache)
 
         # optional post install hook
         if self.post_install_hook is not None:
@@ -236,22 +236,7 @@ class Recipe:
     @property
     def mirrors(self):
         return self._mirrors
-
-    # configuration is a tuple with two fields:
-    # - a Path of the yaml file containing the cache configuration
-    # - the mount point of the image
-    @mirrors.setter
-    def mirrors(self, path: Optional[pathlib.Path]):
-        """Initialize the mirrors property from config."""
-        self._mirrors = None
-        if path is not None:
-            if not path.is_file():
-                raise FileNotFoundError("The system config 'mirrors.yaml' file exists, but isn't a "
-                                        "readable file.")
-
-            self._logger.debug(f"configuring mirrors from {path}")
-            self._mirrors = mirror.configuration_from_file(path)
-    
+ 
     @property
     def config(self):
         return self._config
