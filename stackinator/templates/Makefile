@@ -32,21 +32,25 @@ pre-install: spack-setup
 	$(SANDBOX) $(STORE)/pre-install-hook
 
 mirror-setup: spack-setup{% if pre_install_hook %} pre-install{% endif %}
-	
 	{% if cache %}
+	# The old way of managing mirrors
 	$(SANDBOX) $(SPACK) buildcache keys --install --trust
 	{% if cache.key %}
 	$(SANDBOX) $(SPACK) gpg trust {{ cache.key }}
 	{% endif %}
 	{% endif %}
-	{% if source_mirrors %}
-	@echo "Adding mirrors"
-	{% for name, url in source_mirrors.items() | reverse %}
-	$(SANDBOX) $(SPACK) mirror add --scope=site {{ name }} {{ url }}
+	{% if mirrors %}
+	@echo "Adding mirrors and gpg keys."
+	{% for mirror_info in mirrors | reverse %}
+	$(SANDBOX) $(SPACK) mirror add --scope=site {{ mirror_info.name }} {{ mirror_info.url }}
+	$(SANDBOX) $(SPACK)	gpg trust {{ mirror_info.key_path }}
 	{% endfor %}
 	@echo "Current mirror list:"
 	$(SANDBOX) $(SPACK) mirror list
 	{% endif %}
+	{% for mirror_info in filter(lambda m: m['bootstrap'], mirrors) | filter() %}
+	$(SANDBOX) $(SPACK) bootstrap add --scope=site {{ mirror_info.name }} bootstrap/{{ mirror_info.name }}
+	{% endfor %}
 	touch mirror-setup
 
 compilers: mirror-setup
