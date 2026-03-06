@@ -1,0 +1,37 @@
+# This config handles source mirrors, binary caches, and bootstrap mirrors (of both forms)
+{
+    # Order matters, so we need an array.
+    "type" : "array",
+    "items": {
+        "type": "object",
+        "required": ["name", "url"]
+        "properties": {
+            "name": {
+                "type": "string",
+                "description": "The name of this mirror. Should be follow standard variable naming syntax.",
+            },
+            "url": {
+                "type": "string",
+                "description": "URL to the mirror. Can be a simple path, or any protocol Spack supports (https, OCI).",
+            },
+            "enabled": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether this mirror is enabled.",
+            },
+            "bootstrap": {
+                "type": "boolean",
+                "default": false,
+                "description": "Whether to use as a mirror for bootstrapping. Will also use as a regular mirror.",
+            }
+            "public_key": {
+                "type": "string",
+                "description": "Public PGP key for validating binary cache packages.",
+            },
+            "description": {
+                "type": "string",
+                "description": "What this mirror is for."
+            }
+        }
+    }
+}
