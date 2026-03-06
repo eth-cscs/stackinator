@@ -1,5 +1,6 @@
 import os
 import pathlib
+import urllib.request
 
 import yaml
 
@@ -14,30 +15,28 @@ def configuration_from_file(file, mount):
         # validate the yaml
         schema.CacheValidator.validate(raw)
 
-        # verify that the root path exists
-        path = pathlib.Path(os.path.expandvars(raw["root"]))
-        if not path.is_absolute():
-            raise FileNotFoundError(f"The build cache path '{path}' is not absolute")
-        if not path.is_dir():
-            raise FileNotFoundError(f"The build cache path '{path}' does not exist")
+        mirrors = [mirror for mirror in raw if mirror["enabled"]]
 
-        raw["root"] = path
+        for mirror in mirrors:
+            url = mirror["url"]
+            if url.beginswith("file://"):
+                # verify that the root path exists
+                path = pathlib.Path(os.path.expandvars(url))
+                if not path.is_absolute():
+                    raise FileNotFoundError(f"The build cache path '{path}' is not absolute")
+                if not path.is_dir():
+                    raise FileNotFoundError(f"The build cache path '{path}' does not exist")
 
-        # Put the build cache in a sub-directory named after the mount point.
-        # This avoids relocation issues.
-        raw["path"] = pathlib.Path(path.as_posix() + mount.as_posix())
+                mirror["url"] = path
 
-        # verify that the key file exists if it was specified
-        key = raw["key"]
-        if key is not None:
-            key = pathlib.Path(os.path.expandvars(key))
-            if not key.is_absolute():
-                raise FileNotFoundError(f"The build cache key '{key}' is not absolute")
-            if not key.is_file():
-                raise FileNotFoundError(f"The build cache key '{key}' does not exist")
-            raw["key"] = key
+            else:
+                try:
+                    request = urllib.request.Request(url, method='HEAD')
+                    response = urllib.request.urlopen(request)
+                except urllib.error.URLError as e:
+                    print(f'Error: {e.reason}')
 
-        return raw
+        return mirrors
 
 
 def generate_mirrors_yaml(config):
