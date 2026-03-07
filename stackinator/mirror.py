@@ -12,7 +12,6 @@ class MirrorConfigError(RuntimeError):
     """Exception class for errors thrown by mirror configuration problems."""
 
 
-
 def configuration_from_file(system_config_root: pathlib.Path, cmdline_cache: Optional[str] = None):
     """Configure mirrors from both the system 'mirror.yaml' file and the command line."""
 
@@ -62,7 +61,7 @@ def configuration_from_file(system_config_root: pathlib.Path, cmdline_cache: Opt
             if not path.is_absolute():
                 raise FileNotFoundError(f"The mirror path '{path}' is not absolute")
             if not path.is_dir():
-                raise FileNotFoundError(f"The mirror path '{path}' does not exist")
+                raise FileNotFoundError(f"The mirror path '{path}' is not a directory")
 
             mirror["url"] = path
 
@@ -82,11 +81,12 @@ def configuration_from_file(system_config_root: pathlib.Path, cmdline_cache: Opt
         return mirrors
 
 
-def setup(mirrors, config_path):
+def yaml_setup(mirrors, config_path):
+    """Generate the mirrors.yaml for spack"""
+
     dst = config_path / "mirrors.yaml"
+
     self._logger.debug(f"generate the spack mirrors.yaml: {dst}")
-    with dst.open("w") as fid:
-        fid.write()
     yaml = {"mirrors": {}}
 
     for m in mirrors:
@@ -98,13 +98,22 @@ def setup(mirrors, config_path):
             "push": {"url": url},
         }
 
-    return yaml.dump(yaml, default_flow_style=False)
+    with dst.open("w") as file:
+        yaml.dump(yaml, default_flow_style=False)
 
-#called from builder
+    # return dst
+
+
 def key_setup(mirrors: List[Dict], system_config_path: pathlib.Path, key_store: pathlib.Path):
+    """Validate mirror keys, relocate to key_store, and update mirror config with new key paths"""
+
     for mirror in mirrors:
         if mirror["key"]:
             key = mirror["key"]
+
+            # key will be saved under key_store/mirror_name.gpg
+            dst = (key_store / f"'{mirror["name"]}'.gpg").resolve()
+
             # if path, check if abs path, if not, append sys config path in front and check again
             path = pathlib.Path(os.path.expandvars(key))
             if path.exists():
@@ -115,20 +124,23 @@ def key_setup(mirrors: List[Dict], system_config_path: pathlib.Path, key_store: 
                         raise FileNotFoundError(
                             f"The key path '{path}' is not a file. "
                             f"Check the key listed in mirrors.yaml in system config.")
+
                 file_type = magic.from_file(path)
+
                 if not file_type.startswith("OpenPGP Public Key"):
                     raise MirrorConfigError(
-                        f"'{key}' is not a valid GPG key. "
+                        f"'{path}' is not a valid GPG key. "
                         f"Check the key listed in mirrors.yaml in system config.")
-                # copy file to key store
-                with file open:
-                    data = key.read
-                dest = mkdir(new_key_file)
-                dest.write(data)
-                # mirror["key"] = new_path
+                
+                # copy key to new destination in key store
+                with open(path, 'r') as reader, open(dst, 'w') as writer:
+                    data = reader.read()
+                    writer.write(data)
                 
             else:            
                 # if PGP key, convert to binary, ???, convert back
-                # if key, save to file, change to path
+                with open(dst, "w") as file:
+                    file.write(key)
             
-    
+            # update mirror with new path
+            mirror["key"] = dst
