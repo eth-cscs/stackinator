@@ -11,7 +11,7 @@ from datetime import datetime
 import jinja2
 import yaml
 
-from . import VERSION, cache, root_logger, spack_util
+from . import VERSION, cache, root_logger, spack_util, mirror
 
 
 def install(src, dst, *, ignore=None, symlinks=False):
@@ -231,7 +231,7 @@ class Builder:
                     pre_install_hook=recipe.pre_install_hook,
                     spack_version=spack_version,
                     spack_meta=spack_meta,
-                    mirrors=recipe.mirrors
+                    mirrors=recipe.mirrors,
                     exclude_from_cache=["nvhpc", "cuda", "perl"],
                     verbose=False,
                 )
@@ -312,11 +312,12 @@ class Builder:
             fid.write(global_packages_yaml)
 
         # generate a mirrors.yaml file if build caches have been configured
+        key_store = self.path / ".gnupg"
         if recipe.mirrors:
+            mirror.key_setup(recipe.mirrors, config_path, key_store)
             dst = config_path / "mirrors.yaml"
             self._logger.debug(f"generate the spack mirrors.yaml: {dst}")
-            with dst.open("w") as fid:
-                fid.write(cache.generate_mirrors_yaml(recipe.mirrors))
+            mirror.spack_yaml_setup(recipe.mirrors, dst)
 
         # Add custom spack package recipes, configured via Spack repos.
         # Step 1: copy Spack repos to store_path where they will be used to
