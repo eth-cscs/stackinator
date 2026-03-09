@@ -1,7 +1,7 @@
 import os
 import pathlib
 import urllib.request
-from typing import Optional
+from typing import Optional, List, Dict
 import magic
 
 import yaml
@@ -74,19 +74,18 @@ def configuration_from_file(system_config_root: pathlib.Path, cmdline_cache: Opt
                     f"Could not reach the mirror url '{url}'. " 
                     f"Check the url listed in mirrors.yaml in system config. \n{e.reason}")
 
-        if mirror["bootstrap"]:
+        #if mirror["bootstrap"]:
             #make bootstrap dirs
             #bootstrap/<mirror name>/metadata.yaml
 
         return mirrors
 
 
-def yaml_setup(mirrors, config_path):
+def spack_yaml_setup(mirrors, config_path):
     """Generate the mirrors.yaml for spack"""
 
     dst = config_path / "mirrors.yaml"
 
-    self._logger.debug(f"generate the spack mirrors.yaml: {dst}")
     yaml = {"mirrors": {}}
 
     for m in mirrors:
@@ -120,7 +119,7 @@ def key_setup(mirrors: List[Dict], system_config_path: pathlib.Path, key_store: 
                 if not path.is_absolute():
                     #try prepending system config path
                     path = system_config_path + path
-                    if not.path.is_file()
+                    if not path.is_file():
                         raise FileNotFoundError(
                             f"The key path '{path}' is not a file. "
                             f"Check the key listed in mirrors.yaml in system config.")
