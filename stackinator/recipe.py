@@ -164,9 +164,15 @@ class Recipe:
         # check that the default view exists (if one has been set)
         self._default_view = self.config["default-view"]
         if self._default_view is not None:
-            if self._default_view not in [view["name"] for env in self.environments.values() for view in env["views"]]:
-                self._logger.warning(
-                    "The default-view {self.default_view} is not the name of a view in the environments.yaml definition"
+            available_views = [view["name"] for env in self.environments.values() for view in env["views"]]
+            # add the modules and spack views to the list of available views
+            if self.with_modules:
+                available_views.append("modules")
+            available_views.append("spack")
+            if self._default_view not in available_views:
+                self._logger.error(
+                    f"The default-view {self._default_view} is not the name of a view in the environments.yaml "
+                    "definition (one of {[name for name in available_views]}"
                 )
                 raise RuntimeError("Ivalid default-view in the recipe.")
 
