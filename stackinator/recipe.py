@@ -87,14 +87,6 @@ class Recipe:
                 self._logger.error(f"modules.yaml:{self.with_modules}")
                 raise RuntimeError("conflicting modules configuration detected")
 
-        # optional packages.yaml file
-        packages_path = self.path / "packages.yaml"
-        self._logger.debug(f"opening {packages_path}")
-        self.packages = None
-        if packages_path.is_file():
-            with packages_path.open() as fid:
-                self.packages = yaml.load(fid, Loader=yaml.Loader)
-
         self._logger.debug("creating packages")
 
         # load recipe/packages.yaml -> recipe_packages (if it exists)
@@ -168,6 +160,21 @@ class Recipe:
             }
             schema.EnvironmentsValidator.validate(raw)
             self.generate_environment_specs(raw)
+
+        # check that the default view exists (if one has been set)
+        self._default_view = self.config["default-view"]
+        if self._default_view is not None:
+            available_views = [view["name"] for env in self.environments.values() for view in env["views"]]
+            # add the modules and spack views to the list of available views
+            if self.with_modules:
+                available_views.append("modules")
+            available_views.append("spack")
+            if self._default_view not in available_views:
+                self._logger.error(
+                    f"The default-view {self._default_view} is not the name of a view in the environments.yaml "
+                    "definition (one of {[name for name in available_views]}"
+                )
+                raise RuntimeError("Ivalid default-view in the recipe.")
 
         # optional mirror configurtion
         mirrors_path = self.path / "mirrors.yaml"
@@ -285,6 +292,13 @@ class Recipe:
     # pre 1.0 Spack version.
     def find_spack_version(self, develop):
         return "1.0"
+
+    # Returns:
+    #   Path: if the recipe contains a spack package repository
+    #   None: if there is the recipe contains no repo
+    @property
+    def default_view(self):
+        return self._default_view
 
     @property
     def environment_view_meta(self):
