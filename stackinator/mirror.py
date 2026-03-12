@@ -159,8 +159,8 @@ class Mirrors:
         """Validate mirror keys, relocate to key_store, and update mirror config with new key paths."""
 
         for mirror in self.mirrors:
-            if mirror["key"]:
-                key = mirror["key"]
+            if mirror["public_key"]:
+                key = mirror["public_key"]
 
                 # key will be saved under key_store/mirror_name.gpg
                 dest = (key_store / f"'{mirror["name"]}'.gpg").resolve()
