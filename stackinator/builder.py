@@ -164,6 +164,7 @@ class Builder:
         self._environment_meta = meta
 
     def generate(self, recipe):
+        """Setup the recipe build environment."""
         # make the paths, in case bwrap is not used, directly write to recipe.mount
         store_path = self.path / "store" if not recipe.no_bwrap else pathlib.Path(recipe.mount)
         tmp_path = self.path / "tmp"
@@ -313,11 +314,14 @@ class Builder:
 
         # generate a mirrors.yaml file if build caches have been configured
         key_store = self.path / ".gnupg"
-        if recipe.mirrors:
-            mirror.key_setup(recipe.mirrors, config_path, key_store)
-            dst = config_path / "mirrors.yaml"
-            self._logger.debug(f"generate the spack mirrors.yaml: {dst}")
-            mirror.spack_yaml_setup(recipe.mirrors, dst)
+        mirrors = recipe.mirrors
+        if mirrors:
+            mirrors.key_setup(recipe.mirrors, config_path, key_store)
+            dest = config_path / "mirrors.yaml"
+            self._logger.debug(f"generate the spack mirrors.yaml: {dest}")
+            mirrors.create_spack_mirrors_yaml(dest)
+
+        # Setup bootstrap mirror configs.
 
         # Add custom spack package recipes, configured via Spack repos.
         # Step 1: copy Spack repos to store_path where they will be used to
