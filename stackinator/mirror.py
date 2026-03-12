@@ -15,6 +15,9 @@ class MirrorError(RuntimeError):
 class Mirrors:
     """Manage the definition of mirrors in a recipe."""
 
+    KEY_STORE_DIR = 'key_store'
+    MIRRORS_YAML = 'mirrors.yaml'
+
     def __init__(self, system_config_root: pathlib.Path, cmdline_cache: Optional[str] = None):
         """Configure mirrors from both the system 'mirror.yaml' file and the command line."""
 
@@ -92,7 +95,14 @@ class Mirrors:
                         f"Could not reach the mirror url '{url}'. " 
                         f"Check the url listed in mirrors.yaml in system config. \n{e.reason}")
 
-    def create_spack_mirrors_yaml(self, dest: pathlib.Path):
+    def setup_configs(self, config_root: pathlib.Path):
+        """Setup all mirror configs in the given config_root."""
+
+        self._key_setup(config_root/self.KEY_STORE_DIR)
+        self._create_spack_mirrors_yaml(config_root/self.MIRRORS_YAML)
+        self._create_bootstrap_configs(config_root)
+
+    def _create_spack_mirrors_yaml(self, dest: pathlib.Path):
         """Generate the mirrors.yaml for our build directory."""
 
         raw = {"mirrors": {}}
@@ -109,7 +119,7 @@ class Mirrors:
         with dest.open("w") as file:
             yaml.dump(raw, file, default_flow_style=False)
 
-    def create_bootstrap_configs(self, config_root: pathlib.Path):
+    def _create_bootstrap_configs(self, config_root: pathlib.Path):
         """Create the bootstrap.yaml and bootstrap metadata dirs in our build dir."""
 
         if not self.bootstrap_mirrors:
@@ -145,7 +155,7 @@ class Mirrors:
         with (config_root/'bootstrap.yaml').open('w') as file:
             yaml.dump(bootstrap_yaml, file, default_flow_style=False)
 
-    def key_setup(self, key_store: pathlib.Path):
+    def _key_setup(self, key_store: pathlib.Path):
         """Validate mirror keys, relocate to key_store, and update mirror config with new key paths."""
 
         for mirror in self.mirrors:
