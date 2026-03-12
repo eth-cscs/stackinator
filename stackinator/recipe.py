@@ -174,6 +174,7 @@ class Recipe:
         # mirrors specified on the command line.
         self._logger.debug("Configuring mirrors.")
         self._mirrors = mirror.Mirrors(self.system_config_path, args.cache)
+        self._cache = [mirror for mirror in self.mirrors if mirror["buildcache"]]
 
         # optional post install hook
         if self.post_install_hook is not None:
@@ -235,6 +236,10 @@ class Recipe:
     @property
     def mirrors(self):
         return self._mirrors
+    
+    @property
+    def cache(self):
+        return self._cache
  
     @property
     def config(self):
@@ -515,7 +520,7 @@ class Recipe:
         )
 
         makefile_template = env.get_template("Makefile.compilers")
-        push_to_cache = self.mirrors
+        push_to_cache = self.cache
         files["makefile"] = makefile_template.render(
             compilers=self.compilers,
             push_to_cache=push_to_cache,
@@ -546,7 +551,7 @@ class Recipe:
         jenv.filters["py2yaml"] = schema.py2yaml
 
         makefile_template = jenv.get_template("Makefile.environments")
-        push_to_cache = self.mirror is not None
+        push_to_cache = self.cache is not None
         files["makefile"] = makefile_template.render(
             environments=self.environments,
             push_to_cache=push_to_cache,

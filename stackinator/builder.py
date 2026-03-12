@@ -227,6 +227,7 @@ class Builder:
         with (self.path / "Makefile").open("w") as f:
             f.write(
                 makefile_template.render(
+                    cache = recipe.cache,
                     modules=recipe.with_modules,
                     post_install_hook=recipe.post_install_hook,
                     pre_install_hook=recipe.pre_install_hook,
