@@ -145,7 +145,7 @@ class Mirrors:
         with (config_root/'bootstrap.yaml').open('w') as file:
             yaml.dump(bootstrap_yaml, file, default_flow_style=False)
 
-    def key_setup(self, config_root: pathlib.Path):
+    def key_setup(self, key_store: pathlib.Path):
         """Validate mirror keys, relocate to key_store, and update mirror config with new key paths."""
 
         for mirror in self.mirrors:

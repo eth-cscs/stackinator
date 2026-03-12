@@ -315,7 +315,7 @@ class Builder:
 
         # generate a mirrors.yaml file if build caches have been configured
         if recipe.mirrors:
-            recipe.mirrors.key_setup(config_path)
+            recipe.mirrors.key_setup(config_path/'key_store')
 
             self._logger.debug(f"Generating the spack mirrors.yaml in '{config_path}'")
             recipe.mirrors.create_spack_mirrors_yaml(config_path/'mirrors.yaml')
