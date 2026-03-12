@@ -2,7 +2,7 @@ import os
 import pathlib
 import urllib.request
 import urllib.error
-from typing import Optional, List, Dict
+from typing import ByteString, Optional, List, Dict
 import magic
 
 import yaml
@@ -22,8 +22,10 @@ class Mirrors:
 
         self.mirrors = self._load_mirrors(cmdline_cache)
         self._check_mirrors()
-
-        self.build_cache_mirrors = [mirror for mirror in self.mirrors if mirror.get('buildcache', False)]
+ 
+        self.build_cache_mirror = ([mirror for mirror in self.mirrors if mirror.get('buildcache', False)] 
+                                   + [None]).pop(0)
+        self.bootstrap_mirrors = [mirror for mirror in self.mirrors if mirror.get('bootstrap', False)]
         self.keys = [mirror['key'] for mirror in self.mirrors if mirror.get('key') is not None]
 
     def _load_mirrors(self, cmdline_cache: Optional[str]) -> List[Dict]:
@@ -107,12 +109,43 @@ class Mirrors:
         with dest.open("w") as file:
             yaml.dump(raw, file, default_flow_style=False)
 
-    def bootstrap_setup(self, config_root: pathlib.Path):
+    def create_bootstrap_configs(self, config_root: pathlib.Path):
         """Create the bootstrap.yaml and bootstrap metadata dirs in our build dir."""
 
+        if not self.bootstrap_mirrors:
+            return
+        
+        bootstrap_yaml = {
+            'sources': [],
+            'trusted': {},
+        }
 
+        for mirror in self.bootstrap_mirrors:
+            name = mirror['name']
+            bs_mirror_path = config_root/f'bootstrap/{name}'
+            # Tell spack where to find the metadata for each bootstrap mirror.
+            bootstrap_yaml['sources'].append(
+                {
+                    'name': name,
+                    'metadata': bs_mirror_path,
+                }
+            )
+            # And trust each one
+            bootstrap_yaml['trusted'][name] = True
 
-    def key_setup(self, key_store: pathlib.Path):
+            # Create the metadata dir and metadata.yaml
+            bs_mirror_path.mkdir(parents=True)
+            bs_mirror_yaml = {
+                'type': 'install',
+                'info': mirror['url'],
+            }
+            with (bs_mirror_path/'metadata.yaml').open('w') as file:
+                yaml.dump(bs_mirror_yaml, file, default_flow_style=False)
+        
+        with (config_root/'bootstrap.yaml').open('w') as file:
+            yaml.dump(bootstrap_yaml, file, default_flow_style=False)
+
+    def key_setup(self, config_root: pathlib.Path):
         """Validate mirror keys, relocate to key_store, and update mirror config with new key paths."""
 
         for mirror in self.mirrors:

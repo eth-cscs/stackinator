@@ -314,15 +314,14 @@ class Builder:
             fid.write(global_packages_yaml)
 
         # generate a mirrors.yaml file if build caches have been configured
-        key_store = self.path / ".gnupg"
-        mirrors = recipe.mirrors
-        if mirrors:
-            mirrors.key_setup(recipe.mirrors, config_path, key_store)
-            dest = config_path / "mirrors.yaml"
-            self._logger.debug(f"generate the spack mirrors.yaml: {dest}")
-            mirrors.create_spack_mirrors_yaml(dest)
+        if recipe.mirrors:
+            recipe.mirrors.key_setup(config_path)
 
-        # Setup bootstrap mirror configs.
+            self._logger.debug(f"Generating the spack mirrors.yaml in '{config_path}'")
+            recipe.mirrors.create_spack_mirrors_yaml(config_path/'mirrors.yaml')
+
+            # Setup bootstrap mirror configs.
+            recipe.mirrors.create_bootstrap_configs(config_path)
 
         # Add custom spack package recipes, configured via Spack repos.
         # Step 1: copy Spack repos to store_path where they will be used to
