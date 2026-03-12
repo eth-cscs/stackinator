@@ -314,11 +314,12 @@ class Builder:
             fid.write(global_packages_yaml)
 
         # generate a mirrors.yaml file if build caches have been configured
-        if recipe.mirrors:
-            self._logger.debug(f"Generating the spack mirror configs in '{config_path}'")
-            recipe.mirrors.key_setup(config_path/'key_store')
-            recipe.mirrors.create_spack_mirrors_yaml(config_path/'mirrors.yaml')
-            recipe.mirrors.create_bootstrap_configs(config_path)
+        self._logger.debug(f"Generating the spack mirror configs in '{config_path}'")
+        try:
+            recipe.mirrors.setup_configs(config_path)
+        except mirror.MirrorError as err:
+            self._logger.error(f"Could not set up mirrors.\n{err}")
+            return 1
 
         # Add custom spack package recipes, configured via Spack repos.
         # Step 1: copy Spack repos to store_path where they will be used to
