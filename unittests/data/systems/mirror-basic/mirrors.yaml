@@ -1,0 +1,8 @@
+fake-mirror:
+  url: https://google.com
+disabled-mirror:
+  url: https://google.com
+  enabled: false
+bootstrap-mirror:
+  url: https://mirror.spack.io
+  bootstrap: true
