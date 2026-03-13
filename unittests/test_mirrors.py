@@ -20,8 +20,10 @@ def valid_mirrors(systems_path):
     return mirrors
 
 def test_mirror_init(systems_path, valid_mirrors):
-    path = systems_path / "mirror_ok"
+    path = systems_path / "mirror-ok"
+    print(path)
     mirrors_obj = mirror.Mirrors(path)
+    print(mirrors_obj.mirrors.items())
     assert mirrors_obj.mirrors == valid_mirrors
     assert mirrors_obj.mirrors.bootstrap_mirrors == [mirror for mirror in valid_mirrors.values() if mirror.get('bootstrap')]
     assert mirrors_obj.mirrors.build_cache_mirror == [mirror for mirror in valid_mirrors.values() if mirror.get('buildcache')]
