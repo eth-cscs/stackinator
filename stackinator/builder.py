@@ -227,13 +227,13 @@ class Builder:
         with (self.path / "Makefile").open("w") as f:
             f.write(
                 makefile_template.render(
-                    cache = recipe.cache,
                     modules=recipe.with_modules,
                     post_install_hook=recipe.post_install_hook,
                     pre_install_hook=recipe.pre_install_hook,
                     spack_version=spack_version,
                     spack_meta=spack_meta,
-                    mirrors=recipe.mirrors.mirrors,
+                    gpg_keys=recipe.mirrors.keys,
+                    cache=recipe.mirrors.buildcache,
                     exclude_from_cache=["nvhpc", "cuda", "perl"],
                     verbose=False,
                 )

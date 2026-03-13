@@ -173,8 +173,11 @@ class Mirrors:
         raw = {"mirrors": {}}
 
         for name, mirror in self.mirrors.items():
-            name = mirror["name"]
             url = mirror["url"]
+
+            # Make the mirror path specific to the mount point
+            if mirror['mount_specific'] and self._mount_point is not None:
+                url = url.rstrip('/') + '/' + self._mount_point.as_posix().lstrip('/')
 
             raw["mirrors"][name] = {
                 "fetch": {"url": url},
