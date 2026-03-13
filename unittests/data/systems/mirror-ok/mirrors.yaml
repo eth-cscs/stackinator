@@ -1,7 +1,11 @@
-- url: https://google.com
-- url: https://google.com
+fake-mirror:
+  url: https://google.com
+disabled-mirror:
+  url: https://google.com
   enabled: false
-- url: https://cache.spack.io/
+buildcache-mirror:
+  url: https://cache.spack.io/
   cache: true
-- url: https://mirror.spack.io
+bootstrap-mirror:
+  url: https://mirror.spack.io
   bootstrap: true
