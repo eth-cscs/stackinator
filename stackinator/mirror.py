@@ -45,12 +45,12 @@ class Mirrors:
         """Load the mirrors file, if one exists."""
         path = self._system_config_root/"mirrors.yaml"
         if path.exists():
-            with path.open() as fid:
-                # load the raw yaml input
-                mirrors = yaml.load(fid, Loader=yaml.SafeLoader)
-
-            # validate the yaml
-            schema.MirrorsValidator.validate(mirrors)
+            try:
+                with path.open() as fid:
+                    # load the raw yaml input
+                    mirrors = yaml.load(fid, Loader=yaml.SafeLoader)
+            except (OSError, PermissionError) as err:
+                raise MirrorError("Could not open/read mirrors.yaml file.\n{err}")
         else:
             mirrors = {}
 
@@ -62,6 +62,7 @@ class Mirrors:
                 mirrors['cmdline_cache'] = {
                         'url': cmdline_cache,
                         'description': "Cache configured via command line.",
+                        'enabled': True,
                         'cache': True,
                         'bootstrap': False,
                         'mount_specific': True,
@@ -74,6 +75,15 @@ class Mirrors:
 
         # Load the cache as defined by the deprecated 'cache.yaml' file.
         mirrors['legacy_cache_cfg'] = self._load_legacy_cache()
+
+
+        try:
+            # validate the yaml, including anything we added
+            schema.MirrorsValidator.validate(mirrors)
+        except ValueError as err:
+            raise MirrorError(
+                "Mirror config does not comply with schema.\n{err}"
+            )
 
         caches = [mirror for mirror in mirrors.values() if mirror['cache']]
         if len(caches) > 1:
@@ -115,7 +125,8 @@ class Mirrors:
             mirror_cfg = {
                 'url': f'file://{raw['root']}',
                 'description': "Buildcache dest loaded from legacy cache.yaml",
-                'buildcache_push': True,
+                'cache': True,
+                'enabled': True,
                 'mount_specific': True,
                 'private_key': raw['key'],
             }
