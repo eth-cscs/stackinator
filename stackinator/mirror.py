@@ -47,29 +47,30 @@ class Mirrors:
         if path.exists():
             with path.open() as fid:
                 # load the raw yaml input
-                raw = yaml.load(fid, Loader=yaml.SafeLoader)
+                mirrors = yaml.load(fid, Loader=yaml.SafeLoader)
 
             # validate the yaml
-            schema.MirrorsValidator.validate(raw)
-
-            mirrors = {name: mirror for name, mirror in raw.items() if mirror["enabled"]}
+            schema.MirrorsValidator.validate(mirrors)
         else:
             mirrors = {}
 
         # Add or set the cache given on the command line as the buildcache destination
         if cmdline_cache is not None:
-            existing_mirror = [mirror for mirror in mirrors if mirror['name'] == cmdline_cache]
             # If the mirror name given on the command line isn't in the config, assume it 
             # is the URL to a build cache.
-            if not existing_mirror:
+            if cmdline_cache in mirrors:
                 mirrors['cmdline_cache'] = {
                         'url': cmdline_cache,
                         'description': "Cache configured via command line.",
-                        'enabled': True,
                         'cache': True,
                         'bootstrap': False,
                         'mount_specific': True,
                     }
+            else:
+                # Enable the specified mirror and set it as the build cache dest
+                mirror = mirrors[cmdline_cache]
+                mirror['enabled'] = True
+                mirror['cache'] = True
 
         # Load the cache as defined by the deprecated 'cache.yaml' file.
         mirrors['legacy_cache_cfg'] = self._load_legacy_cache()
@@ -81,7 +82,7 @@ class Mirrors:
                 "Some of these may have come from a legacy 'cache.yaml' or the '--cache' option.\n"
                 f"{self._pp_yaml(caches)}")
 
-        return mirrors
+        return {name: mirror for name, mirror in raw.items() if mirror["enabled"]}
 
     @staticmethod 
     def _pp_yaml(object):
@@ -116,7 +117,6 @@ class Mirrors:
                 'description': "Buildcache dest loaded from legacy cache.yaml",
                 'buildcache_push': True,
                 'mount_specific': True,
-                'enabled': True,
                 'private_key': raw['key'],
             }
 
