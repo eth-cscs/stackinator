@@ -1,17 +1,18 @@
 {
-    "type" : "array",
-    "items": {
+    "type" : "object",
+    "additionalProperties": {
         "type": "object",
-        "required": ["name", "url"],
+        "required": ["url"],
+        "additionalProperties": false,
         "properties": {
-            "name": {
-                "type": "string",
-                "description": "The name of this mirror. Should be follow standard variable naming syntax."
-            },
             "url": {
                 "type": "string",
                 "description": "URL to the mirror. Can be a simple path, or any protocol Spack supports (https, OCI)."
             },
+            "description": {
+                "type": "string",
+                "description": "What this mirror is for."
+            }
             "enabled": {
                 "type": "boolean",
                 "default": true,
@@ -22,18 +23,23 @@
                 "default": false,
                 "description": "Whether to use as a mirror for bootstrapping. Will also use as a regular mirror."
             },
-            "buildcache": {
+            "cache": {
                 "type": "boolean",
                 "default": false,
                 "description": "Use this mirror as the buildcache push destination. Can only be enabled on a single mirror."
             },
             "public_key": {
                 "type": "string",
-                "description": "Public PGP key for validating binary cache packages."
+                "description": "Public PGP key for validating binary cache packages. A path or base64 encoded key."
             },
-            "description": {
+            "private_key": {
                 "type": "string",
-                "description": "What this mirror is for."
+                "description": "Private PGP key for signing binary cache packages. (Path only)",
+            },
+            "mount_specific": {
+                "type": "boolean",
+                "default": false,
+                "description": "Use a mount specific buildcache path (specified path + recipe mount point).",
             }
         }
     }
