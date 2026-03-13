@@ -81,13 +81,19 @@ def log_header(args):
 def make_argparser():
     parser = argparse.ArgumentParser(description=("Generate a build configuration for a spack stack from a recipe."))
     parser.add_argument("--version", action="version", version=f"stackinator version {VERSION}")
-    parser.add_argument("-b", "--build", required=True, type=str)
+    parser.add_argument("-b", "--build", required=True, type=str,
+                        help="Where to set up the stackinator build directory. "
+                             "('/tmp' is not allowed, use '/var/tmp'")
     parser.add_argument("--no-bwrap", action="store_true", required=False)
-    parser.add_argument("-r", "--recipe", required=True, type=str)
-    parser.add_argument("-s", "--system", required=True, type=str)
+    parser.add_argument("-r", "--recipe", required=True, type=str,
+                        help="Name of (and/or path to) the Stackinator recipe.")
+    parser.add_argument("-s", "--system", required=True, type=str,
+                        help="Name of (and/or path to) the Stackinator system configuration.")
     parser.add_argument("-d", "--debug", action="store_true")
-    parser.add_argument("-m", "--mount", required=False, type=str)
-    parser.add_argument("-c", "--cache", required=False, type=str)
+    parser.add_argument("-m", "--mount", required=False, type=str,
+                        help="The mount point where the environment will be located.")
+    parser.add_argument("-c", "--cache", required=False, type=str, 
+                        help="Buildcache location or name (from system config's mirrors.yaml).")
     parser.add_argument("--develop", action="store_true", required=False)
 
     return parser

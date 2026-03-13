@@ -1,0 +1,11 @@
+fake-mirror:
+  url: https://github.com
+disabled-mirror:
+  url: https://github.com
+  enabled: false
+buildcache-mirror:
+  url: https://mirror.spack.io
+  cache: true
+bootstrap-mirror:
+  url: https://mirror.spack.io
+  bootstrap: true
