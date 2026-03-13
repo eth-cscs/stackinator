@@ -54,11 +54,16 @@ class Mirrors:
         else:
             mirrors = {}
 
+        try:
+            schema.MirrorsValidator.validate(mirrors)
+        except ValueError as err:
+            raise MirrorError("Mirror config does not comply with schema.\n{err}")
+
         # Add or set the cache given on the command line as the buildcache destination
         if cmdline_cache is not None:
             # If the mirror name given on the command line isn't in the config, assume it 
             # is the URL to a build cache.
-            if cmdline_cache in mirrors:
+            if cmdline_cache not in mirrors:
                 mirrors['cmdline_cache'] = {
                         'url': cmdline_cache,
                         'description': "Cache configured via command line.",
@@ -74,16 +79,10 @@ class Mirrors:
                 mirror['cache'] = True
 
         # Load the cache as defined by the deprecated 'cache.yaml' file.
-        mirrors['legacy_cache_cfg'] = self._load_legacy_cache()
+        legacy_cache = self._load_legacy_cache()
+        if legacy_cache is not None:
+            mirrors['legacy_cache_cfg'] = legacy_cache
 
-
-        try:
-            # validate the yaml, including anything we added
-            schema.MirrorsValidator.validate(mirrors)
-        except ValueError as err:
-            raise MirrorError(
-                "Mirror config does not comply with schema.\n{err}"
-            )
 
         caches = [mirror for mirror in mirrors.values() if mirror['cache']]
         if len(caches) > 1:
@@ -92,7 +91,7 @@ class Mirrors:
                 "Some of these may have come from a legacy 'cache.yaml' or the '--cache' option.\n"
                 f"{self._pp_yaml(caches)}")
 
-        return {name: mirror for name, mirror in raw.items() if mirror["enabled"]}
+        return {name: mirror for name, mirror in mirrors.items() if mirror["enabled"]}
 
     @staticmethod 
     def _pp_yaml(object):
