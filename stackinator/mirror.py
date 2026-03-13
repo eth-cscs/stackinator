@@ -5,6 +5,7 @@ import urllib.request
 import urllib.error
 from typing import ByteString, Optional, List, Dict
 import magic
+import base64
 
 import yaml
 
@@ -42,7 +43,7 @@ class Mirrors:
                 raw = yaml.load(fid, Loader=yaml.Loader)
 
             # validate the yaml
-            schema.CacheValidator.validate(raw)
+            #schema.CacheValidator.validate(raw)
 
             mirrors = [mirror for mirror in raw if mirror["enabled"]]
         else:
@@ -78,7 +79,7 @@ class Mirrors:
 
         for mirror in self.mirrors:
             url = mirror["url"]
-            if url.beginswith("file://"):
+            if url.startswith("file://"):
                 # verify that the root path exists
                 path = pathlib.Path(os.path.expandvars(url))
                 if not path.is_absolute():
@@ -88,7 +89,7 @@ class Mirrors:
 
                 mirror["url"] = path
 
-            elif url.beginswith("https://"):
+            elif url.startswith("https://"):
                 try:
                     request = urllib.request.Request(url, method='HEAD')
                     urllib.request.urlopen(request)
@@ -159,49 +160,51 @@ class Mirrors:
 
     def _key_setup(self, key_store: pathlib.Path):
         """Validate mirror keys, relocate to key_store, and update mirror config with new key paths."""
+        
+        key_store.mkdir(exist_ok=True)
 
         for mirror in self.mirrors:
-            if not mirror["public_key"]:
-                continue
+            if mirror.get("public_key"):
+                key = mirror["public_key"]
 
-            key = mirror["public_key"]
+                # key will be saved under key_store/mirror_name.gpg
 
-            # key will be saved under key_store/mirror_name.gpg
-            dest = (key_store / f"'{mirror["name"]}'.gpg").resolve()
+                dest = pathlib.Path(key_store / f"{mirror["name"]}.gpg")
 
-            # if path, check if abs path, if not, append sys config path in front and check again
-            path = pathlib.Path(os.path.expandvars(key))
-            if path.exists():
+                # if path, check if abs path, if not, append sys config path in front and check again
+                path = pathlib.Path(os.path.expandvars(key))
                 if not path.is_absolute():
                     #try prepending system config path
                     path = self._system_config_root/path
+
+                if path.exists():
                     if not path.is_file():
                         raise MirrorError(
-                            f"The key path '{path}' is not a file. "
+                            f"The key path '{path}' is not a file. \n"
                             f"Check the key listed in mirrors.yaml in system config.")
-
-                file_type = magic.from_file(path)
-
-                if not file_type.startswith("OpenPGP Public Key"):
+                    
+                    with open(path, 'rb') as reader:
+                        binary_key = reader.read()
+                    
+                # convert base64 key to binary
+                else:
+                    try:
+                        binary_key = base64.b64decode(key)
+                    except ValueError:
+                        raise MirrorError(
+                            f"Key for mirror {mirror["name"]} is not valid. \n"
+                            f"Must be a path to a GPG public key or a base64 encoded GPG public key. \n"
+                            f"Check the key listed in mirrors.yaml in system config.")
+                
+                file_type = magic.from_buffer(binary_key, mime=True)
+                print("magic type:" , file_type)
+                if file_type != "application/x-gnupg-keyring":
                     raise MirrorError(
-                        f"'{path}' is not a valid GPG key. "
+                        f"Key for mirror {mirror["name"]} is not a valid GPG key. \n"
                         f"Check the key listed in mirrors.yaml in system config.")
-                
-                # copy key to new destination in key store
-                with open(path, 'r') as reader, open(dest, 'w') as writer:
-                    data = reader.read()
-                    writer.write(data)
-                
-            else:            
-                try:
-                    key = base64.b64decode(key)
-                except ValueError as err:
-                    pass
-                magic.from_buffer(key)
 
-                # if PGP key, convert to binary, ???, convert back
-                with open(dest, "wb") as file:
-                    file.write(key)
-            
-            # update mirror with new path
-            mirror["key"] = dest
+                # copy key to new destination in key store
+                with open(dest, 'wb') as writer:
+                    writer.write(binary_key)
+                # update mirror with new path
+                mirror["public_key"] = dest

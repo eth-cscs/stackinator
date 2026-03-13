@@ -233,7 +233,7 @@ class Builder:
                     pre_install_hook=recipe.pre_install_hook,
                     spack_version=spack_version,
                     spack_meta=spack_meta,
-                    mirrors=recipe.mirrors,
+                    mirrors=recipe.mirrors.mirrors,
                     exclude_from_cache=["nvhpc", "cuda", "perl"],
                     verbose=False,
                 )

@@ -173,8 +173,8 @@ class Recipe:
         # load the optional mirrors.yaml from system config, and add any additional 
         # mirrors specified on the command line.
         self._logger.debug("Configuring mirrors.")
-        self._mirrors = mirror.Mirrors(self.system_config_path, args.cache)
-        self._cache = [mirror for mirror in self.mirrors if mirror["buildcache"]]
+        self.mirrors = mirror.Mirrors(self.system_config_path, args.cache)
+        self.cache = self.mirrors.build_cache_mirror
 
         # optional post install hook
         if self.post_install_hook is not None:
@@ -232,14 +232,6 @@ class Recipe:
         if hook_path.exists() and hook_path.is_file():
             return hook_path
         return None
-
-    @property
-    def mirrors(self):
-        return self._mirrors
-    
-    @property
-    def cache(self):
-        return self._cache
  
     @property
     def config(self):
