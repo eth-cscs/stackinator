@@ -84,7 +84,7 @@ class Mirrors:
             mirrors['legacy_cache_cfg'] = legacy_cache
 
 
-        caches = [mirror for mirror in mirrors.values() if mirror['cache']]
+        caches = {name: mirror for name, mirror in mirrors.items() if mirror['cache']]
         if len(caches) > 1:
             raise MirrorError(
                 "Mirror config has more than one mirror specified as the build cache destination.\n"

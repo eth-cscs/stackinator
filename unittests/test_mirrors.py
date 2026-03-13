@@ -35,9 +35,9 @@ def test_mirror_init(systems_path, valid_mirrors):
 def test_command_line_cache(systems_path):
     """Check that adding a cache from the command line works."""
 
-    mirrors = mirror.Mirrors(systems_path/'mirror-ok', cmdline_cache=systems_path.as_posix())
+    mirrors = mirror.Mirrors(systems_path/'mirror-basic', cmdline_cache=systems_path.as_posix())
 
-    assert len(mirrors.mirrors) == 4
+    assert len(mirrors.mirrors) == 3
     
 
 def test_create_spack_mirrors_yaml(systems_path):
