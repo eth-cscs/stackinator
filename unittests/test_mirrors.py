@@ -20,6 +20,7 @@ def valid_mirrors(systems_path):
     return mirrors
 
 def test_mirror_init(systems_path, valid_mirrors):
+    """Check that Mirror objects are initialized correctly."""
     path = systems_path / "mirror-ok"
     mirrors_obj = mirror.Mirrors(path)
 
