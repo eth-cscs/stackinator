@@ -1,11 +1,7 @@
-- name: fake-mirror
-  url: https://google.com
-- name: disabled-mirror
-  url: https://google.com
+- url: https://google.com
+- url: https://google.com
   enabled: false
-- name: buildcache-mirror
-  url: https://cache.spack.io/
-  buildcache: true
-- name: bootstrap-mirror
-  url: https://mirror.spack.io
+- url: https://cache.spack.io/
+  cache: true
+- url: https://mirror.spack.io
   bootstrap: true

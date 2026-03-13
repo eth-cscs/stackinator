@@ -12,7 +12,7 @@
             "description": {
                 "type": "string",
                 "description": "What this mirror is for."
-            }
+            },
             "enabled": {
                 "type": "boolean",
                 "default": true,
@@ -34,12 +34,12 @@
             },
             "private_key": {
                 "type": "string",
-                "description": "Private PGP key for signing binary cache packages. (Path only)",
+                "description": "Private PGP key for signing binary cache packages. (Path only)"
             },
             "mount_specific": {
                 "type": "boolean",
                 "default": false,
-                "description": "Use a mount specific buildcache path (specified path + recipe mount point).",
+                "description": "Use a mount specific buildcache path (specified path + recipe mount point)."
             }
         }
     }
