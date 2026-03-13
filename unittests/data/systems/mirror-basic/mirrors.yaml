@@ -1,8 +1,8 @@
 fake-mirror:
-  url: https://google.com
+  url: https://github.com
 disabled-mirror:
-  url: https://google.com
+  url: /tmp/
   enabled: false
 bootstrap-mirror:
-  url: https://mirror.spack.io
+  url: https://github.com
   bootstrap: true
