@@ -1,0 +1,2 @@
+- name: bad-url
+  url: google.com

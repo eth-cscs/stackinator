@@ -43,7 +43,7 @@ class Mirrors:
                 raw = yaml.load(fid, Loader=yaml.Loader)
 
             # validate the yaml
-            #schema.CacheValidator.validate(raw)
+            schema.CacheValidator.validate(raw)
 
             mirrors = [mirror for mirror in raw if mirror["enabled"]]
         else:
@@ -197,7 +197,7 @@ class Mirrors:
                             f"Check the key listed in mirrors.yaml in system config.")
                 
                 file_type = magic.from_buffer(binary_key, mime=True)
-                print("magic type:" , file_type)
+
                 if file_type != "application/x-gnupg-keyring":
                     raise MirrorError(
                         f"Key for mirror {mirror["name"]} is not a valid GPG key. \n"
