@@ -50,14 +50,14 @@ class Mirrors:
                     # load the raw yaml input
                     mirrors = yaml.load(fid, Loader=yaml.SafeLoader)
             except (OSError, PermissionError) as err:
-                raise MirrorError("Could not open/read mirrors.yaml file.\n{err}")
+                raise MirrorError(f"Could not open/read mirrors.yaml file.\n{err}")
         else:
             mirrors = {}
 
         try:
             schema.MirrorsValidator.validate(mirrors)
         except ValueError as err:
-            raise MirrorError("Mirror config does not comply with schema.\n{err}")
+            raise MirrorError(f"Mirror config does not comply with schema.\n{err}")
 
         # Add or set the cache given on the command line as the buildcache destination
         if cmdline_cache is not None:
@@ -84,7 +84,7 @@ class Mirrors:
             mirrors['legacy_cache_cfg'] = legacy_cache
 
 
-        caches = {name: mirror for name, mirror in mirrors.items() if mirror['cache']]
+        caches = {name: mirror for name, mirror in mirrors.items() if mirror['cache']}
         if len(caches) > 1:
             raise MirrorError(
                 "Mirror config has more than one mirror specified as the build cache destination.\n"
