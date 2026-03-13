@@ -14,23 +14,21 @@ def systems_path(test_path):
 @pytest.fixture
 def valid_mirrors(systems_path):
     mirrors = {}
-    mirrors["fake-mirror"] = {'url': 'https://google.com', 'enabled': True, 'bootstrap': False, 'cache': False, 'mount_specific': False}
-    mirrors["buildcache-mirror"] = {'url': 'https://cache.spack.io/', 'enabled': True, 'bootstrap': False, 'cache': True, 'mount_specific': False}
+    mirrors["fake-mirror"] = {'url': 'https://github.com', 'enabled': True, 'bootstrap': False, 'cache': False, 'mount_specific': False}
+    mirrors["buildcache-mirror"] = {'url': 'https://mirror.spack.io', 'enabled': True, 'bootstrap': False, 'cache': True, 'mount_specific': False}
     mirrors["bootstrap-mirror"] = {'url': 'https://mirror.spack.io', 'enabled': True, 'bootstrap': True, 'cache': False, 'mount_specific': False}
     return mirrors
 
 def test_mirror_init(systems_path, valid_mirrors):
     path = systems_path / "mirror-ok"
-    #print(path)
     mirrors_obj = mirror.Mirrors(path)
-    #print(mirrors_obj.mirrors.items())
+
     assert mirrors_obj.mirrors == valid_mirrors
-    assert mirrors_obj.mirrors.bootstrap_mirrors == [mirror for mirror in valid_mirrors.values() if mirror.get('bootstrap')]
-    assert mirrors_obj.mirrors.build_cache_mirror == [mirror for mirror in valid_mirrors.values() if mirror.get('buildcache')]
-    # assert disabled mirror not in mirrors
+    assert mirrors_obj.bootstrap_mirrors == [name for name in valid_mirrors.keys() if valid_mirrors[name].get('bootstrap')]
+    assert mirrors_obj.build_cache_mirror == [name for name in valid_mirrors.keys() if valid_mirrors[name].get('cache')].pop(0)
+    
     for mir in mirrors_obj.mirrors:
-        assert mir["enabled"]
-    # test that cmdline_cache gets added to mirrors?
+        assert mirrors_obj.mirrors[mir].get('enabled')
 
 def test_command_line_cache(systems_path):
     """Check that adding a cache from the command line works."""
