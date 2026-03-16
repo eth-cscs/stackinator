@@ -57,7 +57,17 @@ def test_mirror_init_bad_url(systems_path):
     path = systems_path / "mirror-bad-url"
 
     with pytest.raises(mirror.MirrorError):
-        mirrors_obj = mirror.Mirrors(path)
+        mirror.Mirrors(path)
+
+def test_setup_configs(tmp_path, systems_path):
+    """Test general config setup."""
+
+    mir = mirror.Mirrors(systems_path/'mirror-ok')
+    mir.setup_configs(tmp_path)
+
+    assert (tmp_path/'mirrors.yaml').is_file()
+    assert (tmp_path/'bootstrap').is_dir()
+    assert (tmp_path/'key_store').is_dir()
 
 def test_command_line_cache(systems_path):
     """Check that adding a cache from the command line works."""
