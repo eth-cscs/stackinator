@@ -68,3 +68,17 @@ def test_key_setup(systems_path, tmp_path):
         with key_file.open('rb') as file:
             key_file_data.append(file.read())
     assert key_file_data[0] == key_file_data[1]
+
+@pytest.mark.parametrize("system_name", [
+    'mirror-bad-key',
+    'mirror-bad-keypath',
+])
+def test_key_setup_bad_key(tmp_path, systems_path, system_name):
+    """asdfasdf"""
+
+    mirrors = mirror.Mirrors(systems_path/system_name)
+    with pytest.raises(mirror.MirrorError):
+        mirrors._key_setup(tmp_path)
+
+
+

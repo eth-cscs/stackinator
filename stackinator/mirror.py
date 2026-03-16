@@ -246,12 +246,7 @@ class Mirrors:
                 #try prepending system config path
                 path = self._system_config_root/path
 
-            if path.exists():
-                if not path.is_file():
-                    raise MirrorError(
-                        f"The key path '{path}' is not a file. \n"
-                        f"Check the key listed in mirrors.yaml in system config.")
-                
+            if path.is_file():
                 with open(path, 'rb') as reader:
                     binary_key = reader.read()
                 
@@ -261,15 +256,15 @@ class Mirrors:
                     binary_key = base64.b64decode(key)
                 except ValueError:
                     raise MirrorError(
-                        f"Key for mirror '{name}' is not valid. \n"
+                        f"Key for mirror '{name}' is not valid: '{path}'. \n"
                         f"Must be a path to a GPG public key or a base64 encoded GPG public key. \n"
                         f"Check the key listed in mirrors.yaml in system config.")
             
             file_type = magic.from_buffer(binary_key, mime=True)
-            print("magic type:" , file_type)
             if file_type not in ("application/x-gnupg-keyring", "application/pgp-keys"):
                 raise MirrorError(
                     f"Key for mirror {name} is not a valid GPG key. \n"
+                    f"The file (or base64) was readable, but the data itself was not a PGP key.\n"
                     f"Check the key listed in mirrors.yaml in system config.")
 
             # copy key to new destination in key store

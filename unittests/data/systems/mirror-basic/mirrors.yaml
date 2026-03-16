@@ -1,8 +1,0 @@
-fake-mirror:
-  url: https://github.com
-disabled-mirror:
-  url: /tmp/
-  enabled: false
-bootstrap-mirror:
-  url: https://github.com
-  bootstrap: true
