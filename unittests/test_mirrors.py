@@ -34,10 +34,11 @@ def test_mirror_init(systems_path, valid_mirrors):
 def test_command_line_cache(systems_path):
     """Check that adding a cache from the command line works."""
 
-    mirrors = mirror.Mirrors(systems_path/'mirror-basic', 
-                             cmdline_cache=systems_path/'mirror-basic/cache.yaml')
+    mirrors = mirror.Mirrors(systems_path/'mirror-ok', 
+                             cmdline_cache=systems_path/'mirror-ok/cache.yaml')
 
-    assert len(mirrors.mirrors) == 3
+    assert len(mirrors.mirrors) == 4
+    # This should always be the build cache even though one is already defined.
     assert mirrors.build_cache_mirror == 'cmdline_cache'
     cache_mirror = mirrors.mirrors['cmdline_cache']
     assert cache_mirror['url'] == '/tmp/foo'
@@ -45,12 +46,6 @@ def test_command_line_cache(systems_path):
     assert cache_mirror['cache']
     assert not cache_mirror['bootstrap']
     assert cache_mirror['mount_specific'] 
-
-def test_multi_buildcache(systems_path):
-    """Make sure we throw appropriate errors when there's more than one build cache defined."""
-
-
-
 
 def test_create_spack_mirrors_yaml(systems_path):
     pass

@@ -66,11 +66,15 @@ class Mirrors:
         except ValueError as err:
             raise MirrorError(f"Mirror config does not comply with schema.\n{err}")
 
-        caches = {name: mirror for name, mirror in mirrors.items() if mirror['cache']}
+        caches = [name for name, mirror in mirrors.items() if mirror['cache']]
         if len(caches) > 1:
             raise MirrorError(
                 "Mirror config has more than one mirror specified as the build cache destination.\n"
                 f"{self._pp_yaml(caches)}")
+        elif caches:
+            cache = mirrors[caches[0]]
+            if not cache.get('private_key'):
+                raise MirrorError(f"Mirror build cache config '{caches[0]}' missing a required 'private_key' path.")
 
         # Load the cache as defined by the deprecated 'cache.yaml' file.
         if cmdline_cache is not None:

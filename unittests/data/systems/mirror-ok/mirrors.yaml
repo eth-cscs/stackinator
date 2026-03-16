@@ -5,6 +5,7 @@ disabled-mirror:
   enabled: false
 buildcache-mirror:
   url: https://mirror.spack.io
+  private_key: '../test-gpg-priv.asc'
   cache: true
 bootstrap-mirror:
   url: https://mirror.spack.io
