@@ -48,10 +48,65 @@ def test_command_line_cache(systems_path):
     assert cache_mirror['mount_specific'] 
 
 def test_create_spack_mirrors_yaml(systems_path):
-    pass
+    """Check that the mirrors.yaml passed to spack is correct"""
 
-def test_create_bootstrap_configs():
-    pass
+    valid_spack_yaml = {
+        "mirrors": {
+            "fake-mirror": {
+                "fetch": {"url": "https://github.com"},
+                "push": {"url": "https://github.com"},
+            },
+            "buildcache-mirror": {
+                "fetch": {"url": "https://mirror.spack.io"},
+                "push": {"url": "https://mirror.spack.io"},
+            },
+            "bootstrap-mirror": {
+                "fetch": {"url": "https://mirror.spack.io"},
+                "push": {"url": "https://mirror.spack.io"},
+            }
+        }
+    }
+
+    dest = systems_path / "mirror-ok" / "test_output.yaml"
+    mirrors_obj = mirror.Mirrors(systems_path / "mirror-ok")
+    mirrors_obj._create_spack_mirrors_yaml(dest)
+
+    with dest.open() as f:
+        data = yaml.safe_load(f)
+
+    assert data == valid_spack_yaml
+
+def test_create_bootstrap_configs(systems_path):
+    """Check that spack bootstrap configs are generated correctly"""
+    
+    valid_yaml = {
+        "sources": [
+            {
+                "name": "bootstrap-mirror",
+                "metadata": str(systems_path / "mirror-ok" / "bootstrap" / "bootstrap-mirror"),
+            }
+        ],
+        "trusted": {
+            "bootstrap-mirror": True
+        },
+    }
+    valid_metadata = {
+        "type": "install",
+        "info": "https://mirror.spack.io",
+    }
+
+    path = systems_path / "mirror-ok"
+    bs_mirror_path = path / "bootstrap/bootstrap-mirror"
+    mirrors_obj = mirror.Mirrors(path)
+    mirrors_obj._create_bootstrap_configs(path)
+
+    with (path/'bootstrap.yaml').open() as f:
+        bs_data = yaml.safe_load(f)
+    assert bs_data == valid_yaml
+
+    with (bs_mirror_path/'metadata.yaml').open() as f:
+        metadata = yaml.safe_load(f)
+    assert metadata == valid_metadata
 
 def test_key_setup(systems_path, tmp_path):
     """Check that public keys are set up properly."""

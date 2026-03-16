@@ -206,14 +206,14 @@ class Mirrors:
             bootstrap_yaml['sources'].append(
                 {
                     'name': name,
-                    'metadata': bs_mirror_path,
+                    'metadata': str(bs_mirror_path),
                 }
             )
             # And trust each one
             bootstrap_yaml['trusted'][name] = True
 
             # Create the metadata dir and metadata.yaml
-            bs_mirror_path.mkdir(parents=True)
+            bs_mirror_path.mkdir(parents=True, exist_ok=True)
             bs_mirror_yaml = {
                 'type': 'install',
                 'info': mirror['url'],
