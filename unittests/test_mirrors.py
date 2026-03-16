@@ -31,6 +31,14 @@ def test_mirror_init(systems_path, valid_mirrors):
     for mir in mirrors_obj.mirrors:
         assert mirrors_obj.mirrors[mir].get('enabled')
 
+def test_mirror_init_bad_url(systems_path):
+    """Check that MirrorError is raised for a bad url."""
+
+    path = systems_path / "mirror-bad-url"
+
+    with pytest.raises(mirror.MirrorError):
+        mirrors_obj = mirror.Mirrors(path)
+
 def test_command_line_cache(systems_path):
     """Check that adding a cache from the command line works."""
 
