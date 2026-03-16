@@ -11,7 +11,7 @@ from datetime import datetime
 import jinja2
 import yaml
 
-from . import VERSION, cache, root_logger, spack_util, mirror
+from . import VERSION, root_logger, spack_util, mirror
 
 
 def install(src, dst, *, ignore=None, symlinks=False):

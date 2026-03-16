@@ -4,9 +4,8 @@ import re
 
 import jinja2
 import yaml
-from typing import Optional
 
-from . import cache, root_logger, schema, spack_util, mirror
+from . import root_logger, schema, spack_util, mirror
 from .etc import envvars
 
 
@@ -170,7 +169,7 @@ class Recipe:
             schema.EnvironmentsValidator.validate(raw)
             self.generate_environment_specs(raw)
 
-        # load the optional mirrors.yaml from system config, and add any additional 
+        # load the optional mirrors.yaml from system config, and add any additional
         # mirrors specified on the command line.
         self._logger.debug("Configuring mirrors.")
         self.mirrors = mirror.Mirrors(self.system_config_path, args.cache)
@@ -232,7 +231,7 @@ class Recipe:
         if hook_path.exists() and hook_path.is_file():
             return hook_path
         return None
- 
+
     @property
     def config(self):
         return self._config
