@@ -267,7 +267,7 @@ class Mirrors:
             
             file_type = magic.from_buffer(binary_key, mime=True)
             print("magic type:" , file_type)
-            if file_type != "application/x-gnupg-keyring":
+            if file_type not in ("application/x-gnupg-keyring", "application/pgp-keys"):
                 raise MirrorError(
                     f"Key for mirror {name} is not a valid GPG key. \n"
                     f"Check the key listed in mirrors.yaml in system config.")

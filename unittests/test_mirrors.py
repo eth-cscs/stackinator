@@ -53,5 +53,18 @@ def test_create_spack_mirrors_yaml(systems_path):
 def test_create_bootstrap_configs():
     pass
 
-def test_key_setup():
-    pass
+def test_key_setup(systems_path, tmp_path):
+    """Check that public keys are set up properly."""
+
+    mirrors = mirror.Mirrors(systems_path/'mirror-ok')
+
+    mirrors._key_setup(tmp_path)
+
+    key_files = list(tmp_path.iterdir())
+    assert {key_file.name for key_file in key_files} == {'buildcache-mirror.gpg', 'fake-mirror.gpg'}
+    # The two files should be identical in content
+    key_file_data = []
+    for key_file in key_files:
+        with key_file.open('rb') as file:
+            key_file_data.append(file.read())
+    assert key_file_data[0] == key_file_data[1]
