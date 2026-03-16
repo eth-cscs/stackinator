@@ -1,5 +1,6 @@
-import pytest
+import base64
 import pathlib
+import pytest
 import stackinator.mirror as mirror
 import yaml
 
@@ -11,18 +12,37 @@ def test_path():
 def systems_path(test_path):
     return test_path / "data" / "systems"
 
-@pytest.fixture
-def valid_mirrors(systems_path):
-    mirrors = {}
-    mirrors["fake-mirror"] = {'url': 'https://github.com', 'enabled': True, 'bootstrap': False, 'cache': False, 'mount_specific': False}
-    mirrors["buildcache-mirror"] = {'url': 'https://mirror.spack.io', 'enabled': True, 'bootstrap': False, 'cache': True, 'mount_specific': False}
-    mirrors["bootstrap-mirror"] = {'url': 'https://mirror.spack.io', 'enabled': True, 'bootstrap': True, 'cache': False, 'mount_specific': False}
-    return mirrors
-
-def test_mirror_init(systems_path, valid_mirrors):
+def test_mirror_init(systems_path):
     """Check that Mirror objects are initialized correctly."""
     path = systems_path / "mirror-ok"
     mirrors_obj = mirror.Mirrors(path)
+
+    valid_mirrors = {
+        "fake-mirror": {
+            'url': 'https://github.com', 
+            'enabled': True, 
+            'bootstrap': False, 
+            'cache': False, 
+            'public_key': '../../test-gpg-pub.asc',
+            'mount_specific': False},
+        "buildcache-mirror": {
+            'url': 'https://mirror.spack.io', 
+            'enabled': True, 
+            'bootstrap': False, 
+            'cache': True, 
+            'private_key': '../test-gpg-priv.asc',
+            'mount_specific': False},
+        "bootstrap-mirror": {
+            'url': 'https://mirror.spack.io', 
+            'enabled': True, 
+            'bootstrap': True,
+            'cache': False,
+            'mount_specific': False}
+    }
+
+    with (systems_path/'../test-gpg-pub.asc').open('rb') as pub_key_file:
+        key = base64.b64encode(pub_key_file.read()).decode()
+        valid_mirrors['buildcache-mirror']['public_key'] = key
 
     assert mirrors_obj.mirrors == valid_mirrors
     assert mirrors_obj.bootstrap_mirrors == [name for name in valid_mirrors.keys() if valid_mirrors[name].get('bootstrap')]
@@ -55,7 +75,7 @@ def test_command_line_cache(systems_path):
     assert not cache_mirror['bootstrap']
     assert cache_mirror['mount_specific'] 
 
-def test_create_spack_mirrors_yaml(systems_path):
+def test_create_spack_mirrors_yaml(tmp_path, systems_path):
     """Check that the mirrors.yaml passed to spack is correct"""
 
     valid_spack_yaml = {
@@ -75,7 +95,7 @@ def test_create_spack_mirrors_yaml(systems_path):
         }
     }
 
-    dest = systems_path / "mirror-ok" / "test_output.yaml"
+    dest = tmp_path / "test_output.yaml"
     mirrors_obj = mirror.Mirrors(systems_path / "mirror-ok")
     mirrors_obj._create_spack_mirrors_yaml(dest)
 
@@ -84,14 +104,14 @@ def test_create_spack_mirrors_yaml(systems_path):
 
     assert data == valid_spack_yaml
 
-def test_create_bootstrap_configs(systems_path):
+def test_create_bootstrap_configs(tmp_path, systems_path):
     """Check that spack bootstrap configs are generated correctly"""
     
     valid_yaml = {
         "sources": [
             {
                 "name": "bootstrap-mirror",
-                "metadata": str(systems_path / "mirror-ok" / "bootstrap" / "bootstrap-mirror"),
+                "metadata": str(tmp_path / "bootstrap/bootstrap-mirror"),
             }
         ],
         "trusted": {
@@ -103,16 +123,16 @@ def test_create_bootstrap_configs(systems_path):
         "info": "https://mirror.spack.io",
     }
 
-    path = systems_path / "mirror-ok"
-    bs_mirror_path = path / "bootstrap/bootstrap-mirror"
-    mirrors_obj = mirror.Mirrors(path)
-    mirrors_obj._create_bootstrap_configs(path)
+    mirrors_obj = mirror.Mirrors(systems_path/'mirror-ok')
+    mirrors_obj._create_bootstrap_configs(tmp_path)
 
-    with (path/'bootstrap.yaml').open() as f:
+    with (tmp_path/'bootstrap.yaml').open() as f:
         bs_data = yaml.safe_load(f)
+    print(bs_data)
+    print(valid_yaml)
     assert bs_data == valid_yaml
 
-    with (bs_mirror_path/'metadata.yaml').open() as f:
+    with (tmp_path/'bootstrap/bootstrap-mirror/metadata.yaml').open() as f:
         metadata = yaml.safe_load(f)
     assert metadata == valid_metadata
 
