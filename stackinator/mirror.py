@@ -19,8 +19,9 @@ class Mirrors:
 
     KEY_STORE_DIR = 'key_store'
     MIRRORS_YAML = 'mirrors.yaml'
+    CMDLINE_CACHE = 'cmdline_cache'
 
-    def __init__(self, system_config_root: pathlib.Path, cmdline_cache: Optional[str] = None, 
+    def __init__(self, system_config_root: pathlib.Path, cmdline_cache: Optional[pathlib.Path] = None, 
                  mount_point: Optional[pathlib.Path] = None):
         """Configure mirrors from both the system 'mirror.yaml' file and the command line."""
 
@@ -32,16 +33,22 @@ class Mirrors:
         self.mirrors = self._load_mirrors(cmdline_cache)
         self._check_mirrors()
  
-        self.build_cache_mirror : Optional[str] = \
-            ([name for name, mirror in self.mirrors.items() if mirror.get('cache', False)] 
-             + [None]).pop(0)
+        # Always use the cache given on the command line
+        if self.CMDLINE_CACHE in self.mirrors:
+            self.build_cache_mirror = self.CMDLINE_CACHE
+        else:
+            # Otherwise, grab the configured cache (or None)
+            self.build_cache_mirror : Optional[str] = \
+                ([name for name, mirror in self.mirrors.items() if mirror.get('cache', False)] 
+                 + [None]).pop(0)
+
         self.bootstrap_mirrors = [name for name, mirror in self.mirrors.items()
                                     if mirror.get('bootstrap', False)]
 
         # Will hold a list of all the gpg keys (public and private)
         self._keys: Optional[List[pathlib.Path]] = [] 
 
-    def _load_mirrors(self, cmdline_cache: Optional[str]) -> Dict[str, Dict]:
+    def _load_mirrors(self, cmdline_cache: Optional[pathlib.Path]) -> Dict[str, Dict]:
         """Load the mirrors file, if one exists."""
         path = self._system_config_root/"mirrors.yaml"
         if path.exists():
@@ -59,37 +66,15 @@ class Mirrors:
         except ValueError as err:
             raise MirrorError(f"Mirror config does not comply with schema.\n{err}")
 
-        # Add or set the cache given on the command line as the buildcache destination
-        if cmdline_cache is not None:
-            # If the mirror name given on the command line isn't in the config, assume it 
-            # is the URL to a build cache.
-            if cmdline_cache not in mirrors:
-                mirrors['cmdline_cache'] = {
-                        'url': cmdline_cache,
-                        'description': "Cache configured via command line.",
-                        'enabled': True,
-                        'cache': True,
-                        'bootstrap': False,
-                        'mount_specific': True,
-                    }
-            else:
-                # Enable the specified mirror and set it as the build cache dest
-                mirror = mirrors[cmdline_cache]
-                mirror['enabled'] = True
-                mirror['cache'] = True
-
-        # Load the cache as defined by the deprecated 'cache.yaml' file.
-        legacy_cache = self._load_legacy_cache()
-        if legacy_cache is not None:
-            mirrors['legacy_cache_cfg'] = legacy_cache
-
-
         caches = {name: mirror for name, mirror in mirrors.items() if mirror['cache']}
         if len(caches) > 1:
             raise MirrorError(
                 "Mirror config has more than one mirror specified as the build cache destination.\n"
-                "Some of these may have come from a legacy 'cache.yaml' or the '--cache' option.\n"
                 f"{self._pp_yaml(caches)}")
+
+        # Load the cache as defined by the deprecated 'cache.yaml' file.
+        if cmdline_cache is not None:
+            mirrors[self.CMDLINE_CACHE] = self._load_cmdline_cache(cmdline_cache)
 
         return {name: mirror for name, mirror in mirrors.items() if mirror["enabled"]}
 
@@ -101,40 +86,42 @@ class Mirrors:
         yaml.dump(object, example_yaml_stream, default_flow_style=False)
         return example_yaml_stream.getvalue()
 
-    def _load_legacy_cache(self):
-        """Load the mirror definition from the legacy cache.yaml file."""
+    def _load_cmdline_cache(self, cache_config_path: pathlib.Path) -> Dict:
+        """Load the mirror definition from the legacy 'cache.yaml' file."""
 
-        cache_config_path = self._system_config_root/'cache.yaml'
-
-        if cache_config_path.is_file():
-            
-            with cache_config_path.open('r') as file: 
-                try:
-                    raw = yaml.load(file, Loader=yaml.SafeLoader)
-                except ValueError as err:
-                    raise MirrorError(
-                        f"Error loading yaml from cache config at '{cache_config_path}'\n{err}")
-
+        if not cache_config_path.is_file():
+            raise MirrorError(
+                f"Binary cache configuration path given on the command line '{cache_config_path}' "
+                f"does not exist.")
+        
+        with cache_config_path.open('r') as file: 
             try:
-                schema.CacheValidator.validate(raw)
+                raw = yaml.load(file, Loader=yaml.SafeLoader)
             except ValueError as err:
                 raise MirrorError(
-                    f"Error validating contents of cache config at '{cache_config_path}'.\n{err}")
+                    f"Error loading yaml from cache config at '{cache_config_path}'\n{err}")
 
-            mirror_cfg = {
-                'url': f'file://{raw['root']}',
-                'description': "Buildcache dest loaded from legacy cache.yaml",
-                'cache': True,
-                'enabled': True,
-                'mount_specific': True,
-                'private_key': raw['key'],
-            }
+        try:
+            schema.CacheValidator.validate(raw)
+        except ValueError as err:
+            raise MirrorError(
+                f"Error validating contents of cache config at '{cache_config_path}'.\n{err}")
 
-            self._logger.warning("Configuring the buildcache from the system cache.yaml file.\n"
-                "Please switch to using either the '--cache' option or the 'mirrors.yaml' file instead.\n"
-                f"The equivalent 'mirrors.yaml' would look like: \n{self._pp_yaml([mirror_cfg])}")
+        mirror_cfg = {
+            'url': raw['root'],
+            'description': "Buildcache dest loaded from legacy cache.yaml",
+            'cache': True,
+            'enabled': True,
+            'bootstrap': False,
+            'mount_specific': True,
+            'private_key': raw['key'],
+        }
 
-            return mirror_cfg
+        self._logger.warning("Configuring the buildcache from the system cache.yaml file.\n"
+            "Please switch to using either the '--cache' option or the 'mirrors.yaml' file instead.\n"
+            f"The equivalent 'mirrors.yaml' would look like: \n{self._pp_yaml([mirror_cfg])}")
+
+        return mirror_cfg
 
     def _check_mirrors(self):
         """Validate the mirror config entries."""
