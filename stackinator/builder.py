@@ -233,7 +233,7 @@ class Builder:
                     spack_version=spack_version,
                     spack_meta=spack_meta,
                     gpg_keys=recipe.mirrors.keys,
-                    cache=recipe.mirrors.buildcache,
+                    cache=recipe.build_cache_mirror,
                     exclude_from_cache=["nvhpc", "cuda", "perl"],
                     verbose=False,
                 )

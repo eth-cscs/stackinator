@@ -86,7 +86,7 @@ def make_argparser():
         "--build",
         required=True,
         type=str,
-        help="Where to set up the stackinator build directory. ('/tmp' is not allowed, use '/var/tmp'",
+        help="Where to set up the stackinator build directory. ('/tmp' is not allowed, use '/var/tmp')",
     )
     parser.add_argument("--no-bwrap", action="store_true", required=False)
     parser.add_argument(
