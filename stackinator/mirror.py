@@ -49,7 +49,7 @@ class Mirrors:
                 [name for name, mirror in self.mirrors.items() if mirror.get("cache", False)] + [None]
             ).pop(0)
 
-        self.bootstrap_mirrors = [name for name, mirror in self.mirrors.items() if mirror.get("bootstrap", False)]
+        self.bootstrap_mirrors = [name for name, mirror in self.mirrors.items() if mirror.get("bootstrap", True)]
 
         # Will hold a list of all the gpg keys (public and private)
         # self._keys: Optional[List[pathlib.Path]] = []
@@ -201,29 +201,33 @@ class Mirrors:
             return
 
         bootstrap_yaml = {
-            "sources": [],
-            "trusted": {},
+            "bootstrap": {
+                "sources": [],
+                "trusted": {},
+            }
         }
 
         for name in self.bootstrap_mirrors:
             bs_mirror_path = config_root / f"bootstrap/{name}"
             mirror = self.mirrors[name]
             # Tell spack where to find the metadata for each bootstrap mirror.
-            bootstrap_yaml["sources"].append(
+            bootstrap_yaml["bootstrap"]["sources"].append(
                 {
                     "name": name,
                     "metadata": str(bs_mirror_path),
                 }
             )
             # And trust each one
-            bootstrap_yaml["trusted"][name] = True
+            bootstrap_yaml["bootstrap"]["trusted"][name] = True
 
             # Create the metadata dir and metadata.yaml
             bs_mirror_path.mkdir(parents=True, exist_ok=True)
             bs_mirror_yaml = {
                 "type": "install",
-                "info": mirror["url"],
-            }
+                "info": {
+                    "url": mirror["url"],
+                }
+            }            
             with (bs_mirror_path / "metadata.yaml").open("w") as file:
                 yaml.dump(bs_mirror_yaml, file, default_flow_style=False)
 

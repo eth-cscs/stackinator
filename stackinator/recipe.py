@@ -172,7 +172,8 @@ class Recipe:
         # load the optional mirrors.yaml from system config, and add any additional
         # mirrors specified on the command line.
         self._logger.debug("Configuring mirrors.")
-        self.mirrors = mirror.Mirrors(self.system_config_path, pathlib.Path(args.cache))
+        self.mirrors = mirror.Mirrors(self.system_config_path, 
+                                      pathlib.Path(args.cache) if args.cache else None)
 
         # optional post install hook
         if self.post_install_hook is not None:
@@ -521,6 +522,7 @@ class Recipe:
             compilers=self.compilers,
             buildcache=self.build_cache_mirror,
             spack_version=self.spack_version,
+            cache = self.build_cache_mirror,
         )
 
         files["config"] = {}
@@ -551,6 +553,7 @@ class Recipe:
             environments=self.environments,
             buildcache=self.build_cache_mirror,
             spack_version=self.spack_version,
+            cache=self.build_cache_mirror,
         )
 
         files["config"] = {}

@@ -86,7 +86,7 @@ cache-force: mirror-setup
 	$(warning likely have to start a fresh build (but that's okay, because build caches FTW))
 	$(warning ================================================================================)
 	$(SANDBOX) $(MAKE) -C generate-config
-	$(SANDBOX) $(SPACK) --color=never -C $(STORE)/config buildcache create --rebuild-index --only=package cache.name \
+	$(SANDBOX) $(SPACK) --color=never -C $(STORE)/config buildcache create --rebuild-index --only=package cache \
 	$$($(SANDBOX) $(SPACK_HELPER) -C $(STORE)/config find --format '{name};{/hash};version={version}' \
 	| grep -v -E '^({% for p in exclude_from_cache %}{{ pipejoiner() }}{{ p }}{% endfor %});'\
 	| grep -v -E 'version=git\.'\
