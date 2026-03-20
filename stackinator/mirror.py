@@ -1,12 +1,14 @@
-from typing import Optional, List, Dict
+from typing import Optional, Dict
 import base64
 import io
-import magic
 import os
 import pathlib
+import shutil
 import urllib.error
 import urllib.request
 import yaml
+
+import magic
 
 from . import schema, root_logger
 
@@ -50,7 +52,8 @@ class Mirrors:
         self.bootstrap_mirrors = [name for name, mirror in self.mirrors.items() if mirror.get("bootstrap", False)]
 
         # Will hold a list of all the gpg keys (public and private)
-        self._keys: Optional[List[pathlib.Path]] = []
+        # self._keys: Optional[List[pathlib.Path]] = []
+        self._keys = self._key_init()
 
     def _load_mirrors(self, cmdline_cache: Optional[pathlib.Path]) -> Dict[str, Dict]:
         """Load the mirrors file, if one exists."""
@@ -157,14 +160,12 @@ class Mirrors:
                         f"Check the url listed in mirrors.yaml in system config. \n{e.reason}"
                     )
 
-    @property
-    def keys(self):
+    def key_files(self, config_root: pathlib.Path):
         """Return the list of public and private key file paths."""
-
         if self._keys is None:
             raise RuntimeError("The mirror.keys method was accessed before setup_configs() was called.")
-
-        return self._keys
+        key_dir = config_root / self.KEY_STORE_DIR
+        return [key_dir / info["path"] for info in self._keys]
 
     def setup_configs(self, config_root: pathlib.Path):
         """Setup all mirror configs in the given config_root."""
@@ -229,34 +230,27 @@ class Mirrors:
         with (config_root / "bootstrap.yaml").open("w") as file:
             yaml.dump(bootstrap_yaml, file, default_flow_style=False)
 
-    def _key_setup(self, key_store: pathlib.Path):
-        """Validate mirror keys, relocate to key_store, and update mirror config with new key paths."""
-
-        self._keys = []
-        key_store.mkdir(exist_ok=True)
+    def _key_init(self):
+        key_info = []
 
         for name, mirror in self.mirrors.items():
-            if mirror.get("public_key") is None:
+            if mirror.get("private_key") is None:
                 continue
 
-            key = mirror["public_key"]
-
-            # key will be saved under key_store/mirror_name.gpg
-
-            dest = pathlib.Path(key_store / f"{name}.gpg")
+            key = mirror["private_key"]
 
             # if path, check if abs path, if not, append sys config path in front and check again
             path = pathlib.Path(os.path.expandvars(key))
+
             if not path.is_absolute():
                 # try prepending system config path
                 path = self._system_config_root / path
 
             if path.is_file():
-                with open(path, "rb") as reader:
-                    binary_key = reader.read()
-
-            # convert base64 key to binary
+                # use the user-provided file
+                key_info.append({"path": pathlib.Path(f"{name}.pgp"), "source": path})
             else:
+                # convert base64 key to binary
                 try:
                     binary_key = base64.b64decode(key)
                 except ValueError:
@@ -266,16 +260,34 @@ class Mirrors:
                         f"Check the key listed in mirrors.yaml in system config."
                     )
 
-            file_type = magic.from_buffer(binary_key, mime=True)
-            if file_type not in ("application/x-gnupg-keyring", "application/pgp-keys"):
-                raise MirrorError(
-                    f"Key for mirror {name} is not a valid GPG key. \n"
-                    f"The file (or base64) was readable, but the data itself was not a PGP key.\n"
-                    f"Check the key listed in mirrors.yaml in system config."
-                )
+                file_type = magic.from_buffer(binary_key, mime=True)
+                if file_type not in ("application/x-gnupg-keyring", "application/pgp-keys"):
+                    raise MirrorError(
+                        f"Key for mirror {name} is not a valid GPG key. \n"
+                        f"The file (or base64) was readable, but the data itself was not a PGP key.\n"
+                        f"Check the key listed in mirrors.yaml in system config."
+                    )
 
-            # copy key to new destination in key store
-            with open(dest, "wb") as writer:
-                writer.write(binary_key)
+                key_info.append({"path": pathlib.Path(f"{name}.pgp"), "source": binary_key})
 
-            self._keys.append(dest)
+        return key_info
+
+    def _key_setup(self, key_store: pathlib.Path):
+        """Validate mirror keys, relocate to key_store, and update mirror config with new key paths."""
+
+        key_store.mkdir(exist_ok=True)
+
+        for key_info in self._keys:
+            path = key_store / key_info["path"]
+            source = key_info["source"]
+
+            match source:
+                case pathlib.Path():
+                    # copy source -> path
+                    shutil.copy2(source, path)
+                case bytes():
+                    # open path and copy in bytes
+                    with open(path, "wb") as writer:
+                        writer.write(source)
+                case _:
+                    raise TypeError(f"Expected Path or bytes, got {type(source).__name__}")

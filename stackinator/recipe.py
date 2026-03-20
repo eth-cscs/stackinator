@@ -517,10 +517,9 @@ class Recipe:
         )
 
         makefile_template = env.get_template("Makefile.compilers")
-        push_to_cache = self.build_cache_mirror is not None
         files["makefile"] = makefile_template.render(
             compilers=self.compilers,
-            push_to_cache=push_to_cache,
+            buildcache=self.build_cache_mirror,
             spack_version=self.spack_version,
         )
 
@@ -548,10 +547,9 @@ class Recipe:
         jenv.filters["py2yaml"] = schema.py2yaml
 
         makefile_template = jenv.get_template("Makefile.environments")
-        push_to_cache = self.build_cache_mirror is not None
         files["makefile"] = makefile_template.render(
             environments=self.environments,
-            push_to_cache=push_to_cache,
+            buildcache=self.build_cache_mirror,
             spack_version=self.spack_version,
         )
 

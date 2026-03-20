@@ -168,10 +168,12 @@ class Builder:
         # make the paths, in case bwrap is not used, directly write to recipe.mount
         store_path = self.path / "store" if not recipe.no_bwrap else pathlib.Path(recipe.mount)
         tmp_path = self.path / "tmp"
+        config_path = self.path / "config"
 
         self.path.mkdir(exist_ok=True, parents=True)
         store_path.mkdir(exist_ok=True)
         tmp_path.mkdir(exist_ok=True)
+        config_path.mkdir(exist_ok=True)
 
         # check out the version of spack
         spack_version = recipe.spack_version
@@ -232,7 +234,7 @@ class Builder:
                     pre_install_hook=recipe.pre_install_hook,
                     spack_version=spack_version,
                     spack_meta=spack_meta,
-                    gpg_keys=recipe.mirrors.keys,
+                    gpg_keys=recipe.mirrors.key_files(config_path),
                     cache=recipe.build_cache_mirror,
                     exclude_from_cache=["nvhpc", "cuda", "perl"],
                     verbose=False,
@@ -301,8 +303,6 @@ class Builder:
 
         # Generate the system configuration: the compilers, environments, etc.
         # that are defined for the target cluster.
-        config_path = self.path / "config"
-        config_path.mkdir(exist_ok=True)
         packages_path = config_path / "packages.yaml"
 
         # the packages.yaml configuration that will be used when building all environments
