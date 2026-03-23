@@ -293,9 +293,6 @@ class Recipe:
     def find_spack_version(self, develop):
         return "1.0"
 
-    # Returns:
-    #   Path: if the recipe contains a spack package repository
-    #   None: if there is the recipe contains no repo
     @property
     def default_view(self):
         return self._default_view
