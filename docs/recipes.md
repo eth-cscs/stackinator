@@ -15,6 +15,7 @@ A recipe is comprised of the following yaml files in a directory:
 * `post-install`: _optional_ a script to run after Spack has been executed to build the stack.
 * `pre-install`: _optional_ a script to run before any packages have been built.
 
+[](){#ref-recipes-config}
 ## Configuration
 
 ```yaml title="config.yaml"
@@ -26,17 +27,18 @@ spack:
     packages:
         repo: https://github.com/spack/spack-packages.git
         commit: develop
-modules: true
 description: "HPC development tools for building MPI applications with the GNU compiler toolchain"
+default-view: develop
 version: 2
 ```
 
 * `name`: a plain text name for the environment
 * `store`: the location where the environment will be mounted.
 * `spack`: which spack and package repositories to use for installation.
-* `modules`: (_deprecated_) _optional_ enable/disable module file generation.
 * `description`: _optional_ a string that describes the environment (default empty).
+* `default-view`: _default = null_ the name of a uenv view to load if no view is explicitly requested by the user. See the documentation for [default views][ref-recipes-default-view]. If no default view is specified, none will be set.
 * `version`:  _default = 1_ the version of the uenv recipe (see below)
+* `modules`: (_deprecated_) _optional_ enable/disable module file generation.
 
 !!! note "uenv recipe versions"
     Stackinator 6 introduces breaking changes to the uenv recipe format, introduced to support Spack v1.0.
@@ -350,7 +352,7 @@ For example, the `views` description:
 ```yaml
 cuda-env:
   views:
-    default:
+    full:
     no-python:
       exclude:
         - 'python'
@@ -358,19 +360,26 @@ cuda-env:
 
 will configure two views:
 
-* `default`: a view of all the software in the environment using the default settings of Spack.
-* `no-python`: everything in the default view, except any versions of `python`.
+* `full`: a view of all the software in the environment using the full settings of Spack.
+* `no-python`: everything in the `full` view, except any versions of `python`.
+
+!!! warning "only name views default if they are loaded by default"
+    It is possible to name views `default`, and there are uenv images like `prgenv-gnu` that follow this practice for legacy reasons.
+
+    However the name default can be confusing for users because it implies that the view is loaded by default.
+    However, [default views][ref-recipes-default-view] must be explicitly set in [`config.yaml`][ref-recipes-config].
 
 Stackinator provides some additional options that are not provided by Spack, to fine tune the view, that can be set in the `uenv:` field:
 
 ```yaml
 cuda-env:
   views:
-    uenv:
-      add_compilers: true
-      prefix_paths:
-        LD_LIBRARY_PATH: [lib, lib64]
-      env_vars:
+    my-view:
+      uenv:
+        add_compilers: true
+        prefix_paths:
+          LD_LIBRARY_PATH: [lib, lib64]
+        env_vars:
           set:
           - WOMBAT: null
           - NOCOLOR: "1"
@@ -391,6 +400,18 @@ cuda-env:
 
 !!! info
     See the [interfaces documentation](interfaces.md#environment-views) for more information about how the environment views are provided.
+
+[](){#ref-recipes-default-view}
+#### Setting default views
+
+!!! info "available in uenv 9.3 and later"
+    Default views are only loaded in recent versions of uenv.
+    Older uenv versions will ignore the default view - it is not an error to load a uenv that provides a default view using uenv 9.2 and older.
+
+It is possible to specify a view that will be loaded automatically if no view is specified, by setting the `default-view` field in [`config.yaml` file][ref-recipes-config].
+
+* a default view is only used if it is explicitly specified in `config.yaml`.
+* if a uenv is started with a view specified, the default view is ignored.
 
 #### Setting environment variables with `env_vars`
 
