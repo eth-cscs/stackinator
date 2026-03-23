@@ -46,28 +46,17 @@
                 }
             }
         },
-        "mirror" : {
-            "type" : "object",
-            "additionalProperties": false,
-            "default": {"enable": true, "key": null},
-            "properties" : {
-                "enable" : {
-                    "type": "boolean",
-                    "default": true
-                },
-                "key" : {
-                    "oneOf": [
-                        {"type" : "string"},
-                        {"type" : "null"}
-                    ],
-                    "default": null
-                }
-            }
-        },
         "modules" : {
             "type": "boolean"
         },
         "description" : {
+            "oneOf": [
+                {"type" : "string"},
+                {"type" : "null"}
+            ],
+            "default": null
+        },
+        "default-view" : {
             "oneOf": [
                 {"type" : "string"},
                 {"type" : "null"}

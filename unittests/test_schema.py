@@ -43,7 +43,6 @@ def test_config_yaml(yaml_path):
         assert raw["store"] == "/user-environment"
         assert raw["spack"]["commit"] is None
         assert raw["spack"]["packages"]["commit"] is None
-        assert raw["mirror"] == {"enable": True, "key": None}
         assert raw["description"] is None
 
     # no spack:commit
@@ -63,7 +62,6 @@ def test_config_yaml(yaml_path):
     schema.ConfigValidator.validate(raw)
     assert raw["spack"]["commit"] is None
     assert raw["spack"]["packages"]["commit"] is not None
-    assert raw["mirror"] == {"enable": True, "key": None}
     assert raw["description"] is None
 
     # no spack:packages:commit
@@ -83,7 +81,6 @@ def test_config_yaml(yaml_path):
     schema.ConfigValidator.validate(raw)
     assert raw["spack"]["commit"] == "develop"
     assert raw["spack"]["packages"]["commit"] is None
-    assert raw["mirror"] == {"enable": True, "key": None}
     assert raw["description"] is None
 
     # full config
@@ -94,7 +91,6 @@ def test_config_yaml(yaml_path):
         assert raw["spack"]["commit"] == "6408b51"
         assert raw["spack"]["packages"]["commit"] == "v2025.07.0"
         assert raw["modules"] == False  # noqa: E712
-        assert raw["mirror"] == {"enable": True, "key": "/home/bob/veryprivate.key"}
         assert raw["description"] == "a really useful environment"
 
     # unsupported old version
