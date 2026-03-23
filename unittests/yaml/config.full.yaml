@@ -6,9 +6,6 @@ spack:
     packages:
         repo: https://github.com/spack/spack-packages.git
         commit: v2025.07.0
-mirror:
-    key: /home/bob/veryprivate.key
-    enable: True
 modules: False
 description: "a really useful environment"
 version: 2

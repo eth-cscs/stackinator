@@ -5,7 +5,4 @@ spack:
   commit: 6408b51
   packages:
     repo: https://github.com/spack/spack-packages.git
-mirror:
-  key: /scratch/e1000/bcumming/secret/spack-key.gpg
-  enable: true
 version: 2
