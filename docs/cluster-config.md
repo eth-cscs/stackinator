@@ -93,6 +93,27 @@ packages:
         version: ["git.59b6de6a91d9637809677c50cc48b607a91a9acb=main"]
     ```
 
+### Configuring Spack mirrors: `mirrors.yaml`
+
+On air-gapped systems, Spack is unable to reach its default mirror to fetch packages. The `mirrors.yaml` configuration can be used to connect Spack to local mirrors for fetching and building packages.
+
+`mirrors.yaml` treats source mirrors, buildcaches, and bootstrap mirrors the same, and they may all be included in this file. Spack will search the topmost mirror first and the bottom-most mirror last, and will append the default Spack mirror to the bottom of the list when the Spack mirror config is generated.
+
+If using a buildcache, public and private keys must be provided for signing and verifying packages.
+
+```yaml title="mirrors.yaml"
+local_filesystem:
+  url: file:///home/username/spack-mirror-2014-06-24
+site_server:
+  url: https://example.com/some/web-hosted/directory
+buildcache-mirror:
+  url: https://example.com/some/buildcache/mirror
+  public_key: ../buildcache-key.public.gpg
+  private_key: /user-home/.gnupg/private-keys-v1.d/my-private-key.asc
+  cache: true
+  bootstrap: true
+```
+
 ## Site and System Configurations
 
 The `repo.yaml` configuration can be used to provide a list of additional Spack package repositories to use on the target system.
