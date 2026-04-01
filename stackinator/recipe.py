@@ -3,10 +3,12 @@ import pathlib
 import re
 
 import jinja2
-import yaml
+from ruamel.yaml import YAML
 
 from . import cache, root_logger, schema, spack_util
 from .etc.envvars import EnvVarSet
+
+yaml = YAML()
 
 
 class Recipe:
@@ -58,7 +60,7 @@ class Recipe:
             raise FileNotFoundError(f"The recipe path '{compiler_path}' does not contain compilers.yaml")
 
         with compiler_path.open() as fid:
-            raw = yaml.load(fid, Loader=yaml.Loader)
+            raw = yaml.load(fid)
             schema.CompilersValidator.validate(raw)
             self.generate_compiler_specs(raw)
 
@@ -68,7 +70,7 @@ class Recipe:
         self._logger.debug(f"opening {modules_path}")
         if modules_path.is_file():
             with modules_path.open() as fid:
-                self.modules = yaml.load(fid, Loader=yaml.Loader)
+                self.modules = yaml.load(fid)
                 schema.ModulesValidator.validate(self.modules)
 
                 # Note:
@@ -94,7 +96,7 @@ class Recipe:
         recipe_packages_path = self.path / "packages.yaml"
         if recipe_packages_path.is_file():
             with recipe_packages_path.open() as fid:
-                raw = yaml.load(fid, Loader=yaml.Loader)
+                raw = yaml.load(fid)
                 recipe_packages = raw["packages"]
 
         # load system/packages.yaml -> system_packages (if it exists)
@@ -103,7 +105,7 @@ class Recipe:
         if system_packages_path.is_file():
             # load system yaml
             with system_packages_path.open() as fid:
-                raw = yaml.load(fid, Loader=yaml.Loader)
+                raw = yaml.load(fid)
                 system_packages = raw["packages"]
 
         # extract gcc packages from system packages
@@ -123,7 +125,7 @@ class Recipe:
         if network_path.is_file():
             self._logger.debug(f"opening {network_path}")
             with network_path.open() as fid:
-                raw = yaml.load(fid, Loader=yaml.Loader)
+                raw = yaml.load(fid)
                 if "packages" in raw:
                     network_packages = raw["packages"]
                 if "mpi" in raw:
@@ -146,7 +148,7 @@ class Recipe:
             raise FileNotFoundError(f"The recipe path '{environments_path}' does not contain environments.yaml")
 
         with environments_path.open() as fid:
-            raw = yaml.load(fid, Loader=yaml.Loader)
+            raw = yaml.load(fid)
             # add a special environment that installs tools required later in the build process.
             # currently we only need squashfs for creating the squashfs file.
             raw["uenv_tools"] = {
@@ -280,7 +282,7 @@ class Recipe:
             raise FileNotFoundError(f"The recipe path '{config_path}' does not contain config.yaml")
 
         with config_path.open() as fid:
-            raw = yaml.load(fid, Loader=yaml.Loader)
+            raw = yaml.load(fid)
             schema.ConfigValidator.validate(raw)
             self._config = raw
 
