@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import re
 from enum import Enum
 from typing import List, Optional
 
@@ -206,6 +207,11 @@ def is_list_var(name: str) -> bool:
     return name in list_variables
 
 
+class VarExpansionError(Exception):
+    def __init__(self, variable_name) -> None:
+        super().__init__(f'"{variable_name}" variable cannot be expanded')
+
+
 class EnvVarSet:
     """
     A set of environment variable updates.
@@ -218,6 +224,57 @@ class EnvVarSet:
         self._scalars = {}
         # toggles whether post export commands will be generated
         self._generate_post = True
+
+    @classmethod
+    def from_envvars(cls, input: dict, substitutions: dict):
+        def expand_vars(s):
+            def var_expansion(m: re.Match):
+                try:
+                    return substitutions[m.group(1)]
+                except KeyError:
+                    raise VarExpansionError(m.group(0))
+
+            return re.sub(r"\$@(\w+)@", var_expansion, s)
+
+        # TODO: one day this code will be revisited because we need to append_path
+        # or prepend_path to a variable that isn't in envvars.is_list_var
+        # On that day, extend the environments.yaml views:uenv:env_vars field
+        # to also accept a list of env var names to add to the blessed list of prefix paths
+
+        env = EnvVarSet()
+
+        for v in input.get("set", []):
+            ((name, value),) = v.items()
+            if value is not None:
+                value = expand_vars(value)
+
+            # insist that the only 'set' operation on prefix variables is to unset/reset them
+            # this requires that users use append and prepend to build up the variables
+            if is_list_var(name) and value is not None:
+                raise RuntimeError(f"{name} is a prefix variable")
+            else:
+                if is_list_var(name):
+                    env.set_list(name, [], EnvVarOp.SET)
+                else:
+                    env.set_scalar(name, value)
+
+        for v in input.get("prepend_path", []):
+            ((name, value),) = v.items()
+            if value is not None:
+                value = expand_vars(value)
+            if not is_list_var(name):
+                raise RuntimeError(f"{name} is not a known prefix path variable")
+            env.set_list(name, [value], EnvVarOp.PREPEND)
+
+        for v in input.get("append_path", []):
+            ((name, value),) = v.items()
+            if value is not None:
+                value = expand_vars(value)
+            if not is_list_var(name):
+                raise RuntimeError(f"{name} is not a known prefix path variable")
+            env.set_list(name, [value], EnvVarOp.APPEND)
+
+        return env
 
     @property
     def lists(self):
