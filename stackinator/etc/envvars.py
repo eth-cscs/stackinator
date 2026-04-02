@@ -7,8 +7,6 @@ import re
 from enum import Enum
 from typing import List, Optional
 
-import yaml
-
 
 class EnvVarOp(Enum):
     PREPEND = 1
@@ -504,12 +502,8 @@ def view_impl(args):
     envvars.remove_root(args.build_path)
 
     if args.compilers is not None:
-        if not os.path.isfile(args.compilers):
-            print(f"error - compiler yaml file {args.compilers} does not exist")
-            exit(1)
-
         with open(args.compilers, "r") as file:
-            data = yaml.safe_load(file)
+            data = json.load(file)
 
         compilers = []
         for p in data["packages"].values():
