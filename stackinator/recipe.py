@@ -522,7 +522,6 @@ class Recipe:
             compilers=self.compilers,
             buildcache=self.build_cache_mirror,
             spack_version=self.spack_version,
-            cache = self.build_cache_mirror,
         )
 
         files["config"] = {}
@@ -553,7 +552,6 @@ class Recipe:
             environments=self.environments,
             buildcache=self.build_cache_mirror,
             spack_version=self.spack_version,
-            cache=self.build_cache_mirror,
         )
 
         files["config"] = {}
