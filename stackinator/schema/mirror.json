@@ -29,6 +29,10 @@
                 "mount_specific": {
                     "type": "boolean",
                     "default": false
+                },
+                "cmdline": {
+                    "type": "boolean",
+                    "default": true
                 }
             },
             "additionalProperties": false,

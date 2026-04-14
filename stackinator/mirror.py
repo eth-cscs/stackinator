@@ -38,17 +38,6 @@ class Mirrors:
         self.mirrors = self._load_mirrors(cmdline_cache)
         self._check_mirrors()
 
-        # Always use the cache given on the command line
-        if self.CMDLINE_CACHE in self.mirrors:
-            self.build_cache_mirror = self.CMDLINE_CACHE
-        else:
-            # Otherwise, grab the configured cache (or None)
-            self.build_cache_mirror: Optional[str] = (
-                [name for name, mirror in self.mirrors.items() if mirror.get("cache", False)] + [None]
-            ).pop(0)
-
-        self.bootstrap_mirrors = [name for name, mirror in self.mirrors.items() if mirror.get("bootstrap", True)]
-
         # Will hold a list of all the gpg keys (public and private)
         # self._keys: Optional[List[pathlib.Path]] = []
         self._keys = self._key_init()
@@ -71,22 +60,37 @@ class Mirrors:
         except ValueError as err:
             raise MirrorError(f"Mirror config does not comply with schema.\n{err}")
 
-        caches = [name for name, mirror in mirrors.items() if mirror["cache"]]
-        if len(caches) > 1:
-            raise MirrorError(
-                "Mirror config has more than one mirror specified as the build cache destination.\n"
-                f"{self._pp_yaml(caches)}"
-            )
-        elif caches:
-            cache = mirrors[caches[0]]
-            if not cache.get("private_key"):
-                raise MirrorError(f"Mirror build cache config '{caches[0]}' missing a required 'private_key' path.")
+        enabled_mirrors: Dict[str, Dict] = {}
+
+        buildcache = mirrors.get("buildcache")
+        if buildcache and buildcache.get("enabled", True):
+            if not buildcache.get("private_key"):
+                raise MirrorError(
+                    "Mirror build cache config is missing a required 'private_key' path."
+                )
+                self.build_cache_mirror = "buildcache"
+                enabled_mirrors["buildcache"] = buildcache
+        else:
+            self.build_cache_mirror = None
 
         # Load the cache as defined by the deprecated 'cache.yaml' file.
         if cmdline_cache is not None:
-            mirrors[self.CMDLINE_CACHE] = self._load_cmdline_cache(cmdline_cache)
+            enabled_mirrors["buildcache"] = self._load_cmdline_cache(cmdline_cache)
+            self.build_cache_mirror = self.CMDLINE_CACHE
 
-        return {name: mirror for name, mirror in mirrors.items() if mirror["enabled"]}
+
+        bootstrap = mirrors.get("bootstrap")
+        if bootstrap and bootstrap.get("enabled", True):
+            self.bootstrap_mirror = bootstrap
+            enabled_mirrors["bootstrap"] = bootstrap
+        else:
+            self.bootstrap_mirror = None
+
+        for name, mirror in mirrors.get("sourcecache", {}).items():
+        if mirror.get("enabled", True):
+            enabled_mirrors[name] = mirror
+
+        return enabled_mirrors
 
     @staticmethod
     def _pp_yaml(object):
@@ -118,11 +122,10 @@ class Mirrors:
         mirror_cfg = {
             "url": raw["root"],
             "description": "Buildcache dest loaded from legacy cache.yaml",
-            "cache": True,
             "enabled": True,
-            "bootstrap": False,
             "mount_specific": True,
             "private_key": raw["key"],
+            "cmdline": True
         }
 
         self._logger.warning(
@@ -176,11 +179,11 @@ class Mirrors:
 
         raw = {"mirrors": {}}
 
-        for name, mirror in self.mirrors.items():
-            url = mirror["url"]
+        if self.build_cache_mirror:
+            url = self.mirrors.get("buildcache")["url"]
+            name = self.build_cache_mirror
 
-            # Make the mirror path specific to the mount point
-            if mirror["mount_specific"] and self._mount_point is not None:
+            if self.build_cache_mirror.get("mount_specific", True) and self._mount_point is not None:
                 url = url.rstrip("/") + "/" + self._mount_point.as_posix().lstrip("/")
 
             raw["mirrors"][name] = {
@@ -188,13 +191,32 @@ class Mirrors:
                 "push": {"url": url},
             }
 
+        elif self.mirrors.get("bootstrap"):
+            url = self.mirrors.get("bootstrap")["url"]
+
+            raw["mirrors"]["bootstrap"] = {
+                "fetch": {"url": url},
+                "push": {"url": url},
+            }
+
+        elif self.mirrors.get("sourcecache"):
+            source_mirrors = self.mirrors.get("sourcecache")
+
+            for name, mirror in source_mirrors.items():
+                url = mirror["url"]
+
+                raw["mirrors"][name] = {
+                    "fetch": {"url": url},
+                    "push": {"url": url},
+                }
+
         with dest.open("w") as file:
             yaml.dump(raw, file, default_flow_style=False)
 
     def _create_bootstrap_configs(self, config_root: pathlib.Path):
         """Create the bootstrap.yaml and bootstrap metadata dirs in our build dir."""
 
-        if not self.bootstrap_mirrors:
+        if not self.bootstrap_mirror:
             return
 
         bootstrap_yaml = {
@@ -204,29 +226,28 @@ class Mirrors:
             }
         }
 
-        for name in self.bootstrap_mirrors:
-            bs_mirror_path = config_root / f"bootstrap/{name}"
-            mirror = self.mirrors[name]
-            # Tell spack where to find the metadata for each bootstrap mirror.
-            bootstrap_yaml["bootstrap"]["sources"].append(
-                {
-                    "name": name,
-                    "metadata": str(bs_mirror_path),
-                }
-            )
-            # And trust each one
-            bootstrap_yaml["bootstrap"]["trusted"][name] = True
+        bs_mirror_path = config_root / f"bootstrap/{self.bootstrap_mirror}"
+        mirror = self.mirrors.get("bootstrap")
+        # Tell spack where to find the metadata for each bootstrap mirror.
+        bootstrap_yaml["bootstrap"]["sources"].append(
+            {
+                "name": "bootstrap_mirror",
+                "metadata": str(bs_mirror_path),
+            }
+        )
+        # And trust each one
+        bootstrap_yaml["bootstrap"]["trusted"][bootstrap_mirror] = True
 
-            # Create the metadata dir and metadata.yaml
-            bs_mirror_path.mkdir(parents=True, exist_ok=True)
-            bs_mirror_yaml = {
-                "type": "install",
-                "info": {
-                    "url": mirror["url"],
-                }
-            }            
-            with (bs_mirror_path / "metadata.yaml").open("w") as file:
-                yaml.dump(bs_mirror_yaml, file, default_flow_style=False)
+        # Create the metadata dir and metadata.yaml
+        bs_mirror_path.mkdir(parents=True, exist_ok=True)
+        bs_mirror_yaml = {
+            "type": "install",
+            "info": {
+                "url": mirror["url"],
+            }
+        }            
+        with (bs_mirror_path / "metadata.yaml").open("w") as file:
+            yaml.dump(bs_mirror_yaml, file, default_flow_style=False)
 
         with (config_root / "bootstrap.yaml").open("w") as file:
             yaml.dump(bootstrap_yaml, file, default_flow_style=False)
