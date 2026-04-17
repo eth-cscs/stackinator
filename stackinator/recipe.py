@@ -477,6 +477,15 @@ class Recipe:
             llvm_amdgpu["exclude_from_cache"] = cache_exclude
             compilers["llvm-amdgpu"] = llvm_amdgpu
 
+        if raw["intel-oneapi"] is not None:
+            oneapi = {}
+            oneapi_version = raw["oneapi"]["version"]
+            oneapi["packages"] = False
+            oneapi["specs"] = [f"intel-oneapi-compilers@{oneapi_version}"]
+
+            oneapi["exclude_from_cache"] = cache_exclude
+            compilers["intel-oneapi"] = oneapi
+
         self.compilers = compilers
 
     # The path of the default configuration for the target system/cluster

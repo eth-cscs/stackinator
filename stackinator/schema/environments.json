@@ -63,7 +63,7 @@
                      "type": "array",
                      "items": {
                          "type": "string",
-                         "enum": ["gcc", "nvhpc", "llvm", "llvm-amdgpu"]
+                         "enum": ["gcc", "nvhpc", "llvm", "llvm-amdgpu", "intel-oneapi"]
                      }
                  },
                  "specs": {
