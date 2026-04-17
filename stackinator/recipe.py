@@ -391,6 +391,10 @@ class Recipe:
             # Which will compile the upstream MPI with nvfortran, as well as downstream dependendencies.
             if config["prefer"] is None:
                 compiler = config["compiler"][0]
+                # spack uses a different name for the intel oneapi compilers
+                # than the package that installs them.
+                if compiler == "intel-oneapi-compilers":
+                    compiler = "oneapi"
                 config["prefer"] = [
                     f"%[when=%c] c={compiler} %[when=%cxx] cxx={compiler} %[when=%fortran] fortran={compiler}"
                 ]
