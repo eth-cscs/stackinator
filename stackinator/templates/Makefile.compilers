@@ -83,6 +83,12 @@ include llvm-amdgpu/Makefile
 endif
 {% endif %}
 
+{% if compilers.get('intel-oneapi') %}
+ifneq (,$(wildcard gcc/Makefile))
+include intel-oneapi/Makefile
+endif
+{% endif %}
+
 {% if compilers.nvhpc %}
 ifneq (,$(wildcard gcc/Makefile))
 include nvhpc/Makefile
