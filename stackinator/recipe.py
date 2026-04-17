@@ -479,7 +479,7 @@ class Recipe:
 
         if raw["intel-oneapi"] is not None:
             oneapi = {}
-            oneapi_version = raw["oneapi"]["version"]
+            oneapi_version = raw["intel-oneapi"]["version"]
             oneapi["packages"] = False
             oneapi["specs"] = [f"intel-oneapi-compilers@{oneapi_version}"]
 
