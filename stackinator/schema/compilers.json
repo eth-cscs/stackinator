@@ -61,7 +61,7 @@
             ],
             "default": null
         },
-        "intel-oneapi": {
+        "intel-oneapi-compilers": {
             "oneOf": [
                 {
                     "type": "object",

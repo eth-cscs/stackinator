@@ -477,14 +477,14 @@ class Recipe:
             llvm_amdgpu["exclude_from_cache"] = cache_exclude
             compilers["llvm-amdgpu"] = llvm_amdgpu
 
-        if raw["intel-oneapi"] is not None:
+        if raw["intel-oneapi-compilers"] is not None:
             oneapi = {}
-            oneapi_version = raw["intel-oneapi"]["version"]
+            oneapi_version = raw["intel-oneapi-compilers"]["version"]
             oneapi["packages"] = False
             oneapi["specs"] = [f"intel-oneapi-compilers@{oneapi_version}"]
 
             oneapi["exclude_from_cache"] = cache_exclude
-            compilers["intel-oneapi"] = oneapi
+            compilers["intel-oneapi-compilers"] = oneapi
 
         self.compilers = compilers
 
