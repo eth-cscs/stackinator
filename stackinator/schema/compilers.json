@@ -60,6 +60,22 @@
                 }
             ],
             "default": null
+        },
+        "intel-oneapi-compilers": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "version": {"type": "string"}
+                    },
+                    "additionalProperties": false,
+                    "required": ["version"]
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null
         }
     }
 }

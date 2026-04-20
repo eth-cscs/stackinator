@@ -29,4 +29,4 @@ store:
 	touch $@
 
 # Because Spack doesn't know how to find compilers, we help it by getting the bin folder of gcc, clang, nvc given a install prefix
-compiler_bin_dirs = $$(find $(1) '(' -name gcc -o -name clang -o -name nvc ')' -path '*/bin/*' '(' -type f -o -type l ')' -exec dirname {} +)
+compiler_bin_dirs = $$(find $(1) '(' -name gcc -o -name clang -o -name nvc -o -name icx ')' -path '*/bin/*' '(' -type f -o -type l ')' -exec dirname {} +)

@@ -391,6 +391,10 @@ class Recipe:
             # Which will compile the upstream MPI with nvfortran, as well as downstream dependendencies.
             if config["prefer"] is None:
                 compiler = config["compiler"][0]
+                # spack uses a different name for the intel oneapi compilers
+                # than the package that installs them.
+                if compiler == "intel-oneapi-compilers":
+                    compiler = "oneapi"
                 config["prefer"] = [
                     f"%[when=%c] c={compiler} %[when=%cxx] cxx={compiler} %[when=%fortran] fortran={compiler}"
                 ]
@@ -476,6 +480,15 @@ class Recipe:
 
             llvm_amdgpu["exclude_from_cache"] = cache_exclude
             compilers["llvm-amdgpu"] = llvm_amdgpu
+
+        if raw["intel-oneapi-compilers"] is not None:
+            oneapi = {}
+            oneapi_version = raw["intel-oneapi-compilers"]["version"]
+            oneapi["packages"] = False
+            oneapi["specs"] = [f"intel-oneapi-compilers@{oneapi_version}"]
+
+            oneapi["exclude_from_cache"] = cache_exclude
+            compilers["intel-oneapi-compilers"] = oneapi
 
         self.compilers = compilers
 
