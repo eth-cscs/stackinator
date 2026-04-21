@@ -1,2 +1,4 @@
-bad-url:
-  url: https://www.testsite.io/services
+sourcecache:
+  bad-url:
+    url: https://www.testsite.io/services
+    enabled: true

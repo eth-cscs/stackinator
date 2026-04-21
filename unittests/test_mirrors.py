@@ -21,42 +21,34 @@ def test_mirror_init(systems_path):
     mirrors_obj = mirror.Mirrors(path)
 
     valid_mirrors = {
-        "fake-mirror": {
+        "bootstrap": {
+            "url": "https://mirror.spack.io",
+            "enabled": True,
+        },
+        "buildcache": {
+            "url": "https://mirror.spack.io",
+            "enabled": True,
+            "private_key": "../../test-gpg-priv.asc",
+            "mount_specific": False,
+            "cmdline": False,
+        },
+        "mirror1": {
             "url": "https://github.com",
             "enabled": True,
-            "bootstrap": False,
-            "cache": False,
-            "public_key": "../../test-gpg-pub.asc",
-            "mount_specific": False,
         },
-        "buildcache-mirror": {
-            "url": "https://mirror.spack.io",
+        "mirror2": {
+            "url": "https://github.com/spack",
             "enabled": True,
-            "bootstrap": False,
-            "cache": True,
-            "private_key": "../test-gpg-priv.asc",
-            "mount_specific": False,
-        },
-        "bootstrap-mirror": {
-            "url": "https://mirror.spack.io",
-            "enabled": True,
-            "bootstrap": True,
-            "cache": False,
-            "mount_specific": False,
-        },
+        }
     }
 
-    with (systems_path / "../test-gpg-pub.asc").open("rb") as pub_key_file:
-        key = base64.b64encode(pub_key_file.read()).decode()
-        valid_mirrors["buildcache-mirror"]["public_key"] = key
+    # with (systems_path / "../test-gpg-pub.asc").open("rb") as pub_key_file:
+    #     key = base64.b64encode(pub_key_file.read()).decode()
+    #     valid_mirrors["buildcache"]["public_key"] = key
 
     assert mirrors_obj.mirrors == valid_mirrors
-    assert mirrors_obj.bootstrap_mirrors == [
-        name for name in valid_mirrors.keys() if valid_mirrors[name].get("bootstrap")
-    ]
-    assert mirrors_obj.build_cache_mirror == [
-        name for name in valid_mirrors.keys() if valid_mirrors[name].get("cache")
-    ].pop(0)
+
+    assert mirrors_obj.build_cache_mirror == "buildcache"
 
     for mir in mirrors_obj.mirrors:
         assert mirrors_obj.mirrors[mir].get("enabled")
@@ -90,11 +82,10 @@ def test_command_line_cache(systems_path):
     assert len(mirrors.mirrors) == 4
     # This should always be the build cache even though one is already defined.
     assert mirrors.build_cache_mirror == "cmdline_cache"
-    cache_mirror = mirrors.mirrors["cmdline_cache"]
+    cache_mirror = mirrors.mirrors["buildcache"]
     assert cache_mirror["url"] == "/tmp/foo"
     assert cache_mirror["enabled"]
-    assert cache_mirror["cache"]
-    assert not cache_mirror["bootstrap"]
+    assert cache_mirror["cmdline"]
     assert cache_mirror["mount_specific"]
 
 
@@ -103,17 +94,21 @@ def test_create_spack_mirrors_yaml(tmp_path, systems_path):
 
     valid_spack_yaml = {
         "mirrors": {
-            "fake-mirror": {
+            "bootstrap": {
+                "fetch": {"url": "https://mirror.spack.io"},
+                "push": {"url": "https://mirror.spack.io"},
+            },
+            "buildcache": {
+                "fetch": {"url": "https://mirror.spack.io"},
+                "push": {"url": "https://mirror.spack.io"},
+            },
+            "mirror1": {
                 "fetch": {"url": "https://github.com"},
                 "push": {"url": "https://github.com"},
             },
-            "buildcache-mirror": {
-                "fetch": {"url": "https://mirror.spack.io"},
-                "push": {"url": "https://mirror.spack.io"},
-            },
-            "bootstrap-mirror": {
-                "fetch": {"url": "https://mirror.spack.io"},
-                "push": {"url": "https://mirror.spack.io"},
+            "mirror2": {
+                "fetch": {"url": "https://github.com/spack"},
+                "push": {"url": "https://github.com/spack"},
             },
         }
     }
@@ -132,17 +127,21 @@ def test_create_bootstrap_configs(tmp_path, systems_path):
     """Check that spack bootstrap configs are generated correctly"""
 
     valid_yaml = {
-        "sources": [
-            {
-                "name": "bootstrap-mirror",
-                "metadata": str(tmp_path / "bootstrap/bootstrap-mirror"),
-            }
-        ],
-        "trusted": {"bootstrap-mirror": True},
+        "bootstrap": {
+            "sources": [
+                {
+                    "name": "bootstrap-mirror",
+                    "metadata": str(tmp_path / "bootstrap/bootstrap-mirror"),
+                }
+            ],
+            "trusted": {"bootstrap-mirror": True},
+        }
     }
     valid_metadata = {
         "type": "install",
-        "info": "https://mirror.spack.io",
+        "info": {
+            "url": "https://mirror.spack.io",
+        }
     }
 
     mirrors_obj = mirror.Mirrors(systems_path / "mirror-ok")
@@ -162,18 +161,26 @@ def test_create_bootstrap_configs(tmp_path, systems_path):
 def test_key_setup(systems_path, tmp_path):
     """Check that public keys are set up properly."""
 
-    mirrors = mirror.Mirrors(systems_path / "mirror-ok")
+    mirrors_key_file = mirror.Mirrors(systems_path / "mirror-ok")
+    key_dir = tmp_path / "key_dir"
+    mirrors_raw_key = mirror.Mirrors(systems_path / "mirror-ok-raw-key")
+    raw_dir = tmp_path / "raw_dir"
 
-    mirrors._key_setup(tmp_path)
+    mirrors_key_file._key_setup(key_dir)
+    mirrors_raw_key._key_setup(raw_dir)
 
-    key_files = list(tmp_path.iterdir())
-    assert {key_file.name for key_file in key_files} == {"buildcache-mirror.gpg", "fake-mirror.gpg"}
+    key_file, = (p for p in key_dir.iterdir() if p.is_file())
+    assert key_file.name == "buildcache.pgp"
+
+    raw_key_file, = (p for p in key_dir.iterdir() if p.is_file())
+    assert raw_key_file.name == "buildcache.pgp"
+
     # The two files should be identical in content
-    key_file_data = []
-    for key_file in key_files:
-        with key_file.open("rb") as file:
-            key_file_data.append(file.read())
-    assert key_file_data[0] == key_file_data[1]
+    with key_file.open("rb") as file:
+        key_file_data = file.read()
+    with raw_key_file.open("rb") as file:
+        raw_key_file_data = file.read()
+    assert key_file_data == raw_key_file_data
 
 
 @pytest.mark.parametrize(
@@ -184,8 +191,7 @@ def test_key_setup(systems_path, tmp_path):
     ],
 )
 def test_key_setup_bad_key(tmp_path, systems_path, system_name):
-    """asdfasdf"""
+    """Check that MirrorError is raised for bad keys"""
 
-    mirrors = mirror.Mirrors(systems_path / system_name)
     with pytest.raises(mirror.MirrorError):
-        mirrors._key_setup(tmp_path)
+        mirrors = mirror.Mirrors(systems_path / system_name)

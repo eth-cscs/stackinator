@@ -1,3 +1,3 @@
-bad-key:
+buildcache:
   url: https://mirror.spack.io
-  public_key: bad_key.gpg
+  private_key: bad_key.gpg

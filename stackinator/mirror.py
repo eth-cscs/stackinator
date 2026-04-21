@@ -68,8 +68,8 @@ class Mirrors:
                 raise MirrorError(
                     "Mirror build cache config is missing a required 'private_key' path."
                 )
-                self.build_cache_mirror = "buildcache"
-                enabled_mirrors["buildcache"] = buildcache
+            self.build_cache_mirror = "buildcache"
+            enabled_mirrors["buildcache"] = buildcache
         else:
             self.build_cache_mirror = None
 
@@ -78,17 +78,13 @@ class Mirrors:
             enabled_mirrors["buildcache"] = self._load_cmdline_cache(cmdline_cache)
             self.build_cache_mirror = self.CMDLINE_CACHE
 
-
         bootstrap = mirrors.get("bootstrap")
         if bootstrap and bootstrap.get("enabled", True):
-            self.bootstrap_mirror = bootstrap
             enabled_mirrors["bootstrap"] = bootstrap
-        else:
-            self.bootstrap_mirror = None
 
         for name, mirror in mirrors.get("sourcecache", {}).items():
-        if mirror.get("enabled", True):
-            enabled_mirrors[name] = mirror
+            if mirror.get("enabled", True):
+                enabled_mirrors[name] = mirror
 
         return enabled_mirrors
 
@@ -179,36 +175,18 @@ class Mirrors:
 
         raw = {"mirrors": {}}
 
-        if self.build_cache_mirror:
-            url = self.mirrors.get("buildcache")["url"]
-            name = self.build_cache_mirror
+        for name, mirror in self.mirrors.items():
+            url = mirror["url"]
 
-            if self.build_cache_mirror.get("mount_specific", True) and self._mount_point is not None:
-                url = url.rstrip("/") + "/" + self._mount_point.as_posix().lstrip("/")
+            # Make the mirror path specific to the mount point
+            if(name=="buildcache"):
+                if mirror["mount_specific"] and self._mount_point is not None:
+                    url = url.rstrip("/") + "/" + self._mount_point.as_posix().lstrip("/")
 
             raw["mirrors"][name] = {
                 "fetch": {"url": url},
                 "push": {"url": url},
             }
-
-        elif self.mirrors.get("bootstrap"):
-            url = self.mirrors.get("bootstrap")["url"]
-
-            raw["mirrors"]["bootstrap"] = {
-                "fetch": {"url": url},
-                "push": {"url": url},
-            }
-
-        elif self.mirrors.get("sourcecache"):
-            source_mirrors = self.mirrors.get("sourcecache")
-
-            for name, mirror in source_mirrors.items():
-                url = mirror["url"]
-
-                raw["mirrors"][name] = {
-                    "fetch": {"url": url},
-                    "push": {"url": url},
-                }
 
         with dest.open("w") as file:
             yaml.dump(raw, file, default_flow_style=False)
@@ -216,7 +194,7 @@ class Mirrors:
     def _create_bootstrap_configs(self, config_root: pathlib.Path):
         """Create the bootstrap.yaml and bootstrap metadata dirs in our build dir."""
 
-        if not self.bootstrap_mirror:
+        if not self.mirrors.get("bootstrap"):
             return
 
         bootstrap_yaml = {
@@ -226,17 +204,17 @@ class Mirrors:
             }
         }
 
-        bs_mirror_path = config_root / f"bootstrap/{self.bootstrap_mirror}"
+        bs_mirror_path = config_root / "bootstrap" / "bootstrap-mirror"
         mirror = self.mirrors.get("bootstrap")
         # Tell spack where to find the metadata for each bootstrap mirror.
         bootstrap_yaml["bootstrap"]["sources"].append(
             {
-                "name": "bootstrap_mirror",
+                "name": "bootstrap-mirror",
                 "metadata": str(bs_mirror_path),
             }
         )
         # And trust each one
-        bootstrap_yaml["bootstrap"]["trusted"][bootstrap_mirror] = True
+        bootstrap_yaml["bootstrap"]["trusted"]["bootstrap-mirror"] = True
 
         # Create the metadata dir and metadata.yaml
         bs_mirror_path.mkdir(parents=True, exist_ok=True)
@@ -253,44 +231,44 @@ class Mirrors:
             yaml.dump(bootstrap_yaml, file, default_flow_style=False)
 
     def _key_init(self):
-        key_info = []
+        key_info = {}
+        
+        key = self.mirrors["buildcache"].get("private_key")
 
-        for name, mirror in self.mirrors.items():
-            if mirror.get("private_key") is None:
-                continue
+        if key is None:
+            return
 
-            key = mirror["private_key"]
+        # if path, check if abs path, if not, append sys config path in front and check again
+        path = pathlib.Path(os.path.expandvars(key))
 
-            # if path, check if abs path, if not, append sys config path in front and check again
-            path = pathlib.Path(os.path.expandvars(key))
+        if not path.is_absolute():
+            # try prepending system config path
+            path = self._system_config_root / path
 
-            if not path.is_absolute():
-                # try prepending system config path
-                path = self._system_config_root / path
+        if path.is_file():
+            # use the user-provided file
+            key_info = {"path": pathlib.Path(f"buildcache.pgp"), "source": path}
+        else:
+            # convert base64 key to binary
+            try:
+                binary_key = base64.b64decode(key, validate=True)
+                print(binary_key)
+            except ValueError:
+                raise MirrorError(
+                    f"Key for mirror 'buildcache' is not valid. \n"
+                    f"Must be a path to a GPG public key or a base64 encoded GPG public key. \n"
+                    f"Check the key listed in mirrors.yaml in system config."
+                )
 
-            if path.is_file():
-                # use the user-provided file
-                key_info.append({"path": pathlib.Path(f"{name}.pgp"), "source": path})
-            else:
-                # convert base64 key to binary
-                try:
-                    binary_key = base64.b64decode(key)
-                except ValueError:
-                    raise MirrorError(
-                        f"Key for mirror '{name}' is not valid: '{path}'. \n"
-                        f"Must be a path to a GPG public key or a base64 encoded GPG public key. \n"
-                        f"Check the key listed in mirrors.yaml in system config."
-                    )
+            file_type = magic.from_buffer(binary_key, mime=True)
+            if file_type not in ("application/x-gnupg-keyring", "application/pgp-keys"):
+                raise MirrorError(
+                    f"Key for mirror 'buildcache' is not a valid GPG key. \n"
+                    f"The file (or base64) was readable, but the data itself was not a PGP key.\n"
+                    f"Check the key listed in mirrors.yaml in system config."
+                )
 
-                file_type = magic.from_buffer(binary_key, mime=True)
-                if file_type not in ("application/x-gnupg-keyring", "application/pgp-keys"):
-                    raise MirrorError(
-                        f"Key for mirror {name} is not a valid GPG key. \n"
-                        f"The file (or base64) was readable, but the data itself was not a PGP key.\n"
-                        f"Check the key listed in mirrors.yaml in system config."
-                    )
-
-                key_info.append({"path": pathlib.Path(f"{name}.pgp"), "source": binary_key})
+            key_info = {"path": pathlib.Path("buildcache.pgp"), "source": binary_key}
 
         return key_info
 
@@ -299,17 +277,20 @@ class Mirrors:
 
         key_store.mkdir(exist_ok=True)
 
-        for key_info in self._keys:
-            path = key_store / key_info["path"]
-            source = key_info["source"]
+        #for key_info in self._keys:
 
-            match source:
-                case pathlib.Path():
-                    # copy source -> path
-                    shutil.copy2(source, path)
-                case bytes():
-                    # open path and copy in bytes
-                    with open(path, "wb") as writer:
-                        writer.write(source)
-                case _:
-                    raise TypeError(f"Expected Path or bytes, got {type(source).__name__}")
+        #path = key_store / key_info["path"]
+        path = key_store / self._keys["path"]
+        #source = key_info["source"]
+        source = self._keys["source"]
+
+        match source:
+            case pathlib.Path():
+                # copy source -> path
+                shutil.copy2(source, path)
+            case bytes():
+                # open path and copy in bytes
+                with open(path, "wb") as writer:
+                    writer.write(source)
+            case _:
+                raise TypeError(f"Expected Path or bytes, got {type(source).__name__}")
