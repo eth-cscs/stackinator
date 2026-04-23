@@ -32,15 +32,11 @@ def test_mirror_init(systems_path):
             "mount_specific": False,
             "cmdline": False,
         },
-        "mirror1": {
-            "url": "https://github.com",
-            "enabled": True,
-            "public_key": "../../test-gpg-pub.asc"
-        },
+        "mirror1": {"url": "https://github.com", "enabled": True, "public_key": "../../test-gpg-pub.asc"},
         "mirror2": {
             "url": "https://github.com/spack",
             "enabled": True,
-        }
+        },
     }
 
     with (systems_path / "../test-gpg-pub.asc").open("rb") as pub_key_file:
@@ -142,7 +138,7 @@ def test_create_bootstrap_configs(tmp_path, systems_path):
         "type": "install",
         "info": {
             "url": "https://mirror.spack.io",
-        }
+        },
     }
 
     mirrors_obj = mirror.Mirrors(systems_path / "mirror-ok")

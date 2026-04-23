@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Optional, List, Dict
 import base64
 import io
 import os
@@ -64,9 +64,7 @@ class Mirrors:
         buildcache = mirrors.get("buildcache")
         if buildcache and buildcache.get("enabled", True):
             if not buildcache.get("private_key"):
-                raise MirrorError(
-                    "Mirror build cache config is missing a required 'private_key' path."
-                )
+                raise MirrorError("Mirror build cache config is missing a required 'private_key' path.")
             self.build_cache_mirror = "buildcache"
             enabled_mirrors["buildcache"] = buildcache
         else:
@@ -120,7 +118,7 @@ class Mirrors:
             "enabled": True,
             "mount_specific": True,
             "private_key": raw["key"],
-            "cmdline": True
+            "cmdline": True,
         }
 
         self._logger.warning(
@@ -180,7 +178,7 @@ class Mirrors:
             url = mirror["url"]
 
             # Make the mirror path specific to the mount point
-            if(name=="buildcache"):
+            if name == "buildcache":
                 if mirror["mount_specific"] and self._mount_point is not None:
                     url = url.rstrip("/") + "/" + self._mount_point.as_posix().lstrip("/")
 
@@ -223,8 +221,8 @@ class Mirrors:
             "type": "install",
             "info": {
                 "url": mirror["url"],
-            }
-        }            
+            },
+        }
         with (bs_mirror_path / "metadata.yaml").open("w") as file:
             yaml.dump(bs_mirror_yaml, file, default_flow_style=False)
 
@@ -271,8 +269,7 @@ class Mirrors:
             writer.write(binary_key)
 
         self._keys.append(dest)
-    
-    
+
     def _key_setup(self, key_store: pathlib.Path):
         """Iterate through mirror keys and load + relocate each one to key_store"""
 

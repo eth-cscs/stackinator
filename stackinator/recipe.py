@@ -172,8 +172,7 @@ class Recipe:
         # load the optional mirrors.yaml from system config, and add any additional
         # mirrors specified on the command line.
         self._logger.debug("Configuring mirrors.")
-        self.mirrors = mirror.Mirrors(self.system_config_path, 
-                                      pathlib.Path(args.cache) if args.cache else None)
+        self.mirrors = mirror.Mirrors(self.system_config_path, pathlib.Path(args.cache) if args.cache else None)
 
         # optional post install hook
         if self.post_install_hook is not None:
