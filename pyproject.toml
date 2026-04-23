@@ -11,6 +11,7 @@ license-files = ["LICENSE"]
 dynamic = ["version"]
 requires-python = ">=3.12"
 dependencies = [
+  "requests",
   "python-magic",
   "Jinja2",
   "jsonschema",
