@@ -3,7 +3,7 @@ import pathlib
 from textwrap import dedent
 
 import jsonschema
-import yaml
+from ruamel.yaml import YAML
 
 from . import root_logger
 
@@ -11,7 +11,12 @@ prefix = pathlib.Path(__file__).parent.resolve()
 
 
 def py2yaml(data, indent):
-    dump = yaml.dump(data)
+    yaml = YAML()
+    from io import StringIO
+
+    buffer = StringIO()
+    yaml.dump(data, buffer)
+    dump = buffer.getvalue()
     lines = [ln for ln in dump.split("\n") if ln != ""]
     res = ("\n" + " " * indent).join(lines)
     return res
