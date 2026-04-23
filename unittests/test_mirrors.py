@@ -35,6 +35,7 @@ def test_mirror_init(systems_path):
         "mirror1": {
             "url": "https://github.com",
             "enabled": True,
+            "public_key": "../../test-gpg-pub.asc"
         },
         "mirror2": {
             "url": "https://github.com/spack",
@@ -42,9 +43,9 @@ def test_mirror_init(systems_path):
         }
     }
 
-    # with (systems_path / "../test-gpg-pub.asc").open("rb") as pub_key_file:
-    #     key = base64.b64encode(pub_key_file.read()).decode()
-    #     valid_mirrors["buildcache"]["public_key"] = key
+    with (systems_path / "../test-gpg-pub.asc").open("rb") as pub_key_file:
+        key = base64.b64encode(pub_key_file.read()).decode()
+        valid_mirrors["buildcache"]["public_key"] = key
 
     assert mirrors_obj.mirrors == valid_mirrors
 
@@ -149,8 +150,7 @@ def test_create_bootstrap_configs(tmp_path, systems_path):
 
     with (tmp_path / "bootstrap.yaml").open() as f:
         bs_data = yaml.safe_load(f)
-    print(bs_data)
-    print(valid_yaml)
+
     assert bs_data == valid_yaml
 
     with (tmp_path / "bootstrap/bootstrap-mirror/metadata.yaml").open() as f:
@@ -161,26 +161,19 @@ def test_create_bootstrap_configs(tmp_path, systems_path):
 def test_key_setup(systems_path, tmp_path):
     """Check that public keys are set up properly."""
 
-    mirrors_key_file = mirror.Mirrors(systems_path / "mirror-ok")
-    key_dir = tmp_path / "key_dir"
-    mirrors_raw_key = mirror.Mirrors(systems_path / "mirror-ok-raw-key")
-    raw_dir = tmp_path / "raw_dir"
+    mirrors = mirror.Mirrors(systems_path / "mirror-ok")
 
-    mirrors_key_file._key_setup(key_dir)
-    mirrors_raw_key._key_setup(raw_dir)
+    mirrors._key_setup(tmp_path)
 
-    key_file, = (p for p in key_dir.iterdir() if p.is_file())
-    assert key_file.name == "buildcache.pgp"
-
-    raw_key_file, = (p for p in key_dir.iterdir() if p.is_file())
-    assert raw_key_file.name == "buildcache.pgp"
+    pub_files = sorted(f for f in tmp_path.iterdir() if f.name.endswith(".pub.gpg"))
+    assert {pub_file.name for pub_file in pub_files} == {"buildcache.pub.gpg", "mirror1.pub.gpg"}
 
     # The two files should be identical in content
-    with key_file.open("rb") as file:
-        key_file_data = file.read()
-    with raw_key_file.open("rb") as file:
-        raw_key_file_data = file.read()
-    assert key_file_data == raw_key_file_data
+    pub_file_data = []
+    for pub_file in pub_files:
+        with pub_file.open("rb") as file:
+            pub_file_data.append(file.read())
+    assert pub_file_data[0] == pub_file_data[1]
 
 
 @pytest.mark.parametrize(
@@ -193,5 +186,6 @@ def test_key_setup(systems_path, tmp_path):
 def test_key_setup_bad_key(tmp_path, systems_path, system_name):
     """Check that MirrorError is raised for bad keys"""
 
+    mirrors = mirror.Mirrors(systems_path / system_name)
     with pytest.raises(mirror.MirrorError):
-        mirrors = mirror.Mirrors(systems_path / system_name)
+        mirrors._key_setup(tmp_path)
