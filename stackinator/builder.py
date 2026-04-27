@@ -234,7 +234,7 @@ class Builder:
                     pre_install_hook=recipe.pre_install_hook,
                     spack_version=spack_version,
                     spack_meta=spack_meta,
-                    gpg_keys=recipe.mirrors.key_files(config_path),
+                    gpg_keys=recipe.mirrors.keys,
                     cache=recipe.build_cache_mirror,
                     exclude_from_cache=["nvhpc", "cuda", "perl"],
                     verbose=False,
