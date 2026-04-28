@@ -2,6 +2,8 @@
 
 # Copy this file to Make.user and set some variables.
 
+SHELL := bash
+
 # This is the root of the software stack directory.
 BUILD_ROOT := {{ build_path }}
 
