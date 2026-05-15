@@ -165,6 +165,36 @@ def test_config_yaml(yaml_path):
         raw = yaml.load(config, Loader=yaml.Loader)
         schema.ConfigValidator.validate(raw)
 
+    # map format: custom path
+    config = dedent("""
+    version: 2
+    name: map-custom-path
+    spack:
+        repo: https://github.com/spack/spack.git
+        packages:
+            my-packages:
+                repo: https://github.com/example/spack-packages.git
+                path: custom/repo/location
+    """)
+    raw = yaml.load(config, Loader=yaml.Loader)
+    schema.ConfigValidator.validate(raw)
+    assert raw["spack"]["packages"]["my-packages"]["path"] == "custom/repo/location"
+
+    # map format: no path (default behavior)
+    config = dedent("""
+    version: 2
+    name: map-no-path
+    spack:
+        repo: https://github.com/spack/spack.git
+        packages:
+            my-packages:
+                repo: https://github.com/example/spack-packages.git
+                commit: v2.0
+    """)
+    raw = yaml.load(config, Loader=yaml.Loader)
+    schema.ConfigValidator.validate(raw)
+    assert "path" not in raw["spack"]["packages"]["my-packages"]
+
 
 def test_recipe_config_yaml(recipe_paths):
     # validate the config.yaml in the test recipes
