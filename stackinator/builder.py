@@ -197,7 +197,7 @@ class Builder:
 
         packages_meta = []
         for name, repo, commit, repo_path in packages_resolved:
-            clone_path = self.path / name
+            clone_path = self.path / "repos" / name
             git_commit_result = self._git_clone(name, repo, commit, clone_path)
             packages_meta.append({
                 "name": name,
