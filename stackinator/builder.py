@@ -191,26 +191,27 @@ class Builder:
 
         spack_git_commit_result = self._git_clone("spack", spack_repo, spack_commit, spack_path)
 
-        # Clone the spack-packages repository and check out commit if one was given
-        spack_packages = spack["packages"]
-        spack_packages_repo = spack_packages["repo"]
-        spack_packages_commit = spack_packages["commit"]
-        spack_packages_path = self.path / "spack-packages"
+        # Clone the spack package repositories and check out commit if one was given
+        packages_config = spack["packages"]
+        packages_resolved = self._resolve_packages(packages_config)
 
-        spack_packages_git_commit_result = self._git_clone(
-            "spack-packages",
-            spack_packages_repo,
-            spack_packages_commit,
-            spack_packages_path,
-        )
+        packages_meta = []
+        for name, repo, commit in packages_resolved:
+            clone_path = self.path / name
+            git_commit_result = self._git_clone(name, repo, commit, clone_path)
+            packages_meta.append({
+                "name": name,
+                "url": repo,
+                "ref": commit,
+                "commit": git_commit_result,
+                "path": clone_path,
+            })
 
         spack_meta = {
             "url": spack_repo,
             "ref": spack_commit,
             "commit": spack_git_commit_result,
-            "packages_url": spack_packages_repo,
-            "packages_ref": spack_packages_commit,
-            "packages_commit": spack_packages_git_commit_result,
+            "packages": packages_meta,
         }
 
         # load the jinja templating environment
@@ -417,14 +418,16 @@ repo:
                     elif dst.exists():
                         self._logger.debug(f"  NOT installing package {pkg_path}")
 
-        # Copy the builtin repo to store, delete if it already exists.
-        spack_packages_builtin_path = spack_packages_path / "repos" / "spack_repo" / "builtin"
-        spack_packages_store_path = store_path / "repos" / "spack_repo" / "builtin"
-        self._logger.debug(f"copying builtin repo from {spack_packages_builtin_path} to {spack_packages_store_path}")
-        if spack_packages_store_path.exists():
-            self._logger.debug(f"{spack_packages_store_path} exists ... deleting")
-            shutil.rmtree(spack_packages_store_path)
-        install(spack_packages_builtin_path, spack_packages_store_path)
+        for idx, pkg_meta in enumerate(spack_meta["packages"]):
+            clone_path = pkg_meta["path"]
+            name = pkg_meta["name"]
+            src_path = clone_path / "repos" / "spack_repo" / name
+            dst_path = store_path / "repos" / "spack_repo" / name
+            self._logger.debug(f"copying repo \'{name}\' from {src_path} to {dst_path}")
+            if dst_path.exists():
+                self._logger.debug(f"{dst_path} exists ... deleting")
+                shutil.rmtree(dst_path)
+            install(src_path, dst_path)
 
         # Generate the makefile and spack.yaml files that describe the compilers
         compiler_files = recipe.compiler_files
@@ -524,6 +527,12 @@ repo:
                 )
             )
             f.write("\n")
+
+    @staticmethod
+    def _resolve_packages(packages):
+        if isinstance(packages.get("repo"), str):
+            return [("builtin", packages["repo"], packages.get("commit"))]
+        return [(name, val["repo"], val.get("commit")) for name, val in packages.items()]
 
     def _git_clone(self, name, repo, commit, path):
         if not (path / ".git").is_dir():

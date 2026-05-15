@@ -28,21 +28,44 @@
                     "default": null
                 },
                 "packages": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": ["repo"],
-                    "properties" : {
-                        "repo": {
-                            "type": "string"
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": ["repo"],
+                            "properties": {
+                                "repo": {
+                                    "type": "string"
+                                },
+                                "commit": {
+                                    "oneOf": [
+                                        {"type" : "string"},
+                                        {"type" : "null"}
+                                    ]
+                                }
+                            }
                         },
-                        "commit": {
-                            "oneOf": [
-                                {"type" : "string"},
-                                {"type" : "null"}
-                            ],
-                            "default": null
+                        {
+                            "type": "object",
+                            "minProperties": 1,
+                            "additionalProperties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": ["repo"],
+                                "properties": {
+                                    "repo": {
+                                        "type": "string"
+                                    },
+                                    "commit": {
+                                        "oneOf": [
+                                            {"type" : "string"},
+                                            {"type" : "null"}
+                                        ]
+                                    }
+                                }
+                            }
                         }
-                    }
+                    ]
                 }
             }
         },
