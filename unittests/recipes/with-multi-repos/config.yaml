@@ -1,0 +1,13 @@
+name: with-multi-repos
+store: '/user-environment'
+spack:
+    repo: https://github.com/spack/spack.git
+    commit: v21.0
+    packages:
+        my-packages:
+            repo: https://github.com/example/spack-packages.git
+            commit: v1.0
+            path: custom/path/to/packages
+        other-packages:
+            repo: https://github.com/example/other-packages.git
+version: 2
