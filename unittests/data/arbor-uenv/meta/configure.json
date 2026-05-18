@@ -25,7 +25,7 @@
       "-c",
       "./cache.yaml"
     ],
-    "python": "/usr/bin/python3",
+    "python": "/usr/bin/env python3",
     "version": "4.1.0-dev"
   },
   "time": "20240611 12:06:38"
