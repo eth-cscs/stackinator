@@ -47,7 +47,7 @@ def test_config_yaml(yaml_path):
 
     # no spack:commit
     config = dedent("""
-    version: 2
+    version: 3
     name: env-without-spack-commit
     spack:
         repo: https://github.com/spack/spack.git
@@ -66,7 +66,7 @@ def test_config_yaml(yaml_path):
 
     # no spack:packages:commit
     config = dedent("""
-    version: 2
+    version: 3
     name: env-without-spack-packages-commit
     spack:
         repo: https://github.com/spack/spack.git

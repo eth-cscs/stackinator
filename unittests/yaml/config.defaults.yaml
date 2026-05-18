@@ -10,4 +10,4 @@ spack:
         # default: None == no `git checkout` command
         #commit: 6408b51
 #modules: True
-version: 2
+version: 3

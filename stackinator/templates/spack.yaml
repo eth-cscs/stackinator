@@ -1,0 +1,171 @@
+spack:
+  include:
+  - packages.yaml
+  - config.yaml
+  concretizer:
+    reuse: false
+  specs:
+
+  # ---- Compiler groups ----
+  # gcc is always built first using the system compiler.
+  - group: gcc
+    explicit: false
+    specs:
+{% for spec in compilers.gcc.specs %}
+    - '{{ spec }}'
+{% endfor %}
+    override:
+      concretizer:
+        unify: when_possible
+        reuse: false
+      packages:
+        gcc:
+          variants: [build_type=Release +bootstrap +profiled +strip ~binutils]
+        mpc:
+          variants: [libs=static]
+        gmp:
+          variants: [libs=static]
+        mpfr:
+          variants: [libs=static]
+        zstd:
+          variants: [libs=static]
+        zlib:
+          variants: [~shared]
+
+{% if compilers.nvhpc %}
+  - group: nvhpc
+    explicit: false
+    needs: [gcc]
+    specs:
+{% for spec in compilers.nvhpc.specs %}
+    - '{{ spec }}'
+{% endfor %}
+    override:
+      concretizer:
+        unify: when_possible
+        reuse: false
+
+{% endif %}
+{% if compilers.llvm %}
+  - group: llvm
+    explicit: false
+    needs: [gcc]
+    specs:
+{% for spec in compilers.llvm.specs %}
+    - '{{ spec }}'
+{% endfor %}
+    override:
+      concretizer:
+        unify: when_possible
+        reuse: false
+
+{% endif %}
+{% if compilers.get('llvm-amdgpu') %}
+  - group: llvm-amdgpu
+    explicit: false
+    needs: [gcc]
+    specs:
+{% for spec in compilers['llvm-amdgpu'].specs %}
+    - '{{ spec }}'
+{% endfor %}
+    override:
+      concretizer:
+        unify: when_possible
+        reuse: false
+
+{% endif %}
+{% if compilers.get('intel-oneapi-compilers') %}
+  - group: intel-oneapi-compilers
+    explicit: false
+    needs: [gcc]
+    specs:
+{% for spec in compilers['intel-oneapi-compilers'].specs %}
+    - '{{ spec }}'
+{% endfor %}
+    override:
+      concretizer:
+        unify: when_possible
+        reuse: false
+
+{% endif %}
+  # ---- Internal tools group ----
+  # squashfs is required to create the final squashfs image.
+  - group: uenv_tools
+    explicit: false
+    needs: [gcc]
+    override:
+      concretizer:
+        unify: true
+        reuse: false
+    specs:
+    - squashfs
+
+  # ---- User environment groups ----
+{% for name, config in environments.items() %}
+  - group: {{ name }}
+    needs: [{{ config.compiler | join(', ') }}]
+    override:
+      config:
+        deprecated: {{ config.deprecated | string | lower }}
+      concretizer:
+        reuse: false
+        unify: {{ config.unify | string | lower }}
+        duplicates:
+          strategy: {{ config.duplicates.strategy }}
+{% if config.prefer or config.variants or config.mpi %}
+      packages:
+{% if config.prefer or config.variants %}
+        all:
+{% if config.prefer %}
+          prefer:
+{% for p in config.prefer %}
+          - '{{ p }}'
+{% endfor %}
+{% endif %}
+{% if config.variants %}
+          variants:
+{% for v in config.variants %}
+          - '{{ v }}'
+{% endfor %}
+{% endif %}
+{% endif %}
+{% if config.mpi %}
+        mpi:
+          require: '{{ config.mpi }}'
+{% endif %}
+{% endif %}
+    specs:
+{% for spec in config.specs %}
+    - '{{ spec }}'
+{% endfor %}
+
+{% endfor %}
+{% if has_views %}
+  view:
+{% for name, config in environments.items() %}
+{% for view in config.views %}
+    {{ view.name }}:
+      root: '{{ view.config.root }}'
+      group: {{ name }}
+{% if view.config.link != 'roots' %}
+      link: {{ view.config.link }}
+{% endif %}
+{% if view.config.get('exclude') %}
+      exclude:
+{% for e in view.config.exclude %}
+      - '{{ e }}'
+{% endfor %}
+{% endif %}
+{% if view.config.get('select') %}
+      select:
+{% for s in view.config.select %}
+      - '{{ s }}'
+{% endfor %}
+{% endif %}
+{% if view.config.get('projections') %}
+      projections:
+        {{ view.config.projections | py2yaml(8) }}
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% endif %}

@@ -6,4 +6,4 @@ spack:
   repo: https://github.com/spack/spack.git
   packages:
     repo: https://github.com/spack/spack-packages.git
-version: 2
+version: 3

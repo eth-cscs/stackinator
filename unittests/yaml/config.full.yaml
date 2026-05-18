@@ -8,4 +8,4 @@ spack:
         commit: v2025.07.0
 modules: False
 description: "a really useful environment"
-version: 2
+version: 3
