@@ -191,22 +191,9 @@ class Builder:
 
         spack_git_commit_result = self._git_clone("spack", spack_repo, spack_commit, spack_path)
 
-        # Clone the spack package repositories and check out commit if one was given
-        packages_config = spack["packages"]
-        packages_resolved = self._resolve_packages(packages_config)
-
-        packages_meta = []
-        for name, repo, commit, repo_path in packages_resolved:
-            clone_path = self.path / "repos" / name
-            git_commit_result = self._git_clone(name, repo, commit, clone_path)
-            packages_meta.append({
-                "name": name,
-                "url": repo,
-                "ref": commit,
-                "commit": git_commit_result,
-                "path": clone_path,
-                "repo_path": repo_path,
-            })
+        packages_meta = self._resolve_packages(spack["packages"])
+        for pkg in packages_meta:
+            pkg["commit"] = self._git_clone(pkg["name"], pkg["url"], pkg["ref"], pkg["path"])
 
         spack_meta = {
             "url": spack_repo,
@@ -561,11 +548,14 @@ repo:
             )
             f.write("\n")
 
-    @staticmethod
-    def _resolve_packages(packages):
+    def _resolve_packages(self, packages):
+        base = self.path / "repos"
         if isinstance(packages.get("repo"), str):
-            return [("builtin", packages["repo"], packages.get("commit"), "repos/spack_repo/builtin")]
-        return [(name, val["repo"], val.get("commit"), val.get("path", f"repos/spack_repo/{name}")) for name, val in packages.items()]
+            return [{"name": "builtin", "url": packages["repo"], "ref": packages.get("commit"),
+                     "path": base / "builtin", "repo_path": "repos/spack_repo/builtin"}]
+        return [{"name": name, "url": val["repo"], "ref": val.get("commit"),
+                 "path": base / name, "repo_path": val.get("path", f"repos/spack_repo/{name}")}
+                for name, val in packages.items()]
 
     def _git_clone(self, name, repo, commit, path):
         if not (path / ".git").is_dir():
