@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import pathlib
 from textwrap import dedent
@@ -20,20 +20,14 @@ def yaml_path(test_path):
     return test_path / "yaml"
 
 
-@pytest.fixture
-def recipes():
-    return [
-        "host-recipe",
-        "base-nvgpu",
-        "cache",
-        "with-repo",
-        "with-multi-repos",
-    ]
+@pytest.fixture(params=["host-recipe", "base-nvgpu", "cache", "with-repo", "with-multi-repos"])
+def recipe(request):
+    return request.param
 
 
 @pytest.fixture
-def recipe_paths(test_path, recipes):
-    return [test_path / "recipes" / r for r in recipes]
+def recipe_path(test_path, recipe):
+    return test_path / "recipes" / recipe
 
 
 def test_config_yaml(yaml_path):
@@ -196,12 +190,11 @@ def test_config_yaml(yaml_path):
     assert "path" not in raw["spack"]["packages"]["my-packages"]
 
 
-def test_recipe_config_yaml(recipe_paths):
+def test_recipe_config_yaml(recipe_path):
     # validate the config.yaml in the test recipes
-    for p in recipe_paths:
-        with open(p / "config.yaml") as fid:
-            raw = yaml.load(fid, Loader=yaml.Loader)
-            schema.ConfigValidator.validate(raw)
+    with open(recipe_path / "config.yaml") as fid:
+        raw = yaml.load(fid, Loader=yaml.Loader)
+        schema.ConfigValidator.validate(raw)
 
 
 def test_compilers_yaml(yaml_path):
@@ -220,12 +213,11 @@ def test_compilers_yaml(yaml_path):
         assert raw["nvhpc"] == {"version": "25.1"}
 
 
-def test_recipe_compilers_yaml(recipe_paths):
+def test_recipe_compilers_yaml(recipe_path):
     # validate the compilers.yaml in the test recipes
-    for p in recipe_paths:
-        with open(p / "compilers.yaml") as fid:
-            raw = yaml.load(fid, Loader=yaml.Loader)
-            schema.CompilersValidator.validate(raw)
+    with open(recipe_path / "compilers.yaml") as fid:
+        raw = yaml.load(fid, Loader=yaml.Loader)
+        schema.CompilersValidator.validate(raw)
 
 
 def test_environments_yaml(yaml_path):
@@ -281,12 +273,11 @@ def test_environments_yaml(yaml_path):
             schema.EnvironmentsValidator.validate(raw)
 
 
-def test_recipe_environments_yaml(recipe_paths):
+def test_recipe_environments_yaml(recipe_path):
     # validate the environments.yaml in the test recipes
-    for p in recipe_paths:
-        with open(p / "environments.yaml") as fid:
-            raw = yaml.load(fid, Loader=yaml.Loader)
-            schema.EnvironmentsValidator.validate(raw)
+    with open(recipe_path / "environments.yaml") as fid:
+        raw = yaml.load(fid, Loader=yaml.Loader)
+        schema.EnvironmentsValidator.validate(raw)
 
 
 @pytest.mark.parametrize(
