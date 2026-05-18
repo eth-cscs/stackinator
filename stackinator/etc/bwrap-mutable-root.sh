@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 args=()
 shopt -s dotglob
 for d in /*; do
