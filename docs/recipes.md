@@ -566,7 +566,7 @@ The post-install script is templated using Jinja, with the following variables a
 The use of Jinja templates is demonstrated in the following example of a bash script that generates an activation script that adds the installation path of GROMACS to the system PATH:
 
 ```bash title="post-install script that generates a simple activation script."
-#!/bin/bash
+#!/usr/bin/env bash
 
 gmx_path=$(spack -C {{ env.config }} location -i gromacs)/bin
 echo "export PATH=$gmx_path:$PATH" >> {{ env.mount }}/activate.sh

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 root=$(pwd)
 input_path=${root}/data/arbor-uenv
