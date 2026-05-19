@@ -177,7 +177,7 @@ class Recipe:
                 raise RuntimeError("Ivalid default-view in the recipe.")
 
         # load the optional mirrors.yaml from system config, and add any additional
-        # mirrors specified on the command line. 
+        # mirrors specified on the command line.
         self._logger.debug("Configuring mirrors.")
         self.mirrors = mirror.Mirrors(self.system_config_path, pathlib.Path(args.cache) if args.cache else None)
 
