@@ -43,6 +43,7 @@ class Mirrors:
 
     def _load_mirrors(self, cmdline_cache: Optional[pathlib.Path]) -> Dict[str, Dict]:
         """Load the mirrors file, if one exists."""
+
         path = self._system_config_root / "mirrors.yaml"
         if path.exists():
             try:
@@ -188,7 +189,7 @@ class Mirrors:
             }
 
         with dest.open("w") as file:
-            yaml.dump(raw, file, default_flow_style=False)
+            yaml.dump(raw, file, default_flow_style=False, sort_keys=False)
 
     def _create_bootstrap_configs(self, config_root: pathlib.Path):
         """Create the bootstrap.yaml and bootstrap metadata dirs in our build dir."""

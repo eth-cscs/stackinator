@@ -5,7 +5,7 @@ import re
 import jinja2
 import yaml
 
-from . import cache, root_logger, schema, spack_util, mirror
+from . import root_logger, schema, spack_util, mirror
 from .etc.envvars import EnvVarSet
 
 
