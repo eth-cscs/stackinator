@@ -99,19 +99,26 @@ On air-gapped systems, Spack is unable to reach its default mirror to fetch pack
 
 `mirrors.yaml` treats source mirrors, buildcaches, and bootstrap mirrors the same, and they may all be included in this file. Spack will search the topmost mirror first and the bottom-most mirror last, and will append the default Spack mirror to the bottom of the list when the Spack mirror config is generated.
 
-If using a buildcache, public and private keys must be provided for signing and verifying packages.
+`mirrors.yaml` may include source mirrors, bootstrap mirrors, and buildcaches. Any number of source mirrors can be added, but only one bootstrap mirror and buildcache can be specified. Spack will search the source mirrors in order from first to last, and will append the default Spack mirror to the bottom of the list when the Spack mirror config is generated.
+
+If using a buildcache, a private key must be provided for signing packages. An optional public key may be specified with any type of mirror to verify packages.
 
 ```yaml title="mirrors.yaml"
-local_filesystem:
+bootstrap:
   url: file:///home/username/spack-mirror-2014-06-24
-site_server:
-  url: https://example.com/some/web-hosted/directory
-buildcache-mirror:
+  enabled: true
+buildcache:
   url: https://example.com/some/buildcache/mirror
-  public_key: ../buildcache-key.public.gpg
+  enabled: true
   private_key: /user-home/.gnupg/private-keys-v1.d/my-private-key.asc
-  cache: true
-  bootstrap: true
+sourcecache:
+  mirror1:
+    url: https://example.com/some/web-hosted/directory
+    public_key: ../buildcache-key.public.gpg
+    enabled: true
+  mirror2:
+    url: https://example.com/some/other-web-hosted/directory
+    enabled: true
 ```
 
 ## Site and System Configurations

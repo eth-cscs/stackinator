@@ -37,7 +37,7 @@
                 }
             },
             "additionalProperties": false,
-            "required": ["url"]
+            "required": ["url", "private_key"]
         },
         "sourcecache": {
             "type": "object",
