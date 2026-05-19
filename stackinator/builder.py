@@ -156,6 +156,7 @@ class Builder:
         meta["name"] = conf["name"]
         meta["description"] = conf["description"]
         meta["views"] = recipe.environment_view_meta
+        meta["default-view"] = recipe.default_view
         meta["mount"] = str(recipe.mount)
         modules = None
         if recipe.with_modules:

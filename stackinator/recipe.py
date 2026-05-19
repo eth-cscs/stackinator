@@ -5,8 +5,8 @@ import re
 import jinja2
 import yaml
 
-from . import root_logger, schema, spack_util, mirror
-from .etc import envvars
+from . import cache, root_logger, schema, spack_util, mirror
+from .etc.envvars import EnvVarSet
 
 
 class Recipe:
@@ -87,14 +87,6 @@ class Recipe:
                 self._logger.error(f"modules.yaml:{self.with_modules}")
                 raise RuntimeError("conflicting modules configuration detected")
 
-        # optional packages.yaml file
-        packages_path = self.path / "packages.yaml"
-        self._logger.debug(f"opening {packages_path}")
-        self.packages = None
-        if packages_path.is_file():
-            with packages_path.open() as fid:
-                self.packages = yaml.load(fid, Loader=yaml.Loader)
-
         self._logger.debug("creating packages")
 
         # load recipe/packages.yaml -> recipe_packages (if it exists)
@@ -169,8 +161,23 @@ class Recipe:
             schema.EnvironmentsValidator.validate(raw)
             self.generate_environment_specs(raw)
 
+        # check that the default view exists (if one has been set)
+        self._default_view = self.config["default-view"]
+        if self._default_view is not None:
+            available_views = [view["name"] for env in self.environments.values() for view in env["views"]]
+            # add the modules and spack views to the list of available views
+            if self.with_modules:
+                available_views.append("modules")
+            available_views.append("spack")
+            if self._default_view not in available_views:
+                self._logger.error(
+                    f"The default-view {self._default_view} is not the name of a view in the environments.yaml "
+                    "definition (one of {[name for name in available_views]}"
+                )
+                raise RuntimeError("Ivalid default-view in the recipe.")
+
         # load the optional mirrors.yaml from system config, and add any additional
-        # mirrors specified on the command line.
+        # mirrors specified on the command line. 
         self._logger.debug("Configuring mirrors.")
         self.mirrors = mirror.Mirrors(self.system_config_path, pathlib.Path(args.cache) if args.cache else None)
 
@@ -263,65 +270,27 @@ class Recipe:
         return "1.0"
 
     @property
+    def default_view(self):
+        return self._default_view
+
+    @property
     def environment_view_meta(self):
         # generate the view meta data that is presented in the squashfs image meta data
         view_meta = {}
         for _, env in self.environments.items():
             for view in env["views"]:
-                # recipe authors can substitute the name of the view, the mount
-                # and view path into environment variables using '$@key@' where
-                # key is one of view_name, mount and view_path.
-                substitutions = {
-                    "view_name": str(view["name"]),
-                    "mount": str(self.mount),
-                    "view_path": str(view["config"]["root"]),
-                }
-
-                def fill(s):
-                    return re.sub(
-                        r"\$@(\w+)@",
-                        lambda m: substitutions.get(m.group(1), m.group(0)),
-                        s,
-                    )
-
-                ev_inputs = view["extra"]["env_vars"]
-                env = envvars.EnvVarSet()
-
-                # TODO: one day this code will be revisited because we need to append_path
-                # or prepend_path to a variable that isn't in envvars.is_list_var
-                # On that day, extend the environments.yaml views:uenv:env_vars field
-                # to also accept a list of env var names to add to the blessed list of prefix paths
-
-                for v in ev_inputs["set"]:
-                    ((name, value),) = v.items()
-                    if value is not None:
-                        value = fill(value)
-
-                    # insist that the only 'set' operation on prefix variables is to unset/reset them
-                    # this requires that users use append and prepend to build up the variables
-                    if envvars.is_list_var(name) and value is not None:
-                        raise RuntimeError(f"{name} in the {view['name']} view is a prefix variable.")
-                    else:
-                        if envvars.is_list_var(name):
-                            env.set_list(name, [], envvars.EnvVarOp.SET)
-                        else:
-                            env.set_scalar(name, value)
-                for v in ev_inputs["prepend_path"]:
-                    ((name, value),) = v.items()
-                    if value is not None:
-                        value = fill(value)
-                    if not envvars.is_list_var(name):
-                        raise RuntimeError(f"{name} in the {view['name']} view is not a known prefix path variable")
-
-                    env.set_list(name, [value], envvars.EnvVarOp.APPEND)
-                for v in ev_inputs["append_path"]:
-                    ((name, value),) = v.items()
-                    if value is not None:
-                        value = fill(value)
-                    if not envvars.is_list_var(name):
-                        raise RuntimeError(f"{name} in the {view['name']} view is not a known prefix path variable")
-
-                    env.set_list(name, [value], envvars.EnvVarOp.PREPEND)
+                try:
+                    # recipe authors can substitute the name of the view, the mount
+                    # and view path into environment variables using '$@key@' where
+                    # key is one of view_name, mount and view_path.
+                    substitutions = {
+                        "view_name": str(view["name"]),
+                        "mount": str(self.mount),
+                        "view_path": str(view["config"]["root"]),
+                    }
+                    env = EnvVarSet.from_envvars(view["extra"]["env_vars"], substitutions)
+                except Exception as err:
+                    raise RuntimeError(f'In view "{view["name"]}": {err}')
 
                 view_meta[view["name"]] = {
                     "root": view["config"]["root"],
@@ -398,6 +367,10 @@ class Recipe:
             # Which will compile the upstream MPI with nvfortran, as well as downstream dependendencies.
             if config["prefer"] is None:
                 compiler = config["compiler"][0]
+                # spack uses a different name for the intel oneapi compilers
+                # than the package that installs them.
+                if compiler == "intel-oneapi-compilers":
+                    compiler = "oneapi"
                 config["prefer"] = [
                     f"%[when=%c] c={compiler} %[when=%cxx] cxx={compiler} %[when=%fortran] fortran={compiler}"
                 ]
@@ -483,6 +456,15 @@ class Recipe:
 
             llvm_amdgpu["exclude_from_cache"] = cache_exclude
             compilers["llvm-amdgpu"] = llvm_amdgpu
+
+        if raw["intel-oneapi-compilers"] is not None:
+            oneapi = {}
+            oneapi_version = raw["intel-oneapi-compilers"]["version"]
+            oneapi["packages"] = False
+            oneapi["specs"] = [f"intel-oneapi-compilers@{oneapi_version}"]
+
+            oneapi["exclude_from_cache"] = cache_exclude
+            compilers["intel-oneapi-compilers"] = oneapi
 
         self.compilers = compilers
 

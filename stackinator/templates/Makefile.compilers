@@ -51,10 +51,16 @@ llvm-amdgpu/packages.yaml: gcc/generated/env
 	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK_HELPER) -e ./gcc find --explicit --format '{prefix}' {{ compilers.get('llvm-amdgpu').requires }}))
 {% endif %}
 
+{% if compilers.get('intel-oneapi-compilers') %}
+intel-oneapi-compilers/packages.yaml: gcc/generated/env
+	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK_HELPER) -e ./gcc find --explicit --format '{prefix}' {{ compilers.get('intel-oneapi-compilers').requires }}))
+{% endif %}
+
 {% if compilers.nvhpc %}
 nvhpc/packages.yaml: gcc/generated/env
 	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $$($(SPACK_HELPER) -e ./gcc find --explicit --format '{prefix}' {{ compilers.nvhpc.requires }}))
 {% endif %}
+
 
 
 include ../Make.inc
@@ -74,6 +80,12 @@ endif
 {% if compilers.get('llvm-amdgpu') %}
 ifneq (,$(wildcard gcc/Makefile))
 include llvm-amdgpu/Makefile
+endif
+{% endif %}
+
+{% if compilers.get('intel-oneapi-compilers') %}
+ifneq (,$(wildcard gcc/Makefile))
+include intel-oneapi-compilers/Makefile
 endif
 {% endif %}
 
