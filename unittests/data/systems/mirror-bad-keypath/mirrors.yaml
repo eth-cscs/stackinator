@@ -1,0 +1,3 @@
+buildcache:
+  url: https://mirror.spack.io
+  private_key: /path/doesnt/exist

@@ -5,7 +5,7 @@ import re
 import jinja2
 import yaml
 
-from . import cache, root_logger, schema, spack_util
+from . import root_logger, schema, spack_util, mirror
 from .etc.envvars import EnvVarSet
 
 
@@ -176,15 +176,10 @@ class Recipe:
                 )
                 raise RuntimeError("Ivalid default-view in the recipe.")
 
-        # optional mirror configurtion
-        mirrors_path = self.path / "mirrors.yaml"
-        if mirrors_path.is_file():
-            self._logger.warning(
-                "mirrors.yaml have been removed from recipes, use the --cache option on stack-config instead."
-            )
-            raise RuntimeError("Unsupported mirrors.yaml file in recipe.")
-
-        self.mirror = (args.cache, self.mount)
+        # load the optional mirrors.yaml from system config, and add any additional
+        # mirrors specified on the command line.
+        self._logger.debug("Configuring mirrors.")
+        self.mirrors = mirror.Mirrors(self.system_config_path, pathlib.Path(args.cache) if args.cache else None)
 
         # optional post install hook
         if self.post_install_hook is not None:
@@ -212,6 +207,13 @@ class Recipe:
         if spack_util.is_repo(repo_path):
             return repo_path
         return None
+
+    # Returns:
+    #   Path: if the recipe specified a build cache mirror
+    #   None: if no build cache mirror is used
+    @property
+    def build_cache_mirror(self):
+        return self.mirrors.build_cache_mirror
 
     # Returns:
     #   Path: of the recipe extra path if it exists
@@ -242,32 +244,6 @@ class Recipe:
         if hook_path.exists() and hook_path.is_file():
             return hook_path
         return None
-
-    # Returns a dictionary with the following fields
-    #
-    # root: /path/to/cache
-    # path: /path/to/cache/user-environment
-    # key: /path/to/private-pgp-key
-    @property
-    def mirror(self):
-        return self._mirror
-
-    # configuration is a tuple with two fields:
-    # - a Path of the yaml file containing the cache configuration
-    # - the mount point of the image
-    @mirror.setter
-    def mirror(self, configuration):
-        self._logger.debug(f"configuring build cache mirror with {configuration}")
-        self._mirror = None
-
-        file, mount = configuration
-
-        if file is not None:
-            mirror_config_path = pathlib.Path(file)
-            if not mirror_config_path.is_file():
-                raise FileNotFoundError(f"The cache configuration '{file}' is not a file")
-
-            self._mirror = cache.configuration_from_file(mirror_config_path, pathlib.Path(mount))
 
     @property
     def config(self):
@@ -523,10 +499,9 @@ class Recipe:
         )
 
         makefile_template = env.get_template("Makefile.compilers")
-        push_to_cache = self.mirror is not None
         files["makefile"] = makefile_template.render(
             compilers=self.compilers,
-            push_to_cache=push_to_cache,
+            buildcache=self.build_cache_mirror,
             spack_version=self.spack_version,
         )
 
@@ -554,10 +529,9 @@ class Recipe:
         jenv.filters["py2yaml"] = schema.py2yaml
 
         makefile_template = jenv.get_template("Makefile.environments")
-        push_to_cache = self.mirror is not None
         files["makefile"] = makefile_template.render(
             environments=self.environments,
-            push_to_cache=push_to_cache,
+            buildcache=self.build_cache_mirror,
             spack_version=self.spack_version,
         )
 
