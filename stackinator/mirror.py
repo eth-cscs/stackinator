@@ -233,6 +233,13 @@ class Mirrors:
     def _load_key(self, key: str, dest: pathlib.Path, name: str):
         """Validate mirror keys, relocate to key_store, and update mirror config with new key paths."""
 
+        ASCII_PGP_HEADERS = (
+            b"-----BEGIN PGP PRIVATE KEY BLOCK-----",
+            b"-----BEGIN PGP PUBLIC KEY BLOCK-----",
+            b"-----BEGIN PGP MESSAGE-----",
+            b"-----BEGIN PGP SIGNATURE-----",
+        )
+
         # key will be saved under key_store/mirror_name.[pub/priv].gpg
 
         # if path, check if abs path, if not, append sys config path in front and check again
@@ -256,20 +263,29 @@ class Mirrors:
                     f"Check the key listed in mirrors.yaml in system config."
                 )
 
-        # private keys will evaluate as "application/octet-stream"
-        file_type = magic.from_buffer(binary_key, mime=True)
-        if file_type not in ("application/x-gnupg-keyring", "application/pgp-keys", "application/octet-stream"):
+        file_type = magic.from_buffer(binary_key)
+        
+        if ((file_type in "application/x-gnupg-keyring", "application/pgp-keys", "application/octet-stream") or 
+            (binary_key.startswith(ASCII_PGP_HEADERS))):
+            
+            # copy key to new destination in key store
+            with open(dest, "wb") as writer:
+                writer.write(binary_key)
+
+            self._keys.append(dest)
+
+        else:
             raise MirrorError(
                 f"Key for mirror {name} is not a valid GPG key. \n"
                 f"The file (or base64) was readable, but the data itself was not a PGP key.\n"
                 f"Check the key listed in mirrors.yaml in system config."
             )
 
-        # copy key to new destination in key store
-        with open(dest, "wb") as writer:
-            writer.write(binary_key)
+        # # copy key to new destination in key store
+        # with open(dest, "wb") as writer:
+        #     writer.write(binary_key)
 
-        self._keys.append(dest)
+        # self._keys.append(dest)
 
     def _key_setup(self, key_store: pathlib.Path):
         """Iterate through mirror keys and load + relocate each one to key_store"""
