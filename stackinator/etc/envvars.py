@@ -694,7 +694,8 @@ if __name__ == "__main__":
     )
     uenv_parser.add_argument(
         "--spack-package-repo",
-        help='configure spack package repository metadata. Format is "name,spack_url,git_ref,git_commit". Can be repeated.',
+        help="configure spack package repository metadata. "
+        'Format is "name,spack_url,git_ref,git_commit". Can be repeated.',
         type=str,
         action="append",
         default=None,

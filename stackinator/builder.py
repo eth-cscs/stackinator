@@ -408,7 +408,10 @@ repo:
             repo_path = recipe.mount / "repos" / "spack_repo" / "alps"
             recipe_repo_path = recipe.mount / "repos" / "spack_repo" / "recipe"
             package_repos = [
-                {"name": pkg["name"], "path": (recipe.mount / "repos" / "spack_repo" / pkg["name"]).as_posix()}
+                {
+                    "name": pkg["name"],
+                    "path": (recipe.mount / "repos" / "spack_repo" / pkg["name"]).as_posix(),
+                }
                 for pkg in spack_meta["packages"]
             ]
             f.write(
@@ -443,7 +446,7 @@ repo:
             name = pkg_meta["name"]
             src_path = clone_path / pkg_meta["repo_path"]
             dst_path = store_path / "repos" / "spack_repo" / name
-            self._logger.debug(f"copying repo \'{name}\' from {src_path} to {dst_path}")
+            self._logger.debug(f"copying repo '{name}' from {src_path} to {dst_path}")
             if dst_path.exists():
                 self._logger.debug(f"{dst_path} exists ... deleting")
                 shutil.rmtree(dst_path)
@@ -551,11 +554,25 @@ repo:
     def _resolve_packages(self, packages):
         base = self.path / "repos"
         if isinstance(packages.get("repo"), str):
-            return [{"name": "builtin", "url": packages["repo"], "ref": packages.get("commit"),
-                     "path": base / "builtin", "repo_path": "repos/spack_repo/builtin"}]
-        return [{"name": name, "url": val["repo"], "ref": val.get("commit"),
-                 "path": base / name, "repo_path": val.get("path", f"repos/spack_repo/{name}")}
-                for name, val in packages.items()]
+            return [
+                {
+                    "name": "builtin",
+                    "url": packages["repo"],
+                    "ref": packages.get("commit"),
+                    "path": base / "builtin",
+                    "repo_path": "repos/spack_repo/builtin",
+                }
+            ]
+        return [
+            {
+                "name": name,
+                "url": val["repo"],
+                "ref": val.get("commit"),
+                "path": base / name,
+                "repo_path": val.get("path", f"repos/spack_repo/{name}"),
+            }
+            for name, val in packages.items()
+        ]
 
     def _git_clone(self, name, repo, commit, path):
         if not (path / ".git").is_dir():
