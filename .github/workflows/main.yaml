@@ -26,3 +26,8 @@ jobs:
       run: uv sync --group dev
     - name: Run Unit Tests
       run: uv run pytest
+    - name: Run Envvars Test
+      working-directory: unittests
+      run: |
+        sudo apt-get install -y jq
+        uv run bash ./test-envvars.sh

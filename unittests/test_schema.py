@@ -20,7 +20,7 @@ def yaml_path(test_path):
     return test_path / "yaml"
 
 
-@pytest.fixture(params=["host-recipe", "base-nvgpu", "cache", "with-repo"])
+@pytest.fixture(params=["host-recipe", "base-nvgpu", "cache", "with-repo", "with-multi-repos"])
 def recipe(request):
     return request.param
 
@@ -37,7 +37,7 @@ def test_config_yaml(yaml_path):
         schema.ConfigValidator.validate(raw)
         assert raw["store"] == "/user-environment"
         assert raw["spack"]["commit"] is None
-        assert raw["spack"]["packages"]["commit"] is None
+        assert raw["spack"]["packages"].get("commit") is None
         assert raw["description"] is None
 
     # no spack:commit
@@ -75,7 +75,7 @@ def test_config_yaml(yaml_path):
     )
     schema.ConfigValidator.validate(raw)
     assert raw["spack"]["commit"] == "develop"
-    assert raw["spack"]["packages"]["commit"] is None
+    assert raw["spack"]["packages"].get("commit") is None
     assert raw["description"] is None
 
     # full config
@@ -97,6 +97,97 @@ def test_config_yaml(yaml_path):
         """)
         raw = yaml.load(config, Loader=yaml.Loader)
         schema.ConfigValidator.validate(raw)
+
+    # map format: single entry
+    config = dedent("""
+    version: 2
+    name: map-single
+    spack:
+        repo: https://github.com/spack/spack.git
+        packages:
+            my-packages:
+                repo: https://github.com/example/spack-packages.git
+    """)
+    raw = yaml.load(config, Loader=yaml.Loader)
+    schema.ConfigValidator.validate(raw)
+    assert "my-packages" in raw["spack"]["packages"]
+    assert raw["spack"]["packages"]["my-packages"]["repo"] == "https://github.com/example/spack-packages.git"
+    assert raw["spack"]["packages"]["my-packages"].get("commit") is None
+
+    # map format: multiple entries with commits
+    config = dedent("""
+    version: 2
+    name: map-multi
+    spack:
+        repo: https://github.com/spack/spack.git
+        packages:
+            my-packages:
+                repo: https://github.com/example/spack-packages.git
+                commit: v1.0
+            other-packages:
+                repo: https://github.com/example/other-packages.git
+                commit: v2.0
+    """)
+    raw = yaml.load(config, Loader=yaml.Loader)
+    schema.ConfigValidator.validate(raw)
+    assert raw["spack"]["packages"]["my-packages"]["commit"] == "v1.0"
+    assert raw["spack"]["packages"]["other-packages"]["commit"] == "v2.0"
+
+    # map format: empty map should fail
+    with pytest.raises(Exception):
+        config = dedent("""
+        version: 2
+        name: map-empty
+        spack:
+            repo: https://github.com/spack/spack.git
+            packages: {}
+        """)
+        raw = yaml.load(config, Loader=yaml.Loader)
+        schema.ConfigValidator.validate(raw)
+
+    # map format: entry missing repo should fail
+    with pytest.raises(Exception):
+        config = dedent("""
+        version: 2
+        name: map-no-repo
+        spack:
+            repo: https://github.com/spack/spack.git
+            packages:
+                my-packages:
+                    commit: v1.0
+        """)
+        raw = yaml.load(config, Loader=yaml.Loader)
+        schema.ConfigValidator.validate(raw)
+
+    # map format: custom path
+    config = dedent("""
+    version: 2
+    name: map-custom-path
+    spack:
+        repo: https://github.com/spack/spack.git
+        packages:
+            my-packages:
+                repo: https://github.com/example/spack-packages.git
+                path: custom/repo/location
+    """)
+    raw = yaml.load(config, Loader=yaml.Loader)
+    schema.ConfigValidator.validate(raw)
+    assert raw["spack"]["packages"]["my-packages"]["path"] == "custom/repo/location"
+
+    # map format: no path (default behavior)
+    config = dedent("""
+    version: 2
+    name: map-no-path
+    spack:
+        repo: https://github.com/spack/spack.git
+        packages:
+            my-packages:
+                repo: https://github.com/example/spack-packages.git
+                commit: v2.0
+    """)
+    raw = yaml.load(config, Loader=yaml.Loader)
+    schema.ConfigValidator.validate(raw)
+    assert "path" not in raw["spack"]["packages"]["my-packages"]
 
 
 def test_recipe_config_yaml(recipe_path):

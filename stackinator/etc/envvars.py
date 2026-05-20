@@ -621,12 +621,27 @@ def meta_impl(args):
 
     if args.spack is not None:
         spack_url, spack_ref, spack_commit = args.spack.split(",")
-        spack_packages_url = None
-        spack_packages_ref = None
-        spack_packages_commit = None
-        if args.spack_packages is not None:
-            spack_packages_url, spack_packages_ref, spack_packages_commit = args.spack_packages.split(",")
         spack_path = f"{args.mount}/config".replace("//", "/")
+        scalar_vars = {
+            "UENV_SPACK_CONFIG_PATH": spack_path,
+            "UENV_SPACK_URL": spack_url,
+            "UENV_SPACK_REF": spack_ref,
+            "UENV_SPACK_COMMIT": spack_commit,
+        }
+        if args.spack_package_repo:
+            repo_names = []
+            for entry in args.spack_package_repo:
+                name, url, ref, commit = entry.split(",")
+                repo_names.append(name)
+                name_upper = name.upper().replace("-", "_")
+                scalar_vars[f"UENV_PACKAGE_REPO_{name_upper}_URL"] = url
+                scalar_vars[f"UENV_PACKAGE_REPO_{name_upper}_REF"] = ref
+                scalar_vars[f"UENV_PACKAGE_REPO_{name_upper}_COMMIT"] = commit
+                if name == "builtin":
+                    scalar_vars["UENV_SPACK_PACKAGES_URL"] = url
+                    scalar_vars["UENV_SPACK_PACKAGES_REF"] = ref
+                    scalar_vars["UENV_SPACK_PACKAGES_COMMIT"] = commit
+            scalar_vars["UENV_PACKAGE_REPOS"] = ",".join(repo_names)
         meta["views"]["spack"] = {
             "activate": "/dev/null",
             "description": "configure spack upstream",
@@ -636,15 +651,7 @@ def meta_impl(args):
                 "type": "augment",
                 "values": {
                     "list": {},
-                    "scalar": {
-                        "UENV_SPACK_CONFIG_PATH": spack_path,
-                        "UENV_SPACK_URL": spack_url,
-                        "UENV_SPACK_REF": spack_ref,
-                        "UENV_SPACK_COMMIT": spack_commit,
-                        "UENV_SPACK_PACKAGES_URL": spack_packages_url,
-                        "UENV_SPACK_PACKAGES_REF": spack_packages_ref,
-                        "UENV_SPACK_PACKAGES_COMMIT": spack_packages_commit,
-                    },
+                    "scalar": scalar_vars,
                 },
             },
         }
@@ -686,9 +693,11 @@ if __name__ == "__main__":
         default=None,
     )
     uenv_parser.add_argument(
-        "--spack-packages",
-        help='configure spack-packages repository metadata. Format is "spack_url,git_ref,git_commit"',
+        "--spack-package-repo",
+        help="configure spack package repository metadata. "
+        'Format is "name,spack_url,git_ref,git_commit". Can be repeated.',
         type=str,
+        action="append",
         default=None,
     )
 

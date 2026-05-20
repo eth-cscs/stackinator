@@ -191,26 +191,15 @@ class Builder:
 
         spack_git_commit_result = self._git_clone("spack", spack_repo, spack_commit, spack_path)
 
-        # Clone the spack-packages repository and check out commit if one was given
-        spack_packages = spack["packages"]
-        spack_packages_repo = spack_packages["repo"]
-        spack_packages_commit = spack_packages["commit"]
-        spack_packages_path = self.path / "spack-packages"
-
-        spack_packages_git_commit_result = self._git_clone(
-            "spack-packages",
-            spack_packages_repo,
-            spack_packages_commit,
-            spack_packages_path,
-        )
+        packages_meta = self._resolve_packages(spack["packages"])
+        for pkg in packages_meta:
+            pkg["commit"] = self._git_clone(pkg["name"], pkg["url"], pkg["ref"], pkg["path"])
 
         spack_meta = {
             "url": spack_repo,
             "ref": spack_commit,
             "commit": spack_git_commit_result,
-            "packages_url": spack_packages_repo,
-            "packages_ref": spack_packages_commit,
-            "packages_commit": spack_packages_git_commit_result,
+            "packages": packages_meta,
         }
 
         # load the jinja templating environment
@@ -331,15 +320,11 @@ class Builder:
         # 2. cluster-config/repos.yaml
         #   - if the repos.yaml file exists it will contain a list of relative paths
         #     to search for package
-        # 1. builtin repo
+        # 1. package repos from config.yaml in the order specified (typically
+        #    only spack-packages builtin repo)
 
-        # Build a list of repos with packages to install.
+        # Build a list of repos with packages to install from system config and recipe.
         repos = []
-
-        # check for a repo in the recipe
-        if recipe.spack_repo is not None:
-            self._logger.debug(f"adding recipe spack package repo: {recipe.spack_repo}")
-            repos.append(recipe.spack_repo)
 
         # look for repos.yaml file in the system configuration
         repo_yaml = recipe.system_config_path / "repos.yaml"
@@ -361,7 +346,7 @@ class Builder:
                     self._logger.error(f"{repo_path} from {repo_yaml} is not a spack package repository")
                     raise RuntimeError("invalid system-provided package repository")
 
-        self._logger.debug(f"full list of spack package repo: {repos}")
+        self._logger.debug(f"full list of system spack package repos: {repos}")
 
         # Delete the store/repo path, if it already exists.
         # Do this so that incremental builds (though not officially supported) won't break if a repo is updated.
@@ -378,7 +363,7 @@ class Builder:
         self._logger.debug(f"created the repo packages path {pkg_dst}")
 
         # create the repository step 2: create the repo.yaml file that
-        # configures alps and builtin repos
+        # configures the alps repo
         with (repo_dst / "repo.yaml").open("w") as f:
             f.write(
                 """\
@@ -388,43 +373,84 @@ repo:
 """
             )
 
+        # If the recipe provides a package repo, install it as a separate
+        # "recipe" repo in the store with highest precedence.
+        has_recipe_repo = recipe.spack_repo is not None
+        if has_recipe_repo:
+            recipe_dst = repos_path / "recipe"
+            self._logger.debug(f"creating the recipe spack repo in {recipe_dst}")
+            if recipe_dst.exists():
+                self._logger.debug(f"{recipe_dst} exists ... deleting")
+                shutil.rmtree(recipe_dst)
+
+            recipe_pkg_dst = recipe_dst / "packages"
+            recipe_pkg_dst.mkdir(mode=0o755, parents=True)
+
+            with (recipe_dst / "repo.yaml").open("w") as f:
+                f.write(
+                    """\
+repo:
+  namespace: recipe
+  api: v2.0
+"""
+                )
+
+            packages_path = recipe.spack_repo / "packages"
+            for pkg_path in packages_path.iterdir():
+                dst = recipe_pkg_dst / pkg_path.name
+                if pkg_path.is_dir():
+                    self._logger.debug(f"  installing recipe package {pkg_path} to {recipe_pkg_dst}")
+                    install(pkg_path, dst)
+
         # create the repository step 2: create the repos.yaml file in build_path/config
         repos_yaml_template = jinja_env.get_template("repos.yaml")
         with (config_path / "repos.yaml").open("w") as f:
             repo_path = recipe.mount / "repos" / "spack_repo" / "alps"
-            builtin_repo_path = recipe.mount / "repos" / "spack_repo" / "builtin"
+            recipe_repo_path = recipe.mount / "repos" / "spack_repo" / "recipe"
+            package_repos = [
+                {
+                    "name": pkg["name"],
+                    "path": (recipe.mount / "repos" / "spack_repo" / pkg["name"]).as_posix(),
+                }
+                for pkg in spack_meta["packages"]
+            ]
             f.write(
                 repos_yaml_template.render(
                     repo_path=repo_path.as_posix(),
-                    builtin_repo_path=builtin_repo_path.as_posix(),
+                    package_repos=package_repos,
+                    recipe_repo_path=recipe_repo_path.as_posix(),
+                    has_recipe_repo=has_recipe_repo,
                     verbose=False,
                 )
             )
             f.write("\n")
 
-        # Iterate over the source repositories copying their contents to the consolidated repo in the uenv.
-        # Do overwrite packages that have been copied from an earlier source repo, enforcing a descending
-        # order of precidence.
-        if len(repos) > 0:
-            for repo_src in repos:
-                self._logger.debug(f"installing repo {repo_src}")
-                packages_path = repo_src / "packages"
-                for pkg_path in packages_path.iterdir():
-                    dst = pkg_dst / pkg_path.name
-                    if pkg_path.is_dir() and not dst.exists():
-                        self._logger.debug(f"  installing package {pkg_path} to {pkg_dst}")
-                        install(pkg_path, dst)
-                    elif dst.exists():
-                        self._logger.debug(f"  NOT installing package {pkg_path}")
+        # Iterate over the alps and recipe repositories copying their contents
+        # to the final repo locations. Because of the order of repos in the
+        # repos.yaml config file, recipe packages have precedence.
+        for repo_src in repos:
+            self._logger.debug(f"installing repo {repo_src}")
+            packages_path = repo_src / "packages"
+            for pkg_path in packages_path.iterdir():
+                dst = pkg_dst / pkg_path.name
+                if pkg_path.is_dir() and not dst.exists():
+                    self._logger.debug(f"  installing package {pkg_path} to {pkg_dst}")
+                    install(pkg_path, dst)
+                elif dst.exists():
+                    self._logger.debug(f"  NOT installing package {pkg_path}")
 
-        # Copy the builtin repo to store, delete if it already exists.
-        spack_packages_builtin_path = spack_packages_path / "repos" / "spack_repo" / "builtin"
-        spack_packages_store_path = store_path / "repos" / "spack_repo" / "builtin"
-        self._logger.debug(f"copying builtin repo from {spack_packages_builtin_path} to {spack_packages_store_path}")
-        if spack_packages_store_path.exists():
-            self._logger.debug(f"{spack_packages_store_path} exists ... deleting")
-            shutil.rmtree(spack_packages_store_path)
-        install(spack_packages_builtin_path, spack_packages_store_path)
+        # Copy all package repos defined in config.yaml to their final repo
+        # locations.
+        for idx, pkg_meta in enumerate(spack_meta["packages"]):
+            clone_path = pkg_meta["path"]
+            name = pkg_meta["name"]
+            src_path = clone_path / pkg_meta["repo_path"]
+            dst_path = store_path / "repos" / "spack_repo" / name
+            self._logger.debug(f"copying repo '{name}' from {src_path} to {dst_path}")
+            if dst_path.exists():
+                self._logger.debug(f"{dst_path} exists ... deleting")
+                shutil.rmtree(dst_path)
+            install(src_path, dst_path)
 
         # Generate the makefile and spack.yaml files that describe the compilers
         compiler_files = recipe.compiler_files
@@ -524,6 +550,29 @@ repo:
                 )
             )
             f.write("\n")
+
+    def _resolve_packages(self, packages):
+        base = self.path / "repos"
+        if isinstance(packages.get("repo"), str):
+            return [
+                {
+                    "name": "builtin",
+                    "url": packages["repo"],
+                    "ref": packages.get("commit"),
+                    "path": base / "builtin",
+                    "repo_path": "repos/spack_repo/builtin",
+                }
+            ]
+        return [
+            {
+                "name": name,
+                "url": val["repo"],
+                "ref": val.get("commit"),
+                "path": base / name,
+                "repo_path": val.get("path", f"repos/spack_repo/{name}"),
+            }
+            for name, val in packages.items()
+        ]
 
     def _git_clone(self, name, repo, commit, path):
         if not (path / ".git").is_dir():
