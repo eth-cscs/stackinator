@@ -33,7 +33,7 @@ pre-install: spack-setup
 
 mirror-setup: spack-setup{% if pre_install_hook %} pre-install{% endif %}
 
-	{% if buildcache_mirrors %}
+	{% if cache %}
 	@echo "Pulling and trusting keys from configured buildcaches."
 	$(SANDBOX) $(SPACK) buildcache keys --install --trust
 	{% endif %}
