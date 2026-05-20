@@ -30,4 +30,4 @@ jobs:
       working-directory: unittests
       run: |
         sudo apt-get install -y jq
-        ./test-envvars.sh
+        uv run bash ./test-envvars.sh
