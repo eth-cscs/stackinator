@@ -71,8 +71,8 @@ compiler-config.yaml: install
 {% for view in config.views %}
 views/{{ view.name }}: install compiler-config.yaml
 	mkdir -p $(dir $@)
-	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) env activate --with-view {{ view.name }} --sh \
-		> $(STORE)/env/{{ view.name }}/activate.sh
+	$(SANDBOX) mkdir -p $(STORE)/env/{{ view.name }}
+	$(SANDBOX) sh -c '$(SPACK) env activate -d $(ENV_ROOT) --with-view {{ view.name }} --sh > $(STORE)/env/{{ view.name }}/activate.sh'
 	$(SANDBOX) $(BUILD_ROOT)/envvars.py view \
 		{% if view.extra.add_compilers %}--compilers=$(BUILD_ROOT)/compiler-config.yaml {% endif %}\
 		--prefix_paths="{{ view.extra.prefix_string }}" \
@@ -87,7 +87,7 @@ views: {% for name, config in environments.items() %}{% for view in config.views
 	touch views
 
 generate-config: install compiler-config.yaml
-	$(SANDBOX) $(MAKE) -C generate-config
+	$(SANDBOX) $(MAKE) -j1 -C generate-config
 
 {% if modules %}
 modules-done: install generate-config
