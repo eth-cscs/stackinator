@@ -211,7 +211,10 @@ class Builder:
             "spack": self.path / "spack",
         }
 
-        for hook_name, hook_src in [("post-install", recipe.post_install_hook), ("pre-install", recipe.pre_install_hook)]:
+        for hook_name, hook_src in [
+            ("post-install", recipe.post_install_hook),
+            ("pre-install", recipe.pre_install_hook),
+        ]:
             if hook_src is not None:
                 self._logger.debug(f"installing {hook_name} script")
                 jinja_recipe_env = jinja2.Environment(loader=jinja2.FileSystemLoader(recipe.path))
@@ -261,7 +264,11 @@ class Builder:
         with (config_path / "repos.yaml").open("w") as f:
             repo_path = recipe.mount / "repos" / "spack_repo" / "alps"
             builtin_repo_path = recipe.mount / "repos" / "spack_repo" / "builtin"
-            f.write(repos_yaml_template.render(repo_path=repo_path.as_posix(), builtin_repo_path=builtin_repo_path.as_posix()))
+            f.write(
+                repos_yaml_template.render(
+                    repo_path=repo_path.as_posix(), builtin_repo_path=builtin_repo_path.as_posix()
+                )
+            )
             f.write("\n")
 
         if recipe.mirror:
