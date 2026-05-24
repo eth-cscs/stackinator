@@ -113,6 +113,8 @@ class Builder:
         tmp_path = self.path / "tmp"
 
         self.path.mkdir(exist_ok=True, parents=True)
+        env_path = self.path / "env"
+        env_path.mkdir(exist_ok=True)
         store_path.mkdir(exist_ok=True)
         tmp_path.mkdir(exist_ok=True)
 
@@ -152,18 +154,9 @@ class Builder:
         )
 
         # --- Write the unified spack.yaml ---
-        with (self.path / "spack.yaml").open("w") as f:
+        with (env_path / "spack.yaml").open("w") as f:
             f.write(recipe.spack_yaml)
             f.write("\n")
-
-        # --- Write packages.yaml (merged system + network + recipe packages) ---
-        with (self.path / "packages.yaml").open("w") as f:
-            f.write(yaml.dump(recipe.packages))
-
-        # --- Write config.yaml (install tree location) ---
-        config_yaml = {"config": {"install_tree": {"root": str(recipe.mount)}}}
-        with (self.path / "config.yaml").open("w") as f:
-            f.write(yaml.dump(config_yaml))
 
         # --- Write Makefile ---
         has_views = any(env_cfg["views"] for env_cfg in recipe.environments.values())
@@ -255,10 +248,17 @@ class Builder:
         with (repo_dst / "repo.yaml").open("w") as f:
             f.write("repo:\n  namespace: alps\n  api: v2.0\n")
 
-        # config/repos.yaml — consumed by SPACK_SYSTEM_CONFIG_PATH during the build
-        # and copied to store/config/repos.yaml by generate-config for downstream users
+        # config/ is the SPACK_SYSTEM_CONFIG_PATH scope: all files here are loaded
+        # automatically by every spack command, with or without -e.
         config_path = self.path / "config"
         config_path.mkdir(exist_ok=True)
+
+        with (config_path / "packages.yaml").open("w") as f:
+            f.write(yaml.dump(recipe.packages))
+
+        config_yaml = {"config": {"install_tree": {"root": str(recipe.mount)}}}
+        with (config_path / "config.yaml").open("w") as f:
+            f.write(yaml.dump(config_yaml))
 
         repos_yaml_template = jinja_env.get_template("repos.yaml")
         with (config_path / "repos.yaml").open("w") as f:

@@ -7,13 +7,12 @@ all: $(CONFIG_DIR)/upstreams.yaml $(CONFIG_DIR)/packages.yaml $(CONFIG_DIR)/repo
 
 $(CONFIG_DIR)/upstreams.yaml:
 	mkdir -p $(CONFIG_DIR)
-	$(SPACK) -e $(BUILD_ROOT) config --scope=user add upstreams:system:install_tree:$(STORE)
+	$(SPACK) -e $(ENV_ROOT) config --scope=user add upstreams:system:install_tree:$(STORE)
 
-# Merge the build packages.yaml with the installed compiler externals so that
+# Generate packages.yaml with the spack-built compiler externals so that
 # downstream Spack users can find and use the compilers without a compiler.yaml.
 $(CONFIG_DIR)/packages.yaml: $(CONFIG_DIR)/upstreams.yaml
-	install -m 644 $(BUILD_ROOT)/packages.yaml $(CONFIG_DIR)/packages.yaml
-	$(SPACK) -e $(BUILD_ROOT) python $(BUILD_ROOT)/compiler-config.py \
+	$(SPACK) -e $(ENV_ROOT) python $(BUILD_ROOT)/compiler-config.py \
 		$(CONFIG_DIR)/packages.yaml \
 		{{ compiler_names | join(' ') }}
 
@@ -24,7 +23,7 @@ $(CONFIG_DIR)/repos.yaml: $(CONFIG_DIR)/packages.yaml
 MODULE_DIR = $(BUILD_ROOT)/modules
 
 $(MODULE_DIR)/upstreams.yaml:
-	$(SPACK) -e $(BUILD_ROOT) config --scope=user add upstreams:system:install_tree:$(STORE)
+	$(SPACK) -e $(ENV_ROOT) config --scope=user add upstreams:system:install_tree:$(STORE)
 
 {% endif %}
 include ../Make.inc

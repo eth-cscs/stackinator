@@ -34,7 +34,7 @@ pre-install: spack-setup
 mirror-setup: spack-setup{% if pre_install_hook %} pre-install{% endif %}
 
 {% if cache %}
-	$(SANDBOX) $(SPACK) -e $(BUILD_ROOT) buildcache keys --install --trust
+	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) buildcache keys --install --trust
 {% if cache.key %}
 	$(SANDBOX) $(SPACK) gpg trust {{ cache.key }}
 {% endif %}
@@ -42,17 +42,17 @@ mirror-setup: spack-setup{% if pre_install_hook %} pre-install{% endif %}
 	touch mirror-setup
 
 concretize: mirror-setup
-	$(SANDBOX) $(SPACK) -e $(BUILD_ROOT) concretize
+	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) concretize
 	touch concretize
 
 install: concretize
-	$(SANDBOX) $(SPACK) -e $(BUILD_ROOT) install
+	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) install
 	touch install
 
 {% if push_to_cache and cache.key %}
 cache-push: install
-	$(SANDBOX) $(SPACK) -e $(BUILD_ROOT) buildcache create --rebuild-index --only=package alpscache \
-	$$($(SANDBOX) $(SPACK_HELPER) -e $(BUILD_ROOT) find --format '{name};{/hash};version={version}' \
+	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) buildcache create --rebuild-index --only=package alpscache \
+	$$($(SANDBOX) $(SPACK_HELPER) -e $(ENV_ROOT) find --format '{name};{/hash};version={version}' \
 	| grep -v -E '^({% for p in exclude_from_cache %}{{ pipejoiner() }}{{ p }}{% endfor %});'\
 	| grep -v -E 'version=git\.'\
 	| cut -d ';' -f2)\
@@ -62,7 +62,7 @@ cache-push: install
 
 # Generate compiler-config.yaml for use by view and generate-config steps.
 compiler-config.yaml: install
-	$(SANDBOX) $(SPACK) -e $(BUILD_ROOT) python $(BUILD_ROOT)/compiler-config.py \
+	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) python $(BUILD_ROOT)/compiler-config.py \
 		$(BUILD_ROOT)/compiler-config.yaml \
 		{{ compiler_names | join(' ') }}
 
@@ -71,7 +71,7 @@ compiler-config.yaml: install
 {% for view in config.views %}
 views/{{ view.name }}: install compiler-config.yaml
 	mkdir -p $(dir $@)
-	$(SANDBOX) $(SPACK) -e $(BUILD_ROOT) env activate --with-view {{ view.name }} --sh \
+	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) env activate --with-view {{ view.name }} --sh \
 		> $(STORE)/env/{{ view.name }}/activate.sh
 	$(SANDBOX) $(BUILD_ROOT)/envvars.py view \
 		{% if view.extra.add_compilers %}--compilers=$(BUILD_ROOT)/compiler-config.yaml {% endif %}\
@@ -91,7 +91,7 @@ generate-config: install compiler-config.yaml
 
 {% if modules %}
 modules-done: install generate-config
-	$(SANDBOX) $(SPACK) -e $(BUILD_ROOT) module tcl refresh --upstream-modules --delete-tree --yes-to-all
+	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) module tcl refresh --upstream-modules --delete-tree --yes-to-all
 	touch modules-done
 {% endif %}
 
@@ -115,7 +115,7 @@ store.squashfs: env-meta{% if post_install_hook %} post-install{% endif %}{% if 
 	$(SANDBOX) find $(STORE)/repos -type d -name __pycache__ -exec rm -r {} +
 	$(SANDBOX) chmod -R a+rX $(STORE)
 	$(SANDBOX) env -u SOURCE_DATE_EPOCH \
-		"$$($(SANDBOX) $(SPACK_HELPER) -e $(BUILD_ROOT) find --format='{prefix}' squashfs | head -n1)/bin/mksquashfs" \
+		"$$($(SANDBOX) $(SPACK_HELPER) -e $(ENV_ROOT) find --format='{prefix}' squashfs | head -n1)/bin/mksquashfs" \
 		$(STORE) $@ -force-uid nobody -force-gid nobody \
 		-all-time $$(date +%s) -no-recovery -noappend -Xcompression-level 3
 

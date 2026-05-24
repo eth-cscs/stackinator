@@ -5,6 +5,9 @@
 # This is the root of the software stack directory.
 BUILD_ROOT := {{ build_path }}
 
+# Spack environment directory (spack.yaml, packages.yaml, config.yaml live here).
+ENV_ROOT := $(BUILD_ROOT)/env
+
 # What Spack should we use?
 SPACK := spack
 
