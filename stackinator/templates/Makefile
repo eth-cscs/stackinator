@@ -41,7 +41,7 @@ mirror-setup: spack-setup{% if pre_install_hook %} pre-install{% endif %}
 {% endif %}
 	touch mirror-setup
 
-concretize: mirror-setup
+concretize: mirror-setup env/spack.yaml
 	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) concretize
 	touch concretize
 
@@ -71,8 +71,10 @@ cache-push: install
 # Generate compiler-config.yaml for use by view and generate-config steps.
 compiler-config.yaml: cleanup
 	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) python $(BUILD_ROOT)/compiler-config.py \
-		$(BUILD_ROOT)/compiler-config.yaml \
-		{{ compiler_names | join(' ') }}
+{% if system_gcc %}
+		--system-packages=$(BUILD_ROOT)/config/packages.yaml \
+{% endif %}
+		$(BUILD_ROOT)/compiler-config.yaml{% if compiler_names %} {{ compiler_names | join(' ') }}{% endif %}
 
 # Generate activate.sh and env.json for each environment view.
 {% for name, config in environments.items() %}

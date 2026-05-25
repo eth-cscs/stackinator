@@ -79,10 +79,40 @@ def build_compiler_packages(compiler_names):
     return packages
 
 
+def load_system_compiler_externals(system_packages_path):
+    """
+    Read a packages.yaml and return entries that carry extra_attributes.compilers.
+    Used to surface system (external) compilers such as system gcc into the output.
+    """
+    with open(system_packages_path) as fid:
+        data = yaml.safe_load(fid) or {}
+
+    packages = {}
+    for pkg_name, pkg_data in data.get("packages", {}).items():
+        if not isinstance(pkg_data, dict):
+            continue
+        compiler_externals = [
+            e for e in pkg_data.get("externals", [])
+            if isinstance(e, dict)
+            and "extra_attributes" in e
+            and "compilers" in e["extra_attributes"]
+        ]
+        if compiler_externals:
+            packages[pkg_name] = {"externals": compiler_externals, "buildable": False}
+            print(f"  compiler-config: found system compiler '{pkg_name}' in {system_packages_path}", file=sys.stderr)
+
+    return packages
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", help="Path to packages.yaml to create or update")
-    parser.add_argument("compilers", nargs="+", help="Compiler package names to query")
+    parser.add_argument("compilers", nargs="*", help="Compiler package names to query")
+    parser.add_argument(
+        "--system-packages",
+        help="Path to a packages.yaml to read system compiler externals from",
+        default=None,
+    )
     args = parser.parse_args()
 
     # Load existing content if the file already exists (merge mode).
@@ -92,6 +122,14 @@ def main():
             existing = yaml.safe_load(fid) or {}
 
     compiler_packages = build_compiler_packages(args.compilers)
+
+    # Pull in any system compiler externals (e.g. system gcc) that carry
+    # extra_attributes.compilers but are not in the spack store.
+    if args.system_packages and os.path.isfile(args.system_packages):
+        system_externals = load_system_compiler_externals(args.system_packages)
+        for pkg_name, pkg_data in system_externals.items():
+            if pkg_name not in compiler_packages:
+                compiler_packages[pkg_name] = pkg_data
 
     # Merge: compiler entries overwrite any existing entry for the same package name.
     merged = existing.copy()

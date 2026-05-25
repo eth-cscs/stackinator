@@ -503,6 +503,11 @@ def view_impl(args):
     # remove all prefix path variable values that point to a location inside the build path.
     envvars.remove_root(args.build_path)
 
+    # Canonical symlink names for gcc role keys. For other compiler families
+    # (nvhpc, llvm, etc.) the binary names are already canonical, so we fall
+    # back to os.path.basename which gives the right name (nvc, clang, etc.).
+    _GCC_ROLE_CANONICAL = {"c": "gcc", "cxx": "g++", "fortran": "gfortran"}
+
     if args.compilers is not None:
         if not os.path.isfile(args.compilers):
             print(f"error - compiler yaml file {args.compilers} does not exist")
@@ -511,23 +516,27 @@ def view_impl(args):
         with open(args.compilers, "r") as file:
             data = yaml.safe_load(file)
 
-        compilers = []
-        for p in data["packages"].values():
-            for e in p["externals"]:
-                if "extra_attributes" in e:
-                    c = e["extra_attributes"]["compilers"]
-                    if c is not None:
-                        compilers.append(c)
-
-        for c in compilers:
-            source_paths = list(set([os.path.abspath(v) for _, v in c.items() if v is not None]))
-            target_paths = [os.path.join(bin_path, os.path.basename(f)) for f in source_paths]
-            for src, dst in zip(source_paths, target_paths):
-                print(f"creating compiler symlink: {src} -> {dst}")
-                if os.path.exists(dst):
-                    print(f"  first removing {dst}")
-                    os.remove(dst)
-                os.symlink(src, dst)
+        for pkg_name, pkg_data in data["packages"].items():
+            for e in pkg_data["externals"]:
+                if "extra_attributes" not in e:
+                    continue
+                c = e["extra_attributes"].get("compilers")
+                if not c:
+                    continue
+                for role, path in c.items():
+                    if path is None:
+                        continue
+                    src = os.path.abspath(path)
+                    if pkg_name == "gcc":
+                        link_name = _GCC_ROLE_CANONICAL.get(role, os.path.basename(src))
+                    else:
+                        link_name = os.path.basename(src)
+                    dst = os.path.join(bin_path, link_name)
+                    print(f"creating compiler symlink: {src} -> {dst}")
+                    if os.path.exists(dst):
+                        print(f"  first removing {dst}")
+                        os.remove(dst)
+                    os.symlink(src, dst)
 
     if args.prefix_paths:
         # get the root path of the env

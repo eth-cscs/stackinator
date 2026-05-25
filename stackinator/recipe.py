@@ -289,8 +289,8 @@ class Recipe:
 
     @property
     def compiler_names(self):
-        """Names of the compiler packages installed in this recipe."""
-        return list(self.compilers.keys())
+        """Names of the compiler packages installed in this recipe (excludes system gcc)."""
+        return [name for name, c in self.compilers.items() if not c.get("system", False)]
 
     # creates the self.environments field that describes the full specifications
     # for all of the environments sets, grouped in environments, from the raw
@@ -333,18 +333,26 @@ class Recipe:
                     environments[name]["mpi"] = mpi_name
                     environments[name]["specs"] += specs
 
-        # Auto-generate a prefer constraint that pins the default compiler
+        # Auto-generate a prefer constraint that pins the default compiler.
+        # For built compilers, include the version to distinguish from system externals.
+        # For system gcc, omit the version (there is only one gcc available).
         for name, config in environments.items():
             if config["prefer"] is None:
                 compiler_key = config["compiler"][0]
                 # spack uses a different name for the intel oneapi compilers
                 # than the package that installs them.
                 compiler_name = "oneapi" if compiler_key == "intel-oneapi-compilers" else compiler_key
-                compiler_version = self.compilers[compiler_key]["version"]
-                versioned = f"{compiler_name}@{compiler_version}"
+                compiler_version = self.compilers[compiler_key].get("version")
+                versioned = f"{compiler_name}@{compiler_version}" if compiler_version else compiler_name
                 config["prefer"] = [
                     f"%[when=%c] c={versioned} %[when=%cxx] cxx={versioned} %[when=%fortran] fortran={versioned}"
                 ]
+
+        # Compute spec group needs: only compilers with actual (non-system) spec groups.
+        for name, config in environments.items():
+            config["needs"] = [
+                c for c in config["compiler"] if not self.compilers.get(c, {}).get("system", False)
+            ]
 
         # Build view metadata
         env_names = set()
@@ -397,7 +405,10 @@ class Recipe:
         compilers = {}
 
         gcc_version = raw["gcc"]["version"]
-        compilers["gcc"] = {"specs": [f"gcc@{gcc_version} +bootstrap"], "version": gcc_version}
+        if gcc_version == "system":
+            compilers["gcc"] = {"system": True}
+        else:
+            compilers["gcc"] = {"specs": [f"gcc@{gcc_version} +bootstrap"], "version": gcc_version}
 
         for name, spec_template in [
             ("nvhpc", "nvhpc@{version} ~mpi~blas~lapack"),
@@ -410,6 +421,10 @@ class Recipe:
                 compilers[name] = {"specs": [spec_template.format(version=version)], "version": version}
 
         self.compilers = compilers
+
+    @property
+    def system_gcc(self):
+        return self.compilers.get("gcc", {}).get("system", False)
 
     # The path of the default configuration for the target system/cluster
     @property
@@ -449,4 +464,5 @@ class Recipe:
             environments=self.environments,
             store=self.mount,
             has_views=has_views,
+            system_gcc=self.system_gcc,
         )

@@ -4,7 +4,8 @@ spack:
   specs:
 
   # ---- Compiler groups ----
-  # gcc is always built first using the system compiler.
+{% if not system_gcc %}
+  # gcc is built first using the system compiler.
   - group: gcc
     explicit: false
     specs:
@@ -29,10 +30,13 @@ spack:
         zlib:
           variants: [~shared]
 
+{% endif %}
 {% if compilers.nvhpc %}
   - group: nvhpc
     explicit: false
+{% if not system_gcc %}
     needs: [gcc]
+{% endif %}
     specs:
 {% for spec in compilers.nvhpc.specs %}
     - '{{ spec }}'
@@ -46,7 +50,9 @@ spack:
 {% if compilers.llvm %}
   - group: llvm
     explicit: false
+{% if not system_gcc %}
     needs: [gcc]
+{% endif %}
     specs:
 {% for spec in compilers.llvm.specs %}
     - '{{ spec }}'
@@ -60,7 +66,9 @@ spack:
 {% if compilers.get('llvm-amdgpu') %}
   - group: llvm-amdgpu
     explicit: false
+{% if not system_gcc %}
     needs: [gcc]
+{% endif %}
     specs:
 {% for spec in compilers['llvm-amdgpu'].specs %}
     - '{{ spec }}'
@@ -74,7 +82,9 @@ spack:
 {% if compilers.get('intel-oneapi-compilers') %}
   - group: intel-oneapi-compilers
     explicit: false
+{% if not system_gcc %}
     needs: [gcc]
+{% endif %}
     specs:
 {% for spec in compilers['intel-oneapi-compilers'].specs %}
     - '{{ spec }}'
@@ -89,7 +99,9 @@ spack:
   # squashfs is required to create the final squashfs image.
   - group: uenv_tools
     explicit: false
+{% if not system_gcc %}
     needs: [gcc]
+{% endif %}
     override:
       concretizer:
         unify: true
@@ -100,7 +112,9 @@ spack:
   # ---- User environment groups ----
 {% for name, config in environments.items() %}
   - group: {{ name }}
-    needs: [{{ config.compiler | join(', ') }}]
+{% if config.needs %}
+    needs: [{{ config.needs | join(', ') }}]
+{% endif %}
     override:
       config:
         deprecated: {{ config.deprecated | string | lower }}
@@ -143,10 +157,8 @@ spack:
 {% for view in config.views %}
     {{ view.name }}:
       root: '{{ view.config.root }}'
-      group: {{ name }}
-{% if view.config.link != 'roots' %}
-      link: {{ view.config.link }}
-{% endif %}
+      group: '{{ name }}'
+      link: '{{ view.config.link }}'
 {% if view.config.get('exclude') %}
       exclude:
 {% for e in view.config.exclude %}
