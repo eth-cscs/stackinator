@@ -336,13 +336,14 @@ class Recipe:
         # Auto-generate a prefer constraint that pins the default compiler
         for name, config in environments.items():
             if config["prefer"] is None:
-                compiler = config["compiler"][0]
+                compiler_key = config["compiler"][0]
                 # spack uses a different name for the intel oneapi compilers
                 # than the package that installs them.
-                if compiler == "intel-oneapi-compilers":
-                    compiler = "oneapi"
+                compiler_name = "oneapi" if compiler_key == "intel-oneapi-compilers" else compiler_key
+                compiler_version = self.compilers[compiler_key]["version"]
+                versioned = f"{compiler_name}@{compiler_version}"
                 config["prefer"] = [
-                    f"%[when=%c] c={compiler} %[when=%cxx] cxx={compiler} %[when=%fortran] fortran={compiler}"
+                    f"%[when=%c] c={versioned} %[when=%cxx] cxx={versioned} %[when=%fortran] fortran={versioned}"
                 ]
 
         # Build view metadata
@@ -396,7 +397,7 @@ class Recipe:
         compilers = {}
 
         gcc_version = raw["gcc"]["version"]
-        compilers["gcc"] = {"specs": [f"gcc@{gcc_version} +bootstrap"]}
+        compilers["gcc"] = {"specs": [f"gcc@{gcc_version} +bootstrap"], "version": gcc_version}
 
         for name, spec_template in [
             ("nvhpc", "nvhpc@{version} ~mpi~blas~lapack"),
@@ -406,7 +407,7 @@ class Recipe:
         ]:
             if raw.get(name) is not None:
                 version = raw[name]["version"]
-                compilers[name] = {"specs": [spec_template.format(version=version)]}
+                compilers[name] = {"specs": [spec_template.format(version=version)], "version": version}
 
         self.compilers = compilers
 
