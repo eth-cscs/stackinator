@@ -49,6 +49,14 @@ install: concretize
 	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) install
 	touch install
 
+cleanup: install
+{% if cleanup == "build" %}
+	$(SANDBOX) $(SPACK) gc --yes-to-all --keep-build-dependencies --except-environment $(ENV_ROOT)
+{% elif cleanup == "runtime" %}
+	$(SANDBOX) $(SPACK) gc --yes-to-all --except-environment $(ENV_ROOT)
+{% endif %}
+	touch cleanup
+
 {% if push_to_cache and cache.key %}
 cache-push: install
 	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) buildcache create --rebuild-index --only=package alpscache \
@@ -61,7 +69,7 @@ cache-push: install
 {% endif %}
 
 # Generate compiler-config.yaml for use by view and generate-config steps.
-compiler-config.yaml: install
+compiler-config.yaml: cleanup
 	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) python $(BUILD_ROOT)/compiler-config.py \
 		$(BUILD_ROOT)/compiler-config.yaml \
 		{{ compiler_names | join(' ') }}
@@ -121,7 +129,7 @@ store.squashfs: env-meta{% if post_install_hook %} post-install{% endif %}{% if 
 
 clean:
 	rm -rf -- spack-version spack-setup{% if pre_install_hook %} pre-install{% endif %} mirror-setup \
-		concretize install{% if push_to_cache and cache.key %} cache-push{% endif %} \
+		concretize install cleanup{% if push_to_cache and cache.key %} cache-push{% endif %} \
 		compiler-config.yaml views generate-config/.done \
 		{% if modules %}modules-done {% endif %}env-meta{% if post_install_hook %} post-install{% endif %} \
 		store.squashfs spack-bootstrap-output

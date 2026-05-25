@@ -68,6 +68,11 @@
             "default": 1,
             "minimum": 1,
             "maximum": 3
+        },
+        "cleanup" : {
+            "type": "string",
+            "enum": ["none", "runtime", "build"],
+            "default": "none"
         }
     }
 }

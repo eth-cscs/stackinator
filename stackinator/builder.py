@@ -174,6 +174,7 @@ class Builder:
                     compiler_names=recipe.compiler_names,
                     exclude_from_cache=["nvhpc", "cuda", "perl"],
                     has_views=has_views,
+                    cleanup=recipe.config["cleanup"],
                 )
             )
             f.write("\n")
