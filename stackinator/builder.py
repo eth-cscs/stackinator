@@ -199,9 +199,7 @@ class Builder:
 
         packages_meta = self._resolve_packages(spack["packages"])
         for pkg_repo in packages_meta:
-            pkg_repo["commit"] = self._git_clone(
-                pkg_repo["name"], pkg_repo["url"], pkg_repo["ref"], pkg_repo["path"]
-            )
+            pkg_repo["commit"] = self._git_clone(pkg_repo["name"], pkg_repo["url"], pkg_repo["ref"], pkg_repo["path"])
 
         spack_meta = {
             "url": spack_repo,
