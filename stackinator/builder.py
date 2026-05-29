@@ -437,10 +437,10 @@ class Builder:
 
         # Copy all package repos defined in config.yaml to their final repo
         # locations.
-        for idx, pkg_meta in enumerate(spack_meta["packages"]):
-            clone_path = pkg_meta["path"]
-            name = pkg_meta["name"]
-            src_path = clone_path / pkg_meta["repo_path"]
+        for idx, pkg_repo in enumerate(spack_meta["packages"]):
+            clone_path = pkg_repo["path"]
+            name = pkg_repo["name"]
+            src_path = clone_path / pkg_repo["repo_path"]
             dst_path = store_path / "repos" / "spack_repo" / name
             self._logger.debug(f"copying repo '{name}' from {src_path} to {dst_path}")
             if dst_path.exists():
