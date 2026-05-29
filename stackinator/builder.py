@@ -13,6 +13,12 @@ import yaml
 
 from . import VERSION, cache, root_logger, spack_util
 
+_REPO_YAML = """\
+repo:
+  namespace: {namespace}
+  api: v2.0
+"""
+
 
 def install(src, dst, *, ignore=None, symlinks=False):
     """Call shutil.copytree or shutil.copy2. copy2 is used if `src` is not a directory.
@@ -365,13 +371,7 @@ class Builder:
         # create the repository step 2: create the repo.yaml file that
         # configures the alps repo
         with (repo_dst / "repo.yaml").open("w") as f:
-            f.write(
-                """\
-repo:
-  namespace: alps
-  api: v2.0
-"""
-            )
+            f.write(_REPO_YAML.format(namespace="alps"))
 
         # If the recipe provides a package repo, install it as a separate
         # "recipe" repo in the store with highest precedence.
@@ -387,13 +387,7 @@ repo:
             recipe_pkg_dst.mkdir(mode=0o755, parents=True)
 
             with (recipe_dst / "repo.yaml").open("w") as f:
-                f.write(
-                    """\
-repo:
-  namespace: recipe
-  api: v2.0
-"""
-                )
+                f.write(_REPO_YAML.format(namespace="recipe"))
 
             packages_path = recipe.spack_repo / "packages"
             for pkg_path in packages_path.iterdir():
