@@ -59,7 +59,7 @@ modules-done: environments generate-config
 
 env-meta: generate-config environments{% if modules %} modules-done{% endif %}
 
-	$(SANDBOX) $(BUILD_ROOT)/envvars.py uenv {% if modules %}--modules{% endif %} --spack='{{ spack_meta.url }},{{ spack_meta.ref }},{{ spack_meta.commit }}'{% for pkg in spack_meta.packages %} --spack-package-repo='{{ pkg.name }},{{ pkg.url }},{{ pkg.ref }},{{ pkg.commit }}'{% endfor %} $(STORE)
+	$(SANDBOX) $(BUILD_ROOT)/envvars.py uenv {% if modules %}--modules{% endif %} --spack='{{ spack_meta.url }},{{ spack_meta.ref }},{{ spack_meta.commit }}'{% for pkg_repo in spack_meta.packages %} --spack-package-repo='{{ pkg_repo.name }},{{ pkg_repo.url }},{{ pkg_repo.ref }},{{ pkg_repo.commit }}'{% endfor %} $(STORE)
 	touch env-meta
 
 post-install: env-meta

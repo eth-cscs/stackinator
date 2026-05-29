@@ -198,8 +198,10 @@ class Builder:
         spack_git_commit_result = self._git_clone("spack", spack_repo, spack_commit, spack_path)
 
         packages_meta = self._resolve_packages(spack["packages"])
-        for pkg in packages_meta:
-            pkg["commit"] = self._git_clone(pkg["name"], pkg["url"], pkg["ref"], pkg["path"])
+        for pkg_repo in packages_meta:
+            pkg_repo["commit"] = self._git_clone(
+                pkg_repo["name"], pkg_repo["url"], pkg_repo["ref"], pkg_repo["path"]
+            )
 
         spack_meta = {
             "url": spack_repo,
@@ -403,10 +405,10 @@ class Builder:
             recipe_repo_path = recipe.mount / "repos" / "spack_repo" / "recipe"
             package_repos = [
                 {
-                    "name": pkg["name"],
-                    "path": (recipe.mount / "repos" / "spack_repo" / pkg["name"]).as_posix(),
+                    "name": pkg_repo["name"],
+                    "path": (recipe.mount / "repos" / "spack_repo" / pkg_repo["name"]).as_posix(),
                 }
-                for pkg in spack_meta["packages"]
+                for pkg_repo in spack_meta["packages"]
             ]
             f.write(
                 repos_yaml_template.render(
