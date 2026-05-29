@@ -112,7 +112,7 @@ def test_config_yaml(yaml_path):
     schema.ConfigValidator.validate(raw)
     assert "my-packages" in raw["spack"]["packages"]
     assert raw["spack"]["packages"]["my-packages"]["repo"] == "https://github.com/example/spack-packages.git"
-    assert raw["spack"]["packages"]["my-packages"].get("commit") is None
+    assert raw["spack"]["packages"]["my-packages"]["commit"] is None
 
     # map format: multiple entries with commits
     config = dedent("""
