@@ -101,7 +101,7 @@ On air-gapped systems, Spack is unable to reach its default mirror to fetch pack
 
 `mirrors.yaml` may include source mirrors, bootstrap mirrors, and buildcaches. Any number of source mirrors can be added, but only one bootstrap mirror and buildcache can be specified. Spack will search the source mirrors in order from first to last, and will append the default Spack mirror to the bottom of the list when the Spack mirror config is generated.
 
-If using a buildcache, a private key must be provided for signing packages. An optional public key may be specified with any type of mirror to verify packages.
+If using a buildcache, a private key must be provided for signing packages. An optional public key may be specified with any type of mirror to verify packages. The buildcache is registered with Spack under the name `buildcache`, which can be overridden with an optional `name` field.
 
 To stop using a mirror, remove (or comment out) its entry from `mirrors.yaml`.
 

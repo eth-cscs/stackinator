@@ -11,7 +11,7 @@ from datetime import datetime
 import jinja2
 import yaml
 
-from . import VERSION, root_logger, spack_util, mirror
+from . import VERSION, root_logger, spack_util
 
 
 def install(src, dst, *, ignore=None, symlinks=False):
@@ -224,6 +224,15 @@ class Builder:
             lstrip_blocks=True,
         )
 
+        # Write the spack mirror config artifacts (mirrors.yaml, bootstrap config,
+        # and the relocated gpg keys) into the config scope. These were fully
+        # resolved and validated by the recipe, so we just write the bytes. This
+        # must precede the Makefile render, which references the gpg key paths.
+        self._logger.debug(f"Writing the spack mirror configs to '{config_path}'")
+        for dest, content in recipe.mirrors.config_files(config_path).items():
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(content)
+
         # generate top level makefiles
         makefile_template = jinja_env.get_template("Makefile")
 
@@ -235,7 +244,7 @@ class Builder:
                     pre_install_hook=recipe.pre_install_hook,
                     spack_version=spack_version,
                     spack_meta=spack_meta,
-                    gpg_keys=recipe.mirrors.keys,
+                    gpg_keys=recipe.mirrors.gpg_key_paths(config_path),
                     cache=recipe.build_cache_mirror,
                     exclude_from_cache=["nvhpc", "cuda", "perl"],
                     verbose=False,
@@ -313,14 +322,6 @@ class Builder:
         global_packages_path = config_path / "packages.yaml"
         with global_packages_path.open("w") as fid:
             fid.write(global_packages_yaml)
-
-        # generate a mirrors.yaml file if build caches have been configured
-        self._logger.debug(f"Generating the spack mirror configs in '{config_path}'")
-        try:
-            recipe.mirrors.setup_configs(config_path)
-        except mirror.MirrorError as err:
-            self._logger.error(f"Could not set up mirrors.\n{err}")
-            return 1
 
         # Add custom spack package recipes, configured via Spack repos.
         # Step 1: copy Spack repos to store_path where they will be used to

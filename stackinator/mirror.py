@@ -1,6 +1,5 @@
-from typing import Optional, List, Dict
+from typing import Dict, List, Optional, Tuple
 import base64
-import io
 import os
 import pathlib
 import urllib.parse
@@ -11,258 +10,215 @@ import magic
 from . import schema, root_logger
 
 
+# GPG keys may be presented either ASCII-armored (these headers) or as binary
+# data, in which case we fall back to libmagic to recognise the key.
+ASCII_PGP_HEADERS = (
+    b"-----BEGIN PGP PRIVATE KEY BLOCK-----",
+    b"-----BEGIN PGP PUBLIC KEY BLOCK-----",
+    b"-----BEGIN PGP MESSAGE-----",
+    b"-----BEGIN PGP SIGNATURE-----",
+)
+
+# libmagic mime types that we accept as (binary) GPG key material.
+GPG_KEY_MIME_TYPES = (
+    "application/x-gnupg-keyring",
+    "application/pgp-keys",
+    "application/octet-stream",
+)
+
+
 class MirrorError(RuntimeError):
     """Exception class for errors thrown by mirror configuration problems."""
 
 
 class Mirrors:
-    """Manage the definition of mirrors in a recipe."""
+    """Fully validated and resolved definition of the spack mirrors for a recipe.
+
+    The three kinds of mirror have separate types:
+
+      * buildcache    - at most one, signs and stores built packages (so it alone
+                        has a private key and the mount_specific flag). None if no
+                        build cache is configured.
+      * bootstrap     - at most one, used to bootstrap spack itself. None if absent.
+      * source_caches - a name -> config mapping of any number of source mirrors.
+
+    All input processing - loading and schema-validating the system mirrors.yaml,
+    validating urls, and reading/decoding/validating gpg keys - happens eagerly in
+    the constructor, so any error is reported during recipe construction. Once
+    constructed, the object holds nothing but resolved, validated data, which is
+    presented to the builder as static artifacts via config_files() and
+    gpg_key_paths().
+    """
 
     KEY_STORE_DIR = "key_store"
     MIRRORS_YAML = "mirrors.yaml"
-    CMDLINE_CACHE = "cmdline_cache"
+    BOOTSTRAP_MIRROR = "bootstrap"
 
     def __init__(
         self,
         system_config_root: pathlib.Path,
+        mount_path: pathlib.Path,
         cmdline_cache: Optional[pathlib.Path] = None,
-        mount_point: Optional[pathlib.Path] = None,
     ):
-        """Configure mirrors from both the system 'mirror.yaml' file and the command line."""
+        """Load and fully resolve the mirror configuration.
 
-        self._system_config_root = system_config_root
-        self._mount_point = mount_point
+        Inputs are the system config's mirrors.yaml, the recipe mount path (used to
+        make a build cache mount-specific), and an optional legacy cache.yaml passed
+        on the command line (--cache).
+        """
 
         self._logger = root_logger
+        self._system_config_root = system_config_root
+        self._mount_path = mount_path
 
-        # Will hold a list of all the gpg keys (public and private).
-        # None until setup_configs() (via _key_setup) has populated it.
-        self._keys: Optional[List[pathlib.Path]] = None
+        self.buildcache: Optional[Dict] = None
+        self.bootstrap: Optional[Dict] = None
+        self.source_caches: Dict[str, Dict] = {}
 
-        self.mirrors = self._load_mirrors(cmdline_cache)
-        self._check_mirrors()
-
-    def _load_mirrors(self, cmdline_cache: Optional[pathlib.Path]) -> Dict[str, Dict]:
-        """Load the mirrors file, if one exists."""
-
-        path = self._system_config_root / "mirrors.yaml"
-        if path.exists():
+        # Load and schema-validate the system mirrors.yaml (absent file is fine).
+        mirrors_path = system_config_root / "mirrors.yaml"
+        if mirrors_path.exists():
             try:
-                with path.open() as fid:
-                    # load the raw yaml input
-                    mirrors = yaml.load(fid, Loader=yaml.SafeLoader)
+                with mirrors_path.open() as fid:
+                    raw_mirrors = yaml.load(fid, Loader=yaml.SafeLoader)
             except (OSError, PermissionError) as err:
                 raise MirrorError(f"Could not open/read mirrors.yaml file.\n{err}")
         else:
-            mirrors = {}
+            raw_mirrors = {}
 
         try:
-            schema.MirrorsValidator.validate(mirrors)
+            schema.MirrorsValidator.validate(raw_mirrors)
         except ValueError as err:
             raise MirrorError(f"Mirror config does not comply with schema.\n{err}")
 
-        loaded_mirrors: Dict[str, Dict] = {}
-
-        buildcache = mirrors.get("buildcache")
+        # The build cache, if one is defined in mirrors.yaml.
+        buildcache = raw_mirrors.get("buildcache")
         if buildcache:
             if not buildcache.get("private_key"):
                 raise MirrorError("Mirror build cache config is missing a required 'private_key' path.")
-            self.build_cache_mirror = "buildcache"
-            loaded_mirrors["buildcache"] = buildcache
-        else:
-            self.build_cache_mirror = None
+            self.buildcache = buildcache
 
-        # Load the cache as defined by the deprecated 'cache.yaml' file.
+        # A build cache passed via the deprecated cache.yaml file (the --cache CLI
+        # option) takes precedence over a buildcache defined in mirrors.yaml.
         if cmdline_cache is not None:
-            loaded_mirrors["buildcache"] = self._load_cmdline_cache(cmdline_cache)
-            self.build_cache_mirror = self.CMDLINE_CACHE
+            if not cmdline_cache.is_file():
+                raise MirrorError(
+                    f"Binary cache configuration path given on the command line '{cmdline_cache}' does not exist."
+                )
+            with cmdline_cache.open() as fid:
+                try:
+                    raw_cache = yaml.load(fid, Loader=yaml.SafeLoader)
+                except ValueError as err:
+                    raise MirrorError(f"Error loading yaml from cache config at '{cmdline_cache}'\n{err}")
+            try:
+                schema.CacheValidator.validate(raw_cache)
+            except ValueError as err:
+                raise MirrorError(f"Error validating contents of cache config at '{cmdline_cache}'.\n{err}")
 
-        bootstrap = mirrors.get("bootstrap")
-        if bootstrap:
-            loaded_mirrors["bootstrap"] = bootstrap
-
-        for name, mirror in mirrors.get("sourcecache", {}).items():
-            loaded_mirrors[name] = mirror
-
-        return loaded_mirrors
-
-    @staticmethod
-    def _pp_yaml(object):
-        """Pretty print the given object as yaml."""
-
-        example_yaml_stream = io.StringIO()
-        yaml.dump(object, example_yaml_stream, default_flow_style=False)
-        return example_yaml_stream.getvalue()
-
-    def _load_cmdline_cache(self, cache_config_path: pathlib.Path) -> Dict:
-        """Load the mirror definition from the legacy 'cache.yaml' file."""
-
-        if not cache_config_path.is_file():
-            raise MirrorError(
-                f"Binary cache configuration path given on the command line '{cache_config_path}' does not exist."
+            self.buildcache = {
+                "name": "buildcache",
+                "url": raw_cache["root"],
+                "description": "Buildcache dest loaded from legacy cache.yaml",
+                "mount_specific": True,
+                "private_key": raw_cache["key"],
+                "cmdline": True,
+            }
+            self._logger.warning(
+                "Configuring the buildcache from the system cache.yaml file.\n"
+                "Please switch to using either the '--cache' option or the 'mirrors.yaml' file instead.\n"
+                f"The equivalent 'mirrors.yaml' would look like: \n"
+                f"{yaml.dump([self.buildcache], default_flow_style=False)}"
             )
 
-        with cache_config_path.open("r") as file:
-            try:
-                raw = yaml.load(file, Loader=yaml.SafeLoader)
-            except ValueError as err:
-                raise MirrorError(f"Error loading yaml from cache config at '{cache_config_path}'\n{err}")
+        # The bootstrap mirror and the source mirrors, if any are defined.
+        self.bootstrap = raw_mirrors.get("bootstrap")
+        self.source_caches = dict(raw_mirrors.get("sourcecache", {}))
 
-        try:
-            schema.CacheValidator.validate(raw)
-        except ValueError as err:
-            raise MirrorError(f"Error validating contents of cache config at '{cache_config_path}'.\n{err}")
+        # Validate that every mirror url is well-formed (see _validate_url).
+        for name, mirror in self._iter_mirrors():
+            self._validate_url(mirror["url"], name)
 
-        mirror_cfg = {
-            "url": raw["root"],
-            "description": "Buildcache dest loaded from legacy cache.yaml",
-            "mount_specific": True,
-            "private_key": raw["key"],
-            "cmdline": True,
-        }
+        # Read, decode and validate every gpg key into memory. Each key is stored
+        # as (path-relative-to-config-root, raw bytes); the builder writes these
+        # verbatim into the build directory's key store.
+        key_store = pathlib.PurePosixPath(self.KEY_STORE_DIR)
+        self._key_files: List[Tuple[pathlib.PurePosixPath, bytes]] = []
 
-        self._logger.warning(
-            "Configuring the buildcache from the system cache.yaml file.\n"
-            "Please switch to using either the '--cache' option or the 'mirrors.yaml' file instead.\n"
-            f"The equivalent 'mirrors.yaml' would look like: \n{self._pp_yaml([mirror_cfg])}"
-        )
+        # The build cache signs packages, so it alone has a private key.
+        if self.buildcache is not None:
+            name = self.buildcache["name"]
+            self._key_files.append(
+                (key_store / f"{name}.priv.gpg", self._read_key(self.buildcache["private_key"], name))
+            )
 
-        return mirror_cfg
-
-    def _check_mirrors(self):
-        """Validate that each mirror url is well-formed.
-
-        Only the format of the url is checked: no attempt is made to connect to
-        remote mirrors, because a valid-but-unreachable url would otherwise
-        block until the network request times out.
-        """
-
-        for name, mirror in self.mirrors.items():
-            url = mirror["url"]
-
-            if url.startswith("file://"):
-                # local mirror: verify that the root path is an existing directory
-                path = pathlib.Path(os.path.expandvars(url[len("file://") :]))
-                if not path.is_absolute():
-                    raise MirrorError(f"The mirror path '{path}' for mirror '{name}' is not absolute")
-                if not path.is_dir():
-                    raise MirrorError(f"The mirror path '{path}' for mirror '{name}' is not a directory")
-
-                mirror["url"] = path
-                continue
-
-            parsed = urllib.parse.urlparse(url)
-
-            if not parsed.scheme:
-                # a bare path is accepted if absolute (e.g. the legacy command line cache)
-                if not pathlib.Path(url).is_absolute():
-                    raise MirrorError(f"The mirror url '{url}' for mirror '{name}' is not a valid url or absolute path")
-                continue
-
-            # a remote mirror: require a well-formed url with both a scheme and a host
-            if not parsed.netloc:
-                raise MirrorError(f"The mirror url '{url}' for mirror '{name}' is not a valid url")
+        # Any mirror may provide a public key, used to verify downloaded packages.
+        for name, mirror in self._iter_mirrors():
+            public_key = mirror.get("public_key")
+            if public_key is not None:
+                self._key_files.append((key_store / f"{name}.pub.gpg", self._read_key(public_key, name)))
 
     @property
-    def keys(self):
-        """Return the list of public and private key file paths."""
+    def build_cache_mirror(self) -> Optional[str]:
+        """The spack mirror name that built packages are pushed to, or None."""
 
-        if self._keys is None:
-            raise RuntimeError("The mirror.keys method was accessed before setup_configs() was called.")
+        return self.buildcache["name"] if self.buildcache is not None else None
 
-        return self._keys
+    def _iter_mirrors(self):
+        """Yield (spack mirror name, config dict) for every configured mirror.
 
-    def setup_configs(self, config_root: pathlib.Path):
-        """Setup all mirror configs in the given config_root."""
+        The build cache's name is configurable (the 'name' field); the bootstrap
+        and source mirrors are named by their key in mirrors.yaml.
+        """
 
-        self._key_setup(config_root / self.KEY_STORE_DIR)
-        self._create_spack_mirrors_yaml(config_root / self.MIRRORS_YAML)
-        self._create_bootstrap_configs(config_root)
+        if self.buildcache is not None:
+            yield self.buildcache["name"], self.buildcache
+        if self.bootstrap is not None:
+            yield self.BOOTSTRAP_MIRROR, self.bootstrap
+        yield from self.source_caches.items()
 
-    def _create_spack_mirrors_yaml(self, dest: pathlib.Path):
-        """Generate the mirrors.yaml for our build directory."""
+    def _validate_url(self, url: str, name: str):
+        """Validate that a mirror url is well-formed.
 
-        raw = {"mirrors": {}}
+        Only the format of the url is checked: no attempt is made to connect to
+        remote mirrors, because a valid-but-unreachable url would otherwise block
+        until the network request times out.
+        """
 
-        for name, mirror in self.mirrors.items():
-            url = mirror["url"]
-
-            # Make the mirror path specific to the mount point
-            if name == "buildcache":
-                if mirror["mount_specific"] and self._mount_point is not None:
-                    url = url.rstrip("/") + "/" + self._mount_point.as_posix().lstrip("/")
-
-            raw["mirrors"][name] = {
-                "fetch": {"url": url},
-                "push": {"url": url},
-            }
-
-        with dest.open("w") as file:
-            yaml.dump(raw, file, default_flow_style=False, sort_keys=False)
-
-    def _create_bootstrap_configs(self, config_root: pathlib.Path):
-        """Create the bootstrap.yaml and bootstrap metadata dirs in our build dir."""
-
-        if not self.mirrors.get("bootstrap"):
+        if url.startswith("file://"):
+            # local mirror: verify that the root path is an existing directory
+            path = pathlib.Path(os.path.expandvars(url[len("file://") :]))
+            if not path.is_absolute():
+                raise MirrorError(f"The mirror path '{path}' for mirror '{name}' is not absolute")
+            if not path.is_dir():
+                raise MirrorError(f"The mirror path '{path}' for mirror '{name}' is not a directory")
             return
 
-        bootstrap_yaml = {
-            "bootstrap": {
-                "sources": [],
-                "trusted": {},
-            }
-        }
+        parsed = urllib.parse.urlparse(url)
+        if not parsed.scheme:
+            # a bare path is accepted if absolute (e.g. the legacy command line cache)
+            if not pathlib.Path(url).is_absolute():
+                raise MirrorError(f"The mirror url '{url}' for mirror '{name}' is not a valid url or absolute path")
+        elif not parsed.netloc:
+            # a remote mirror requires a well-formed url with both a scheme and a host
+            raise MirrorError(f"The mirror url '{url}' for mirror '{name}' is not a valid url")
 
-        bs_mirror_path = config_root / "bootstrap" / "bootstrap-mirror"
-        mirror = self.mirrors.get("bootstrap")
-        # Tell spack where to find the metadata for each bootstrap mirror.
-        bootstrap_yaml["bootstrap"]["sources"].append(
-            {
-                "name": "bootstrap-mirror",
-                "metadata": str(bs_mirror_path),
-            }
-        )
-        # And trust each one
-        bootstrap_yaml["bootstrap"]["trusted"]["bootstrap-mirror"] = True
+    def _read_key(self, key: str, name: str) -> bytes:
+        """Resolve a key (a file path or base64 blob) to validated gpg key bytes.
 
-        # Create the metadata dir and metadata.yaml
-        bs_mirror_path.mkdir(parents=True, exist_ok=True)
-        bs_mirror_yaml = {
-            "type": "install",
-            "info": {
-                "url": mirror["url"],
-            },
-        }
-        with (bs_mirror_path / "metadata.yaml").open("w") as file:
-            yaml.dump(bs_mirror_yaml, file, default_flow_style=False)
+        A key is either a path - absolute, or relative to the system config - or a
+        base64-encoded blob inlined in mirrors.yaml. The resulting bytes are checked
+        to be genuine gpg key material before being accepted.
+        """
 
-        with (config_root / "bootstrap.yaml").open("w") as file:
-            yaml.dump(bootstrap_yaml, file, default_flow_style=False)
-
-    def _load_key(self, key: str, dest: pathlib.Path, name: str):
-        """Validate mirror keys, relocate to key_store, and update mirror config with new key paths."""
-
-        ASCII_PGP_HEADERS = (
-            b"-----BEGIN PGP PRIVATE KEY BLOCK-----",
-            b"-----BEGIN PGP PUBLIC KEY BLOCK-----",
-            b"-----BEGIN PGP MESSAGE-----",
-            b"-----BEGIN PGP SIGNATURE-----",
-        )
-
-        # key will be saved under key_store/mirror_name.[pub/priv].gpg
-
-        # if path, check if abs path, if not, append sys config path in front and check again
+        # if it is a path (absolute, or relative to the system config), read it
         path = pathlib.Path(os.path.expandvars(key))
         if not path.is_absolute():
-            # try prepending system config path
             path = self._system_config_root / path
 
         if path.is_file():
-            with open(path, "rb") as reader:
-                binary_key = reader.read()
-
-        # convert base64 key to binary
+            binary_key = path.read_bytes()
         else:
+            # otherwise it must be a base64-encoded key
             try:
                 binary_key = base64.b64decode(key)
             except ValueError:
@@ -272,40 +228,65 @@ class Mirrors:
                     f"Check the key listed in mirrors.yaml in system config."
                 )
 
-        file_type = magic.from_buffer(binary_key)
-
-        if (file_type in "application/x-gnupg-keyring", "application/pgp-keys", "application/octet-stream") or (
-            binary_key.startswith(ASCII_PGP_HEADERS)
-        ):
-            # copy key to new destination in key store
-            with open(dest, "wb") as writer:
-                writer.write(binary_key)
-
-            self._keys.append(dest)
-
-        else:
+        is_gpg_key = binary_key.startswith(ASCII_PGP_HEADERS) or (
+            magic.from_buffer(binary_key, mime=True) in GPG_KEY_MIME_TYPES
+        )
+        if not is_gpg_key:
             raise MirrorError(
                 f"Key for mirror {name} is not a valid GPG key. \n"
                 f"The file (or base64) was readable, but the data itself was not a PGP key.\n"
                 f"Check the key listed in mirrors.yaml in system config."
             )
 
-    def _key_setup(self, key_store: pathlib.Path):
-        """Iterate through mirror keys and load + relocate each one to key_store"""
+        return binary_key
 
-        self._keys = []
-        key_store.mkdir(exist_ok=True)
+    def gpg_key_paths(self, config_root: pathlib.Path) -> List[pathlib.Path]:
+        """The absolute paths the gpg keys are written to, for `spack gpg trust`."""
 
-        for name, mirror in self.mirrors.items():
-            if name == "buildcache":
-                if mirror.get("private_key"):
-                    key = mirror["private_key"]
-                    dest = pathlib.Path(key_store / f"{name}.priv.gpg")
-                    self._load_key(key, dest, name)
+        return [config_root / relpath for relpath, _ in self._key_files]
 
-            if mirror.get("public_key") is None:
-                continue
+    def config_files(self, config_root: pathlib.Path) -> Dict[pathlib.Path, bytes]:
+        """The complete set of mirror config files to write under config_root.
 
-            key = mirror["public_key"]
-            dest = pathlib.Path(key_store / f"{name}.pub.gpg")
-            self._load_key(key, dest, name)
+        Returns a mapping of absolute file path -> file content. This is a pure
+        function of the already-validated state and the output location: it neither
+        validates nor performs any I/O, so the builder can write the bytes verbatim.
+        """
+
+        files: Dict[pathlib.Path, bytes] = {}
+
+        # the relocated gpg keys
+        for relpath, content in self._key_files:
+            files[config_root / relpath] = content
+
+        # the spack mirrors.yaml
+        spack_mirrors: Dict[str, Dict] = {"mirrors": {}}
+        for name, mirror in self._iter_mirrors():
+            url = mirror["url"]
+            # a mount-specific build cache lives in a sub-directory named after the
+            # mount point: spack binaries embed the install prefix, so each mount
+            # point needs its own cache to avoid relocation issues. Only the build
+            # cache carries the mount_specific flag.
+            if mirror.get("mount_specific"):
+                url = url.rstrip("/") + "/" + self._mount_path.as_posix().lstrip("/")
+            spack_mirrors["mirrors"][name] = {"fetch": {"url": url}, "push": {"url": url}}
+
+        files[config_root / self.MIRRORS_YAML] = yaml.dump(
+            spack_mirrors, default_flow_style=False, sort_keys=False
+        ).encode()
+
+        # the bootstrap config and its mirror metadata, if a bootstrap mirror is set
+        if self.bootstrap is not None:
+            metadata_dir = config_root / "bootstrap" / "bootstrap-mirror"
+            bootstrap_yaml = {
+                "bootstrap": {
+                    "sources": [{"name": "bootstrap-mirror", "metadata": str(metadata_dir)}],
+                    "trusted": {"bootstrap-mirror": True},
+                }
+            }
+            metadata_yaml = {"type": "install", "info": {"url": self.bootstrap["url"]}}
+
+            files[metadata_dir / "metadata.yaml"] = yaml.dump(metadata_yaml, default_flow_style=False).encode()
+            files[config_root / "bootstrap.yaml"] = yaml.dump(bootstrap_yaml, default_flow_style=False).encode()
+
+        return files

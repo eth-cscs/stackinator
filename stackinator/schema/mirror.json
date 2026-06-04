@@ -15,6 +15,10 @@
         "buildcache": {
             "type": "object",
             "properties": {
+                "name": {
+                    "type": "string",
+                    "default": "buildcache"
+                },
                 "description": {"type": "string"},
                 "url": {"type": "string"},
                 "public_key": {"type": "string"},

@@ -181,8 +181,8 @@ class Recipe:
         self._logger.debug("Configuring mirrors.")
         self.mirrors = mirror.Mirrors(
             self.system_config_path,
-            pathlib.Path(args.cache) if args.cache else None,
             self.mount,
+            pathlib.Path(args.cache) if args.cache else None,
         )
 
         # optional post install hook
