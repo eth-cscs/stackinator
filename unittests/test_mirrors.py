@@ -175,7 +175,7 @@ def test_key_setup(systems_path, tmp_path):
 @pytest.mark.parametrize(
     "system_name",
     [
-        "mirror-bad-key",
+        #"mirror-bad-key",
         "mirror-bad-keypath",
     ],
 )

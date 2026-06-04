@@ -3,7 +3,7 @@ import base64
 import io
 import os
 import pathlib
-import requests
+import urllib.parse
 import yaml
 
 import magic
@@ -131,28 +131,40 @@ class Mirrors:
         return mirror_cfg
 
     def _check_mirrors(self):
-        """Validate the mirror config entries."""
+        """Validate that each mirror url is well-formed.
+
+        Only the format of the url is checked: no attempt is made to connect to
+        remote mirrors, because a valid-but-unreachable url would otherwise
+        block until the network request times out.
+        """
 
         for name, mirror in self.mirrors.items():
             url = mirror["url"]
+
             if url.startswith("file://"):
-                # verify that the root path exists
-                path = pathlib.Path(os.path.expandvars(url))
+                # local mirror: verify that the root path is an existing directory
+                path = pathlib.Path(os.path.expandvars(url[len("file://") :]))
                 if not path.is_absolute():
                     raise MirrorError(f"The mirror path '{path}' for mirror '{name}' is not absolute")
                 if not path.is_dir():
                     raise MirrorError(f"The mirror path '{path}' for mirror '{name}' is not a directory")
 
                 mirror["url"] = path
+                continue
 
-            elif url.startswith("https://"):
-                try:
-                    requests.request(url=url, method="HEAD")
-                except requests.exceptions.RequestException as err:
+            parsed = urllib.parse.urlparse(url)
+
+            if not parsed.scheme:
+                # a bare path is accepted if absolute (e.g. the legacy command line cache)
+                if not pathlib.Path(url).is_absolute():
                     raise MirrorError(
-                        f"Could not reach the mirror url '{url}'. "
-                        f"Check the url listed in mirrors.yaml in system config. \n{err}"
+                        f"The mirror url '{url}' for mirror '{name}' is not a valid url or absolute path"
                     )
+                continue
+
+            # a remote mirror: require a well-formed url with both a scheme and a host
+            if not parsed.netloc:
+                raise MirrorError(f"The mirror url '{url}' for mirror '{name}' is not a valid url")
 
     @property
     def keys(self):

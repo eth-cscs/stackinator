@@ -1,4 +1,4 @@
 sourcecache:
   bad-url:
-    url: https://www.testsite.io/services
+    url: not-a-valid-url
     enabled: true
