@@ -35,11 +35,12 @@ class Mirrors:
 
         self._logger = root_logger
 
+        # Will hold a list of all the gpg keys (public and private).
+        # None until setup_configs() (via _key_setup) has populated it.
+        self._keys: Optional[List[pathlib.Path]] = None
+
         self.mirrors = self._load_mirrors(cmdline_cache)
         self._check_mirrors()
-
-        # Will hold a list of all the gpg keys (public and private)
-        self._keys: Optional[List[pathlib.Path]] = []
 
     def _load_mirrors(self, cmdline_cache: Optional[pathlib.Path]) -> Dict[str, Dict]:
         """Load the mirrors file, if one exists."""
@@ -60,31 +61,30 @@ class Mirrors:
         except ValueError as err:
             raise MirrorError(f"Mirror config does not comply with schema.\n{err}")
 
-        enabled_mirrors: Dict[str, Dict] = {}
+        loaded_mirrors: Dict[str, Dict] = {}
 
         buildcache = mirrors.get("buildcache")
-        if buildcache and buildcache.get("enabled", True):
+        if buildcache:
             if not buildcache.get("private_key"):
                 raise MirrorError("Mirror build cache config is missing a required 'private_key' path.")
             self.build_cache_mirror = "buildcache"
-            enabled_mirrors["buildcache"] = buildcache
+            loaded_mirrors["buildcache"] = buildcache
         else:
             self.build_cache_mirror = None
 
         # Load the cache as defined by the deprecated 'cache.yaml' file.
         if cmdline_cache is not None:
-            enabled_mirrors["buildcache"] = self._load_cmdline_cache(cmdline_cache)
+            loaded_mirrors["buildcache"] = self._load_cmdline_cache(cmdline_cache)
             self.build_cache_mirror = self.CMDLINE_CACHE
 
         bootstrap = mirrors.get("bootstrap")
-        if bootstrap and bootstrap.get("enabled", True):
-            enabled_mirrors["bootstrap"] = bootstrap
+        if bootstrap:
+            loaded_mirrors["bootstrap"] = bootstrap
 
         for name, mirror in mirrors.get("sourcecache", {}).items():
-            if mirror.get("enabled", True):
-                enabled_mirrors[name] = mirror
+            loaded_mirrors[name] = mirror
 
-        return enabled_mirrors
+        return loaded_mirrors
 
     @staticmethod
     def _pp_yaml(object):
@@ -116,7 +116,6 @@ class Mirrors:
         mirror_cfg = {
             "url": raw["root"],
             "description": "Buildcache dest loaded from legacy cache.yaml",
-            "enabled": True,
             "mount_specific": True,
             "private_key": raw["key"],
             "cmdline": True,
@@ -157,9 +156,7 @@ class Mirrors:
             if not parsed.scheme:
                 # a bare path is accepted if absolute (e.g. the legacy command line cache)
                 if not pathlib.Path(url).is_absolute():
-                    raise MirrorError(
-                        f"The mirror url '{url}' for mirror '{name}' is not a valid url or absolute path"
-                    )
+                    raise MirrorError(f"The mirror url '{url}' for mirror '{name}' is not a valid url or absolute path")
                 continue
 
             # a remote mirror: require a well-formed url with both a scheme and a host
@@ -276,10 +273,10 @@ class Mirrors:
                 )
 
         file_type = magic.from_buffer(binary_key)
-        
-        if ((file_type in "application/x-gnupg-keyring", "application/pgp-keys", "application/octet-stream") or 
-            (binary_key.startswith(ASCII_PGP_HEADERS))):
-            
+
+        if (file_type in "application/x-gnupg-keyring", "application/pgp-keys", "application/octet-stream") or (
+            binary_key.startswith(ASCII_PGP_HEADERS)
+        ):
             # copy key to new destination in key store
             with open(dest, "wb") as writer:
                 writer.write(binary_key)
@@ -292,12 +289,6 @@ class Mirrors:
                 f"The file (or base64) was readable, but the data itself was not a PGP key.\n"
                 f"Check the key listed in mirrors.yaml in system config."
             )
-
-        # # copy key to new destination in key store
-        # with open(dest, "wb") as writer:
-        #     writer.write(binary_key)
-
-        # self._keys.append(dest)
 
     def _key_setup(self, key_store: pathlib.Path):
         """Iterate through mirror keys and load + relocate each one to key_store"""

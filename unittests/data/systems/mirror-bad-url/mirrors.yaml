@@ -1,4 +1,3 @@
 sourcecache:
   bad-url:
     url: not-a-valid-url
-    enabled: true

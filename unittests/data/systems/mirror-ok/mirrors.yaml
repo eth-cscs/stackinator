@@ -1,9 +1,7 @@
 bootstrap:
   url: https://mirror.spack.io
-  enabled: true
 buildcache:
   url: https://mirror.spack.io
-  enabled: true
   public_key: "\
     mQINBGm4GvsBEACTyzQFPfRUgo1Wmb9/KgrSr/EFVobRX3LlrcAMemo4nFRdS88aCcEhRWzYQ8ML\
     eGvcxFbzbAoEZACpThMspYOwFsVzIUc3lYQT7g9M/KNEPHztqaTWCqESYmzDFtaLYys6AQP52KMB\
@@ -51,11 +49,6 @@ buildcache:
 sourcecache:
   mirror1:
     url: https://github.com
-    enabled: true
     public_key: ../../test-gpg-pub.asc
   mirror2:
     url: https://github.com/spack
-    enabled: true
-  disabled-mirror:
-    url: https://github.com
-    enabled: false

@@ -7,10 +7,6 @@
             "properties": {
                 "description": {"type": "string"},
                 "url": {"type": "string"},
-                "enabled": {
-                    "type": "boolean",
-                    "default": true
-                },
                 "public_key": {"type": "string"}
             },
             "additionalProperties": false,
@@ -21,10 +17,6 @@
             "properties": {
                 "description": {"type": "string"},
                 "url": {"type": "string"},
-                "enabled": {
-                    "type": "boolean",
-                    "default": true
-                },
                 "public_key": {"type": "string"},
                 "private_key": {"type": "string"},
                 "mount_specific": {
@@ -46,10 +38,6 @@
                 "properties": {
                     "description": {"type": "string"},
                     "url": {"type": "string"},
-                    "enabled": {
-                        "type": "boolean",
-                        "default": true
-                    },
                     "public_key": {"type": "string"}
                 },
                 "additionalProperties": false,

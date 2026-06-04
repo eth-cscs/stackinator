@@ -23,19 +23,16 @@ def test_mirror_init(systems_path):
     valid_mirrors = {
         "bootstrap": {
             "url": "https://mirror.spack.io",
-            "enabled": True,
         },
         "buildcache": {
             "url": "https://mirror.spack.io",
-            "enabled": True,
             "private_key": "../../test-gpg-priv.asc",
             "mount_specific": False,
             "cmdline": False,
         },
-        "mirror1": {"url": "https://github.com", "enabled": True, "public_key": "../../test-gpg-pub.asc"},
+        "mirror1": {"url": "https://github.com", "public_key": "../../test-gpg-pub.asc"},
         "mirror2": {
             "url": "https://github.com/spack",
-            "enabled": True,
         },
     }
 
@@ -46,9 +43,6 @@ def test_mirror_init(systems_path):
     assert mirrors_obj.mirrors == valid_mirrors
 
     assert mirrors_obj.build_cache_mirror == "buildcache"
-
-    for mir in mirrors_obj.mirrors:
-        assert mirrors_obj.mirrors[mir].get("enabled")
 
 
 def test_mirror_init_bad_url(systems_path):
@@ -81,7 +75,6 @@ def test_command_line_cache(systems_path):
     assert mirrors.build_cache_mirror == "cmdline_cache"
     cache_mirror = mirrors.mirrors["buildcache"]
     assert cache_mirror["url"] == "/tmp/foo"
-    assert cache_mirror["enabled"]
     assert cache_mirror["cmdline"]
     assert cache_mirror["mount_specific"]
 
@@ -118,6 +111,51 @@ def test_create_spack_mirrors_yaml(tmp_path, systems_path):
         data = yaml.safe_load(f)
 
     assert data == valid_spack_yaml
+
+
+def test_mount_specific_buildcache(tmp_path, systems_path):
+    """A mount_specific buildcache should have the mount point appended to its url.
+
+    Spack binaries embed the install prefix (the mount point), so a mount_specific
+    cache is namespaced per-mount-point to avoid relocation issues / collisions.
+    """
+
+    mount = pathlib.Path("/user-environment")
+    mirrors_obj = mirror.Mirrors(systems_path / "mirror-ok", mount_point=mount)
+
+    # mirror-ok's buildcache is mount_specific: false by default; enable it.
+    mirrors_obj.mirrors["buildcache"]["mount_specific"] = True
+
+    dest = tmp_path / "mirrors.yaml"
+    mirrors_obj._create_spack_mirrors_yaml(dest)
+
+    with dest.open() as f:
+        data = yaml.safe_load(f)
+
+    # the buildcache url gains the mount point as a sub-directory ...
+    assert data["mirrors"]["buildcache"]["fetch"]["url"] == "https://mirror.spack.io/user-environment"
+    assert data["mirrors"]["buildcache"]["push"]["url"] == "https://mirror.spack.io/user-environment"
+
+    # ... while other mirrors are left untouched.
+    assert data["mirrors"]["mirror1"]["fetch"]["url"] == "https://github.com"
+
+
+def test_mount_specific_disabled(tmp_path, systems_path):
+    """A buildcache with mount_specific false is unchanged, even when a mount point is set."""
+
+    mount = pathlib.Path("/user-environment")
+    mirrors_obj = mirror.Mirrors(systems_path / "mirror-ok", mount_point=mount)
+
+    # confirm the fixture leaves the flag off
+    assert mirrors_obj.mirrors["buildcache"]["mount_specific"] is False
+
+    dest = tmp_path / "mirrors.yaml"
+    mirrors_obj._create_spack_mirrors_yaml(dest)
+
+    with dest.open() as f:
+        data = yaml.safe_load(f)
+
+    assert data["mirrors"]["buildcache"]["fetch"]["url"] == "https://mirror.spack.io"
 
 
 def test_create_bootstrap_configs(tmp_path, systems_path):
@@ -175,7 +213,7 @@ def test_key_setup(systems_path, tmp_path):
 @pytest.mark.parametrize(
     "system_name",
     [
-        #"mirror-bad-key",
+        # "mirror-bad-key",
         "mirror-bad-keypath",
     ],
 )

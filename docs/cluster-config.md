@@ -103,22 +103,20 @@ On air-gapped systems, Spack is unable to reach its default mirror to fetch pack
 
 If using a buildcache, a private key must be provided for signing packages. An optional public key may be specified with any type of mirror to verify packages.
 
+To stop using a mirror, remove (or comment out) its entry from `mirrors.yaml`.
+
 ```yaml title="mirrors.yaml"
 bootstrap:
   url: file:///home/username/spack-mirror-2014-06-24
-  enabled: true
 buildcache:
   url: https://example.com/some/buildcache/mirror
-  enabled: true
   private_key: /user-home/.gnupg/private-keys-v1.d/my-private-key.asc
 sourcecache:
   mirror1:
     url: https://example.com/some/web-hosted/directory
     public_key: ../buildcache-key.public.gpg
-    enabled: true
   mirror2:
     url: https://example.com/some/other-web-hosted/directory
-    enabled: true
 ```
 
 ## Site and System Configurations
