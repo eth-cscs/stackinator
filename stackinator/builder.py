@@ -436,7 +436,7 @@ class Builder:
 
         # Copy all package repos defined in config.yaml to their final repo
         # locations.
-        for idx, pkg_repo in enumerate(spack_meta["packages"]):
+        for pkg_repo in spack_meta["packages"]:
             clone_path = pkg_repo["path"]
             name = pkg_repo["name"]
             src_path = clone_path / pkg_repo["repo_path"]
