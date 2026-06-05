@@ -197,8 +197,8 @@ class Builder:
 
         spack_git_commit_result = self._git_clone("spack", spack_repo, spack_commit, spack_path)
 
-        packages_meta = recipe.spack_package_repos
-        for pkg_repo in packages_meta:
+        package_repos = recipe.spack_package_repos
+        for pkg_repo in package_repos:
             pkg_repo["path"] = self.path / "repos" / pkg_repo["name"]
             pkg_repo["commit"] = self._git_clone(pkg_repo["name"], pkg_repo["url"], pkg_repo["ref"], pkg_repo["path"])
 
@@ -206,7 +206,7 @@ class Builder:
             "url": spack_repo,
             "ref": spack_commit,
             "commit": spack_git_commit_result,
-            "packages": packages_meta,
+            "packages": package_repos,
         }
 
         # load the jinja templating environment
