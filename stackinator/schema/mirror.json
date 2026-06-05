@@ -5,9 +5,9 @@
         "bootstrap": {
             "type": "object",
             "properties": {
-                "description": {"type": "string"},
+                "description": {"type": "string", "default": ""},
                 "url": {"type": "string"},
-                "public_key": {"type": "string"}
+                "public_key": {"type": ["string", "null"], "default": null}
             },
             "additionalProperties": false,
             "required": ["url"]
@@ -19,10 +19,10 @@
                     "type": "string",
                     "default": "buildcache"
                 },
-                "description": {"type": "string"},
+                "description": {"type": "string", "default": ""},
                 "url": {"type": "string"},
-                "public_key": {"type": "string"},
-                "private_key": {"type": "string"},
+                "public_key": {"type": ["string", "null"], "default": null},
+                "private_key": {"type": ["string", "null"], "default": null},
                 "mount_specific": {
                     "type": "boolean",
                     "default": false
@@ -33,16 +33,17 @@
                 }
             },
             "additionalProperties": false,
-            "required": ["url", "private_key"]
+            "required": ["url"]
         },
         "sourcemirror": {
             "type": "object",
+            "default": {},
             "additionalProperties": {
                 "type": "object",
                 "properties": {
-                    "description": {"type": "string"},
+                    "description": {"type": "string", "default": ""},
                     "url": {"type": "string"},
-                    "public_key": {"type": "string"}
+                    "public_key": {"type": ["string", "null"], "default": null}
                 },
                 "additionalProperties": false,
                 "required": ["url"]
@@ -51,7 +52,7 @@
         "sourcecache": {
             "type": "object",
             "properties": {
-                "description": {"type": "string"},
+                "description": {"type": "string", "default": ""},
                 "path": {"type": "string"}
             },
             "additionalProperties": false,

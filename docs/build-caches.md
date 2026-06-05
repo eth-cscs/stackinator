@@ -46,10 +46,20 @@ buildcache:
 | Field | Required | Description |
 |-------|----------|-------------|
 | `url`            | yes | location of the cache (a `file://` path, or an `http(s)://`, `s3://` or `oci://` URL) |
-| `private_key`    | yes | PGP key used to sign and push packages (see [Keys](#keys)) |
+| `private_key`    | no  | PGP key used to sign and push packages (see [Keys](#keys)); omit for a read-only cache |
 | `public_key`     | no  | PGP key used to verify downloaded packages |
 | `name`           | no  | name Spack registers the mirror under (default `buildcache`) |
 | `mount_specific` | no  | store the cache in a per-mount-point sub-directory (default `false`) |
+
+### Read-only build cache
+
+Omit `private_key` to configure a read-only cache: Spack fetches packages from it but never signs or pushes anything back.
+This is useful for consuming a shared team cache that you are not permitted to write to.
+
+```yaml title="mirrors.yaml"
+buildcache:
+  url: file:///capstor/scratch/team/uenv-cache
+```
 
 ### `mount_specific`
 

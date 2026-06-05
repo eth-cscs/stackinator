@@ -36,9 +36,10 @@ class Mirrors:
 
     The kinds of mirror have separate types:
 
-      * buildcache     - at most one, signs and stores built packages (so it alone
-                         has a private key and the mount_specific flag). None if no
-                         build cache is configured.
+      * buildcache     - at most one, fetches and stores built packages (so it alone
+                         has the mount_specific flag). With a private key it signs
+                         and pushes packages too; without one it is read-only. None
+                         if no build cache is configured.
       * bootstrap      - at most one, used to bootstrap spack itself. None if absent.
       * source_mirrors - a name -> config mapping of any number of read-only source
                          mirrors (spack mirrors.yaml entries).
@@ -98,12 +99,9 @@ class Mirrors:
         except ValueError as err:
             raise MirrorError(f"Mirror config does not comply with schema.\n{err}")
 
-        # The build cache, if one is defined in mirrors.yaml.
-        buildcache = raw_mirrors.get("buildcache")
-        if buildcache:
-            if not buildcache.get("private_key"):
-                raise MirrorError("Mirror build cache config is missing a required 'private_key' path.")
-            self.buildcache = buildcache
+        # The build cache, if one is defined in mirrors.yaml. A build cache without
+        # a private_key is read-only: spack fetches from it but never pushes to it.
+        self.buildcache = raw_mirrors.get("buildcache")
 
         # A build cache passed via the deprecated cache.yaml file (the --cache CLI
         # option) takes precedence over a buildcache defined in mirrors.yaml.
@@ -122,16 +120,16 @@ class Mirrors:
             except ValueError as err:
                 raise MirrorError(f"Error validating contents of cache config at '{cmdline_cache}'.\n{err}")
 
+            # a cache.yaml without a key configures a read-only (fetch-only) cache
             self.buildcache = {
                 "name": "buildcache",
                 "url": raw_cache["root"],
                 "description": "Buildcache dest loaded from legacy cache.yaml",
+                "public_key": None,
+                "private_key": raw_cache.get("key"),
                 "mount_specific": True,
                 "cmdline": True,
             }
-            # a cache.yaml without a key configures a read-only (fetch-only) cache
-            if raw_cache.get("key") is not None:
-                self.buildcache["private_key"] = raw_cache["key"]
             self._logger.warning(
                 "Configuring the buildcache from the system cache.yaml file.\n"
                 "Please switch to using either the '--cache' option or the 'mirrors.yaml' file instead.\n"
@@ -142,7 +140,7 @@ class Mirrors:
         # The bootstrap mirror, the read-only source mirrors, and the writable
         # source cache, if any are defined.
         self.bootstrap = raw_mirrors.get("bootstrap")
-        self.source_mirrors = dict(raw_mirrors.get("sourcemirror", {}))
+        self.source_mirrors = dict(raw_mirrors["sourcemirror"])
         self.source_cache = raw_mirrors.get("sourcecache")
 
         # Validate that every mirror url is well-formed (see _validate_url).
@@ -167,7 +165,7 @@ class Mirrors:
 
         # A build cache that pushes packages signs them with its private key. A build
         # cache without a key is read-only, and is fetched from but never pushed to.
-        if self.buildcache is not None and self.buildcache.get("private_key"):
+        if self.buildcache is not None and self.buildcache["private_key"] is not None:
             name = self.buildcache["name"]
             self._key_files.append(
                 (key_store / f"{name}.priv.gpg", self._read_key(self.buildcache["private_key"], name))
@@ -175,7 +173,7 @@ class Mirrors:
 
         # Any mirror may provide a public key, used to verify downloaded packages.
         for name, mirror in self._iter_mirrors():
-            public_key = mirror.get("public_key")
+            public_key = mirror["public_key"]
             if public_key is not None:
                 self._key_files.append((key_store / f"{name}.pub.gpg", self._read_key(public_key, name)))
 
@@ -197,7 +195,7 @@ class Mirrors:
         is read-only - fetched from but never pushed to.
         """
 
-        if self.buildcache is not None and self.buildcache.get("private_key"):
+        if self.buildcache is not None and self.buildcache["private_key"] is not None:
             return self.buildcache["name"]
         return None
 
@@ -307,7 +305,7 @@ class Mirrors:
                 url = url.rstrip("/") + "/" + self._mount_path.as_posix().lstrip("/")
             entry = {"fetch": {"url": url}}
             # only a build cache with a signing key is pushed to
-            if self.buildcache.get("private_key"):
+            if self.buildcache["private_key"] is not None:
                 entry["push"] = {"url": url}
             spack_mirrors["mirrors"][self.buildcache["name"]] = entry
 

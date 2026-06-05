@@ -27,9 +27,10 @@ def test_mirror_init(systems_path, mount_path):
     with (systems_path / "../test-gpg-pub.asc").open("rb") as pub_key_file:
         pub_key_b64 = base64.b64encode(pub_key_file.read()).decode()
 
-    # the build cache, with its schema-defaulted name and flags
+    # the build cache, with its schema-defaulted name, flags and (empty) fields
     assert mirrors_obj.buildcache == {
         "name": "buildcache",
+        "description": "",
         "url": "https://mirror.spack.io",
         "private_key": "../../test-gpg-priv.asc",
         "public_key": pub_key_b64,
@@ -37,15 +38,20 @@ def test_mirror_init(systems_path, mount_path):
         "cmdline": False,
     }
 
-    assert mirrors_obj.bootstrap == {"url": "https://mirror.spack.io"}
+    assert mirrors_obj.bootstrap == {
+        "url": "https://mirror.spack.io",
+        "description": "",
+        "public_key": None,
+    }
 
+    # non-required fields are always present, defaulted to "" / None by the schema
     assert mirrors_obj.source_mirrors == {
-        "mirror1": {"url": "https://github.com", "public_key": "../../test-gpg-pub.asc"},
-        "mirror2": {"url": "https://github.com/spack"},
+        "mirror1": {"url": "https://github.com", "public_key": "../../test-gpg-pub.asc", "description": ""},
+        "mirror2": {"url": "https://github.com/spack", "public_key": None, "description": ""},
     }
 
     # the writable, populate-as-you-go source cache
-    assert mirrors_obj.source_cache == {"path": "/scratch/spack-sources"}
+    assert mirrors_obj.source_cache == {"path": "/scratch/spack-sources", "description": ""}
 
     # the build cache mirror name is derived from the build cache's 'name' field
     assert mirrors_obj.build_cache_mirror == "buildcache"
@@ -92,7 +98,7 @@ def test_keyless_command_line_cache(tmp_path, systems_path, mount_path):
 
     # the cache exists (so it is fetched from), but has no signing key ...
     assert mirrors.build_cache_mirror == "buildcache"
-    assert "private_key" not in mirrors.buildcache
+    assert mirrors.buildcache["private_key"] is None
 
     # ... so it is never pushed to
     assert mirrors.push_to_build_cache is None
@@ -105,6 +111,28 @@ def test_keyless_command_line_cache(tmp_path, systems_path, mount_path):
     # the mirror is emitted with a fetch url but no push url
     data = yaml.safe_load(files[tmp_path / "mirrors.yaml"])
     assert data["mirrors"]["buildcache"] == {"fetch": {"url": "/tmp/foo/user-environment"}}
+
+
+def test_readonly_buildcache(tmp_path, systems_path, mount_path):
+    """A buildcache in mirrors.yaml without a private_key is read-only (fetch-only)."""
+
+    mirrors = mirror.Mirrors(systems_path / "mirror-readonly-cache", mount_path)
+
+    # the cache exists (so it is fetched from), but has no signing key ...
+    assert mirrors.build_cache_mirror == "buildcache"
+    assert mirrors.buildcache["private_key"] is None
+
+    # ... so it is never pushed to
+    assert mirrors.push_to_build_cache is None
+
+    files = mirrors.config_files(tmp_path)
+
+    # no private key is written
+    assert tmp_path / "key_store" / "buildcache.priv.gpg" not in files
+
+    # the mirror is emitted with a fetch url but no push url
+    data = yaml.safe_load(files[tmp_path / "mirrors.yaml"])
+    assert data["mirrors"]["buildcache"] == {"fetch": {"url": "https://mirror.spack.io"}}
 
 
 def test_config_files(tmp_path, systems_path, mount_path):
