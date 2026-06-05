@@ -213,6 +213,28 @@ class Recipe:
             return repo_path
         return None
 
+    @property
+    def spack_package_repos(self):
+        packages = self.config["spack"]["packages"]
+        if isinstance(packages.get("repo"), str):
+            return [
+                {
+                    "name": "builtin",
+                    "url": packages["repo"],
+                    "ref": packages.get("commit"),
+                    "repo_path": "repos/spack_repo/builtin",
+                }
+            ]
+        return [
+            {
+                "name": name,
+                "url": val["repo"],
+                "ref": val.get("commit"),
+                "repo_path": val.get("path", f"repos/spack_repo/{name}"),
+            }
+            for name, val in packages.items()
+        ]
+
     # Returns:
     #   Path: of the recipe extra path if it exists
     #   None: if there is no user-provided extra path in the recipe

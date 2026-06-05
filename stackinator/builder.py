@@ -197,8 +197,9 @@ class Builder:
 
         spack_git_commit_result = self._git_clone("spack", spack_repo, spack_commit, spack_path)
 
-        packages_meta = self._resolve_packages(spack["packages"])
+        packages_meta = recipe.spack_package_repos
         for pkg_repo in packages_meta:
+            pkg_repo["path"] = self.path / "repos" / pkg_repo["name"]
             pkg_repo["commit"] = self._git_clone(pkg_repo["name"], pkg_repo["url"], pkg_repo["ref"], pkg_repo["path"])
 
         spack_meta = {
@@ -544,29 +545,6 @@ class Builder:
                 )
             )
             f.write("\n")
-
-    def _resolve_packages(self, packages):
-        base = self.path / "repos"
-        if isinstance(packages.get("repo"), str):
-            return [
-                {
-                    "name": "builtin",
-                    "url": packages["repo"],
-                    "ref": packages.get("commit"),
-                    "path": base / "builtin",
-                    "repo_path": "repos/spack_repo/builtin",
-                }
-            ]
-        return [
-            {
-                "name": name,
-                "url": val["repo"],
-                "ref": val.get("commit"),
-                "path": base / name,
-                "repo_path": val.get("path", f"repos/spack_repo/{name}"),
-            }
-            for name, val in packages.items()
-        ]
 
     def _git_clone(self, name, repo, commit, path):
         if not (path / ".git").is_dir():
