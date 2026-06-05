@@ -5,7 +5,7 @@ Stackinator is a Python CLI tool that generates build configurations for scienti
 ## Two-Phase Workflow
 
 ```
-stack-config -b BUILD -r RECIPE -s SYSTEM [-c CACHE] [-m MOUNT]
+stack-config -b BUILD -r RECIPE -s SYSTEM [--mirror MIRRORS] [-m MOUNT]   # [-c CACHE] is legacy
     → generates BUILD/ directory with Makefiles + spack.yaml files
 
 cd BUILD
@@ -22,14 +22,15 @@ stackinator/           # Python package
   main.py              # CLI entry point (stack-config)
   recipe.py            # Recipe class: parses and validates all recipe YAML
   builder.py           # Builder class: writes all files to the build path
-  cache.py             # Build cache configuration helpers
+  mirror.py            # Mirrors class: validates the --mirror mirrors.yaml, emits spack mirror/cache config
   spack_util.py        # Tiny helper: checks if a path is a spack package repo
   schema.py            # JSON schema validators with default-injection
   schema/              # JSON schemas for each YAML file type
     config.json
     compilers.json
     environments.json
-    cache.json
+    mirror.json          # mirrors.yaml schema (buildcache/bootstrap/sourcemirror/sourcecache/misccache)
+    cache.json           # legacy -c/--cache cache.yaml schema
     modules.json
   templates/           # Jinja2 templates for all generated files
     Makefile            # Top-level build orchestration
@@ -176,6 +177,8 @@ cluster-config/
   repos.yaml      # optional; list of relative paths to site-wide spack repos
 ```
 
+Mirror/cache config is **not** part of the cluster configuration — it is supplied separately with `--mirror` (a `mirrors.yaml` here is rejected). See [Mirrors and Build Caches](#mirrors-and-build-caches).
+
 `network.yaml` structure:
 ```yaml
 mpi:
@@ -203,8 +206,11 @@ BUILD/
   spack-packages/       # cloned spack-packages repository
   config/               # global spack configuration scope
     packages.yaml
-    mirrors.yaml        # only if --cache provided
     repos.yaml
+    mirrors.yaml        # if --mirror provided: buildcache/bootstrap/sourcemirror entries
+    config.yaml         # if --mirror provided with a sourcecache/misccache (config:source_cache/misc_cache)
+    bootstrap.yaml      # if --mirror provided with a bootstrap mirror
+    key_store/          # if --mirror provided with gpg keys (decoded *.gpg)
   compilers/
     Makefile
     gcc/
@@ -254,6 +260,14 @@ Writes all files to the build path. Key responsibilities:
 - Renders all Jinja templates into build path files
 - Writes metadata JSON files
 
+### `Mirrors` class (`mirror.py`)
+A clean exemplar of the "recipe validates & renders, builder just prints" pattern. Constructed by `Recipe` from the `--mirror` file path; does ALL mirror input processing eagerly in `__init__` (loads + schema-validates `mirrors.yaml`, validates mirror urls, decodes/validates gpg keys to in-memory bytes, checks cache paths are absolute and expands env vars). Then presents pure static artifacts:
+- typed members: `buildcache`, `bootstrap`, `source_mirrors`, `source_cache`, `misc_cache`
+- `config_files(config_root) -> {abs_path: bytes}` — the `mirrors.yaml`, `config.yaml`, `bootstrap.yaml`, and gpg key files the builder writes verbatim
+- `gpg_key_paths(config_root)` and the `build_cache_mirror` / `push_to_build_cache` properties (the latter is `None` for a keyless, read-only build cache)
+
+Mirror/cache config is supplied ONLY via `--mirror`; a `mirrors.yaml` found in the system config dir is rejected with an error (it was never a system-config artifact). Relative gpg-key paths resolve against the `--mirror` file's own directory.
+
 ### `schema.py`
 JSON schema validation using `jsonschema`. The `validator()` function extends the validator to auto-inject `default` values from schemas into parsed instances, so downstream code can rely on optional fields always being present.
 
@@ -269,7 +283,7 @@ The `EnvVarSet` class in `envvars.py` is also imported by `recipe.py` for proces
 The top-level `Makefile` orchestrates in order:
 1. `spack-setup` — sanity check, bootstrap concretizer
 2. `pre-install` — run `pre-install-hook` if provided
-3. `mirror-setup` — configure build cache keys
+3. `mirror-setup` — trust build-cache/mirror gpg keys (`cache-force` force-pushes built packages)
 4. `compilers` — build gcc, then nvhpc/llvm/etc. (parallel within each stage)
 5. `environments` — build all user environments (parallel)
 6. `generate-config` — generate the upstream spack config files for the installed image
@@ -288,15 +302,19 @@ The build runs inside a bwrap sandbox (`bwrap-mutable-root.sh`) that:
 - Bind-mounts `BUILD/tmp` → `/tmp`
 - Puts a tmpfs over `$HOME` (isolates user config)
 
-## Build Cache
+## Mirrors and Build Caches
 
-Optional binary cache configured via YAML file passed to `-c/--cache`:
-```yaml
-root: /path/to/cache       # directory; env vars expanded
-key: /path/to/pgp.key      # optional; omit for read-only cache
-```
+Spack mirrors and caches are configured in a single `mirrors.yaml` supplied with `stack-config --mirror <file>` (see `docs/build-caches.md` for the full reference). It can describe five optional entities:
 
-Cache is stored in a subdirectory named after the mount point (e.g. `cache/user-environment/`) to avoid relocation issues. Packages are pushed per-environment after a successful build. Large binary packages (`cuda`, `nvhpc`, `perl`) are excluded from cache pushes.
+- **`buildcache`** (one): binary cache of built packages — the big build-time speed up. With a `private_key` it signs and pushes packages it builds; without one it is read-only (fetch only). `mount_specific: true` stores binaries in a per-mount-point subdir (Spack binaries embed the install prefix, so each mount point needs its own cache). Packages are pushed per-environment after a successful build; `cuda`, `nvhpc`, `perl` are excluded from pushes. `make cache-force` force-pushes everything built so far.
+- **`bootstrap`** (one): mirror for bootstrapping Spack itself (air-gapped clingo etc.).
+- **`sourcemirror`** (many): read-only mirrors providing package source archives.
+- **`sourcecache`** (one): a writable local dir Spack fills as it fetches sources → emitted as `config:source_cache`.
+- **`misccache`** (one): a writable local dir for Spack's misc cache (package/build-cache indices and the **concretization cache** that lives under it) → emitted as `config:misc_cache`. Useful to persist across ephemeral builds. Concretization caching is on by default in Spack ≥ 1.2, opt-in in 1.1.
+
+`sourcecache`/`misccache` are emitted to `config/config.yaml`; `buildcache`/`bootstrap`/`sourcemirror` to `config/mirrors.yaml` (+ `bootstrap.yaml` + decoded keys under `config/key_store/`).
+
+**Legacy:** a binary cache can still be configured with a `cache.yaml` (`root` + optional `key`) passed to `-c/--cache`. This path is deprecated in favour of a `buildcache` entry and will be removed.
 
 ## Testing
 
@@ -323,7 +341,9 @@ The test coverage is limited — the schema validators and their default-injecti
 - **gcc is required**: `packages.yaml` in cluster config must define an external `gcc`. It is handled separately from other system packages for the bootstrap build step.
 - **MPI validation**: the MPI name in `network.mpi` must match a key in `network.yaml:mpi` templates from the cluster config. Unknown MPI implementations raise an error.
 - **View names are globally unique**: view names must be unique across all environments in a recipe.
-- **`mirrors.yaml` in recipes is unsupported**: use `--cache` CLI flag instead.
+- **Mirror/cache config comes only from `--mirror`**: never from the recipe or the system/cluster config. A `mirrors.yaml` in the system config dir is rejected with an error.
+- **Read-only build cache**: a `buildcache` without a `private_key` is fetched from but never pushed to (`push_to_build_cache` is `None`).
+- **Schema-injected defaults**: every non-required field has a `default` in its JSON schema, injected at every level (including `additionalProperties` maps). Rely on fields always being present and check `is None` — do not use `.get()` to guard existence.
 - **`default-view` must exist**: if set in `config.yaml`, the named view must be defined in `environments.yaml` (or be `modules`/`spack`).
 - **`prefer` is auto-set**: if `null` in the recipe, Stackinator generates a `prefer` constraint using Spack's `%[when=...]` syntax to pin the default compiler.
 - **Spack `uenv_tools` environment**: an internal environment named `uenv_tools` is injected into every build to install `squashfs`. Recipe authors must not use this name.
