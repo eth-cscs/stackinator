@@ -65,32 +65,48 @@ class Mirrors:
         self,
         system_config_root: pathlib.Path,
         mount_path: pathlib.Path,
+        mirror_file: Optional[pathlib.Path] = None,
         cmdline_cache: Optional[pathlib.Path] = None,
     ):
         """Load and fully resolve the mirror configuration.
 
-        Inputs are the system config's mirrors.yaml, the recipe mount path (used to
-        make a build cache mount-specific), and an optional legacy cache.yaml passed
-        on the command line (--cache).
+        Mirrors are supplied with the --mirror command line option (mirror_file).
+        mount_path is the recipe mount point (used to make a build cache mount-specific).
+        cmdline_cache is an optional legacy cache.yaml passed on the command line (--cache).
+
+        Relative paths in the mirror file (e.g. gpg keys) are resolved relative to the
+        directory containing the mirror file.
         """
 
         self._logger = root_logger
-        self._system_config_root = system_config_root
         self._mount_path = mount_path
+        self._mirror_dir = mirror_file.parent if mirror_file is not None else None
 
         self.buildcache: Optional[Dict] = None
         self.bootstrap: Optional[Dict] = None
         self.source_mirrors: Dict[str, Dict] = {}
         self.source_cache: Optional[Dict] = None
 
-        # Load and schema-validate the system mirrors.yaml (absent file is fine).
-        mirrors_path = system_config_root / "mirrors.yaml"
-        if mirrors_path.exists():
+        # The mirror configuration is supplied with --mirror, not the system
+        # configuration. Reject a mirrors.yaml in the system config so it is not
+        # silently ignored.
+        if (system_config_root / "mirrors.yaml").exists():
+            raise MirrorError(
+                "A 'mirrors.yaml' in the system configuration is not supported.\n"
+                "Provide the mirror configuration with the '--mirror' command line option."
+            )
+
+        # Load and schema-validate the mirror file given on the command line. If none
+        # was given there are no mirrors; an empty config still validates (and picks up
+        # schema defaults such as an empty sourcemirror map).
+        if mirror_file is not None:
+            if not mirror_file.is_file():
+                raise MirrorError(f"The mirror configuration file '{mirror_file}' does not exist.")
             try:
-                with mirrors_path.open() as fid:
+                with mirror_file.open() as fid:
                     raw_mirrors = yaml.load(fid, Loader=yaml.SafeLoader)
             except (OSError, PermissionError) as err:
-                raise MirrorError(f"Could not open/read mirrors.yaml file.\n{err}")
+                raise MirrorError(f"Could not open/read mirror file '{mirror_file}'.\n{err}")
         else:
             raw_mirrors = {}
 
@@ -241,15 +257,15 @@ class Mirrors:
     def _read_key(self, key: str, name: str) -> bytes:
         """Resolve a key (a file path or base64 blob) to validated gpg key bytes.
 
-        A key is either a path - absolute, or relative to the system config - or a
-        base64-encoded blob inlined in mirrors.yaml. The resulting bytes are checked
-        to be genuine gpg key material before being accepted.
+        A key is either a path - absolute, or relative to the mirror file's directory
+        - or a base64-encoded blob inlined in the mirror file. The resulting bytes are
+        checked to be genuine gpg key material before being accepted.
         """
 
-        # if it is a path (absolute, or relative to the system config), read it
+        # if it is a path (absolute, or relative to the mirror file), read it
         path = pathlib.Path(os.path.expandvars(key))
         if not path.is_absolute():
-            path = self._system_config_root / path
+            path = self._mirror_dir / path
 
         if path.is_file():
             binary_key = path.read_bytes()

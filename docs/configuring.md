@@ -16,7 +16,8 @@ The following flags are required:
 
 The following flags are optional:
 
-* `-c/--cache`: configure the [build cache](build-caches.md).
+* `--mirror`: path to a [mirrors.yaml](build-caches.md) file configuring build caches and mirrors.
+* `-c/--cache`: legacy build cache configuration file (deprecated; use `--mirror`).
 * `-m/--mount`: override the [mount point](installing.md) where the stack will be installed.
 * `--version`: print the stackinator version.
 * `-h/--help`: print help message.

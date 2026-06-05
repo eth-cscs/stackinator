@@ -1,7 +1,14 @@
 # Mirrors and Build Caches
 
 Spack can use *mirrors* and *caches* to speed up image builds and to build on systems with limited or no internet access.
-They are configured in a single `mirrors.yaml` file in the [system configuration](cluster-config.md).
+They are configured in a single `mirrors.yaml` file that you supply on the command line:
+
+```bash
+stack-config -b $build -r $recipe -s $system --mirror mirrors.yaml
+```
+
+The file is not part of the [system configuration](cluster-config.md): mirror locations are usually specific to the person running the build, so each invocation provides its own.
+Paths inside the file (such as relative gpg key paths) are resolved relative to the directory containing the `mirrors.yaml`, so a self-contained mirror directory (the `mirrors.yaml` plus its keys) can be moved around freely.
 
 A `mirrors.yaml` can describe four kinds of entry, each optional and each documented below:
 

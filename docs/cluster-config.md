@@ -93,10 +93,10 @@ packages:
         version: ["git.59b6de6a91d9637809677c50cc48b607a91a9acb=main"]
     ```
 
-### Configuring Spack mirrors: `mirrors.yaml`
+### Configuring Spack mirrors
 
-An optional `mirrors.yaml` connects Spack to local mirrors and caches, to speed up builds and to build on air-gapped systems.
-It can configure a build cache, a bootstrap mirror, read-only source mirrors, and a writable source cache.
+Mirrors and caches are **not** part of the system configuration.
+They are supplied per-invocation with `stack-config --mirror <file>`, because the locations involved (build caches, source caches) are often specific to the user running the build and may not be accessible to everyone using a system.
 
 See [Mirrors and Build Caches](build-caches.md) for the full reference and examples.
 

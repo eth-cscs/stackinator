@@ -74,6 +74,7 @@ def log_header(args):
     root_logger.info(f"  system     : {args.system}")
     mount = args.mount or "default"
     root_logger.info(f"  mount      : {mount}")
+    root_logger.info(f"  mirror     : {args.mirror}")
     root_logger.info(f"  build cache: {args.cache}")
     root_logger.info(f"  develop    : {args.develop}")
 
@@ -100,11 +101,17 @@ def make_argparser():
         "-m", "--mount", required=False, type=str, help="The mount point where the environment will be located."
     )
     parser.add_argument(
+        "--mirror",
+        required=False,
+        type=str,
+        help="Path to a mirrors.yaml file describing build caches and mirrors.",
+    )
+    parser.add_argument(
         "-c",
         "--cache",
         required=False,
         type=str,
-        help="Buildcache location or name (from system config's mirrors.yaml).",
+        help="Legacy build cache configuration file (deprecated; use --mirror).",
     )
     parser.add_argument("--develop", action="store_true", required=False)
 
