@@ -34,13 +34,18 @@ class MirrorError(RuntimeError):
 class Mirrors:
     """Fully validated and resolved definition of the spack mirrors for a recipe.
 
-    The three kinds of mirror have separate types:
+    The kinds of mirror have separate types:
 
-      * buildcache    - at most one, signs and stores built packages (so it alone
-                        has a private key and the mount_specific flag). None if no
-                        build cache is configured.
-      * bootstrap     - at most one, used to bootstrap spack itself. None if absent.
-      * source_caches - a name -> config mapping of any number of source mirrors.
+      * buildcache     - at most one, signs and stores built packages (so it alone
+                         has a private key and the mount_specific flag). None if no
+                         build cache is configured.
+      * bootstrap      - at most one, used to bootstrap spack itself. None if absent.
+      * source_mirrors - a name -> config mapping of any number of read-only source
+                         mirrors (spack mirrors.yaml entries).
+      * source_cache   - at most one, a writable local directory that spack fills as
+                         it fetches sources (spack config:source_cache). None if
+                         absent. This is not a mirror: it has no key and no url, and
+                         is emitted to config.yaml rather than mirrors.yaml.
 
     All input processing - loading and schema-validating the system mirrors.yaml,
     validating urls, and reading/decoding/validating gpg keys - happens eagerly in
@@ -52,6 +57,7 @@ class Mirrors:
 
     KEY_STORE_DIR = "key_store"
     MIRRORS_YAML = "mirrors.yaml"
+    CONFIG_YAML = "config.yaml"
     BOOTSTRAP_MIRROR = "bootstrap"
 
     def __init__(
@@ -73,7 +79,8 @@ class Mirrors:
 
         self.buildcache: Optional[Dict] = None
         self.bootstrap: Optional[Dict] = None
-        self.source_caches: Dict[str, Dict] = {}
+        self.source_mirrors: Dict[str, Dict] = {}
+        self.source_cache: Optional[Dict] = None
 
         # Load and schema-validate the system mirrors.yaml (absent file is fine).
         mirrors_path = system_config_root / "mirrors.yaml"
@@ -120,9 +127,11 @@ class Mirrors:
                 "url": raw_cache["root"],
                 "description": "Buildcache dest loaded from legacy cache.yaml",
                 "mount_specific": True,
-                "private_key": raw_cache["key"],
                 "cmdline": True,
             }
+            # a cache.yaml without a key configures a read-only (fetch-only) cache
+            if raw_cache.get("key") is not None:
+                self.buildcache["private_key"] = raw_cache["key"]
             self._logger.warning(
                 "Configuring the buildcache from the system cache.yaml file.\n"
                 "Please switch to using either the '--cache' option or the 'mirrors.yaml' file instead.\n"
@@ -130,13 +139,25 @@ class Mirrors:
                 f"{yaml.dump([self.buildcache], default_flow_style=False)}"
             )
 
-        # The bootstrap mirror and the source mirrors, if any are defined.
+        # The bootstrap mirror, the read-only source mirrors, and the writable
+        # source cache, if any are defined.
         self.bootstrap = raw_mirrors.get("bootstrap")
-        self.source_caches = dict(raw_mirrors.get("sourcecache", {}))
+        self.source_mirrors = dict(raw_mirrors.get("sourcemirror", {}))
+        self.source_cache = raw_mirrors.get("sourcecache")
 
         # Validate that every mirror url is well-formed (see _validate_url).
         for name, mirror in self._iter_mirrors():
             self._validate_url(mirror["url"], name)
+
+        # The source cache is a single writable local directory (spack
+        # config:source_cache), not a mirror: validate that it is an absolute path.
+        # Expand env vars now, because the build sandbox runs `env --ignore-environment`
+        # and so would not expand them at build time.
+        if self.source_cache is not None:
+            path = os.path.expandvars(self.source_cache["path"])
+            if not pathlib.Path(path).is_absolute():
+                raise MirrorError(f"The source cache path '{path}' is not absolute")
+            self.source_cache["path"] = path
 
         # Read, decode and validate every gpg key into memory. Each key is stored
         # as (path-relative-to-config-root, raw bytes); the builder writes these
@@ -144,8 +165,9 @@ class Mirrors:
         key_store = pathlib.PurePosixPath(self.KEY_STORE_DIR)
         self._key_files: List[Tuple[pathlib.PurePosixPath, bytes]] = []
 
-        # The build cache signs packages, so it alone has a private key.
-        if self.buildcache is not None:
+        # A build cache that pushes packages signs them with its private key. A build
+        # cache without a key is read-only, and is fetched from but never pushed to.
+        if self.buildcache is not None and self.buildcache.get("private_key"):
             name = self.buildcache["name"]
             self._key_files.append(
                 (key_store / f"{name}.priv.gpg", self._read_key(self.buildcache["private_key"], name))
@@ -159,9 +181,25 @@ class Mirrors:
 
     @property
     def build_cache_mirror(self) -> Optional[str]:
-        """The spack mirror name that built packages are pushed to, or None."""
+        """The build cache mirror name, or None if no build cache is configured.
+
+        A build cache is fetched from (and its keys trusted) whether or not it has a
+        signing key; see push_to_build_cache for whether packages are pushed to it.
+        """
 
         return self.buildcache["name"] if self.buildcache is not None else None
+
+    @property
+    def push_to_build_cache(self) -> Optional[str]:
+        """The build cache mirror name to push built packages to, or None.
+
+        Pushing requires a private signing key; a build cache configured without one
+        is read-only - fetched from but never pushed to.
+        """
+
+        if self.buildcache is not None and self.buildcache.get("private_key"):
+            return self.buildcache["name"]
+        return None
 
     def _iter_mirrors(self):
         """Yield (spack mirror name, config dict) for every configured mirror.
@@ -174,7 +212,7 @@ class Mirrors:
             yield self.buildcache["name"], self.buildcache
         if self.bootstrap is not None:
             yield self.BOOTSTRAP_MIRROR, self.bootstrap
-        yield from self.source_caches.items()
+        yield from self.source_mirrors.items()
 
     def _validate_url(self, url: str, name: str):
         """Validate that a mirror url is well-formed.
@@ -248,9 +286,7 @@ class Mirrors:
     def config_files(self, config_root: pathlib.Path) -> Dict[pathlib.Path, bytes]:
         """The complete set of mirror config files to write under config_root.
 
-        Returns a mapping of absolute file path -> file content. This is a pure
-        function of the already-validated state and the output location: it neither
-        validates nor performs any I/O, so the builder can write the bytes verbatim.
+        Returns a mapping of absolute file path -> file content.
         """
 
         files: Dict[pathlib.Path, bytes] = {}
@@ -261,19 +297,40 @@ class Mirrors:
 
         # the spack mirrors.yaml
         spack_mirrors: Dict[str, Dict] = {"mirrors": {}}
-        for name, mirror in self._iter_mirrors():
-            url = mirror["url"]
+
+        if self.buildcache is not None:
+            url = self.buildcache["url"]
             # a mount-specific build cache lives in a sub-directory named after the
             # mount point: spack binaries embed the install prefix, so each mount
-            # point needs its own cache to avoid relocation issues. Only the build
-            # cache carries the mount_specific flag.
-            if mirror.get("mount_specific"):
+            # point needs its own cache to avoid relocation issues.
+            if self.buildcache["mount_specific"]:
                 url = url.rstrip("/") + "/" + self._mount_path.as_posix().lstrip("/")
-            spack_mirrors["mirrors"][name] = {"fetch": {"url": url}, "push": {"url": url}}
+            entry = {"fetch": {"url": url}}
+            # only a build cache with a signing key is pushed to
+            if self.buildcache.get("private_key"):
+                entry["push"] = {"url": url}
+            spack_mirrors["mirrors"][self.buildcache["name"]] = entry
+
+        if self.bootstrap is not None:
+            url = self.bootstrap["url"]
+            spack_mirrors["mirrors"][self.BOOTSTRAP_MIRROR] = {"fetch": {"url": url}, "push": {"url": url}}
+
+        # source mirrors are read-only and provide sources only: fetch url, no push.
+        for name, mirror in self.source_mirrors.items():
+            spack_mirrors["mirrors"][name] = {
+                "source": True,
+                "binary": False,
+                "fetch": {"url": mirror["url"]},
+            }
 
         files[config_root / self.MIRRORS_YAML] = yaml.dump(
             spack_mirrors, default_flow_style=False, sort_keys=False
         ).encode()
+
+        # the spack config.yaml setting the writable, populate-as-you-go source cache
+        if self.source_cache is not None:
+            config_yaml = {"config": {"source_cache": self.source_cache["path"]}}
+            files[config_root / self.CONFIG_YAML] = yaml.dump(config_yaml, default_flow_style=False).encode()
 
         # the bootstrap config and its mirror metadata, if a bootstrap mirror is set
         if self.bootstrap is not None:

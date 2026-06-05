@@ -246,6 +246,7 @@ class Builder:
                     spack_meta=spack_meta,
                     gpg_keys=recipe.mirrors.gpg_key_paths(config_path),
                     cache=recipe.build_cache_mirror,
+                    buildcache_push=recipe.push_to_build_cache,
                     exclude_from_cache=["nvhpc", "cuda", "perl"],
                     verbose=False,
                 )

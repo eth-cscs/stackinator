@@ -46,9 +46,11 @@ buildcache:
   private_key: ../../test-gpg-priv.asc
   mount_specific: false
   cmdline: false
-sourcecache:
+sourcemirror:
   mirror1:
     url: https://github.com
     public_key: ../../test-gpg-pub.asc
   mirror2:
     url: https://github.com/spack
+sourcecache:
+  path: /scratch/spack-sources

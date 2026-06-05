@@ -220,6 +220,13 @@ class Recipe:
         return self.mirrors.build_cache_mirror
 
     # Returns:
+    #   str:  the build cache mirror name to push built packages to
+    #   None: if there is no build cache, or it is read-only (no signing key)
+    @property
+    def push_to_build_cache(self):
+        return self.mirrors.push_to_build_cache
+
+    # Returns:
     #   Path: of the recipe extra path if it exists
     #   None: if there is no user-provided extra path in the recipe
     @property
@@ -505,7 +512,7 @@ class Recipe:
         makefile_template = env.get_template("Makefile.compilers")
         files["makefile"] = makefile_template.render(
             compilers=self.compilers,
-            buildcache=self.build_cache_mirror,
+            buildcache=self.push_to_build_cache,
             spack_version=self.spack_version,
         )
 
@@ -535,7 +542,7 @@ class Recipe:
         makefile_template = jenv.get_template("Makefile.environments")
         files["makefile"] = makefile_template.render(
             environments=self.environments,
-            buildcache=self.build_cache_mirror,
+            buildcache=self.push_to_build_cache,
             spack_version=self.spack_version,
         )
 

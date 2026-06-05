@@ -95,29 +95,10 @@ packages:
 
 ### Configuring Spack mirrors: `mirrors.yaml`
 
-On air-gapped systems, Spack is unable to reach its default mirror to fetch packages. The `mirrors.yaml` configuration can be used to connect Spack to local mirrors for fetching and building packages.
+An optional `mirrors.yaml` connects Spack to local mirrors and caches, to speed up builds and to build on air-gapped systems.
+It can configure a build cache, a bootstrap mirror, read-only source mirrors, and a writable source cache.
 
-`mirrors.yaml` treats source mirrors, buildcaches, and bootstrap mirrors the same, and they may all be included in this file. Spack will search the topmost mirror first and the bottom-most mirror last, and will append the default Spack mirror to the bottom of the list when the Spack mirror config is generated.
-
-`mirrors.yaml` may include source mirrors, bootstrap mirrors, and buildcaches. Any number of source mirrors can be added, but only one bootstrap mirror and buildcache can be specified. Spack will search the source mirrors in order from first to last, and will append the default Spack mirror to the bottom of the list when the Spack mirror config is generated.
-
-If using a buildcache, a private key must be provided for signing packages. An optional public key may be specified with any type of mirror to verify packages. The buildcache is registered with Spack under the name `buildcache`, which can be overridden with an optional `name` field.
-
-To stop using a mirror, remove (or comment out) its entry from `mirrors.yaml`.
-
-```yaml title="mirrors.yaml"
-bootstrap:
-  url: file:///home/username/spack-mirror-2014-06-24
-buildcache:
-  url: https://example.com/some/buildcache/mirror
-  private_key: /user-home/.gnupg/private-keys-v1.d/my-private-key.asc
-sourcecache:
-  mirror1:
-    url: https://example.com/some/web-hosted/directory
-    public_key: ../buildcache-key.public.gpg
-  mirror2:
-    url: https://example.com/some/other-web-hosted/directory
-```
+See [Mirrors and Build Caches](build-caches.md) for the full reference and examples.
 
 ## Site and System Configurations
 

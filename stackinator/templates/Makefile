@@ -81,14 +81,14 @@ store.squashfs: post-install
 
 # Force push all built packages to the build cache
 cache-force: mirror-setup
-{% if cache %}
+{% if buildcache_push %}
 	$(warning ================================================================================)
 	$(warning Generate the config in order to force push partially built compiler environments)
 	$(warning if this step is performed with partially built compiler envs, you will)
 	$(warning likely have to start a fresh build (but that's okay, because build caches FTW))
 	$(warning ================================================================================)
 	$(SANDBOX) $(MAKE) -C generate-config
-	$(SANDBOX) $(SPACK) --color=never -C $(STORE)/config buildcache create --rebuild-index --only=package {{ cache }} \
+	$(SANDBOX) $(SPACK) --color=never -C $(STORE)/config buildcache create --rebuild-index --only=package {{ buildcache_push }} \
 	$$($(SANDBOX) $(SPACK_HELPER) -C $(STORE)/config find --format '{name};{/hash};version={version}' \
 	| grep -v -E '^({% for p in exclude_from_cache %}{{ pipejoiner() }}{{ p }}{% endfor %});'\
 	| grep -v -E 'version=git\.'\

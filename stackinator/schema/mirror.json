@@ -35,7 +35,7 @@
             "additionalProperties": false,
             "required": ["url", "private_key"]
         },
-        "sourcecache": {
+        "sourcemirror": {
             "type": "object",
             "additionalProperties": {
                 "type": "object",
@@ -47,6 +47,15 @@
                 "additionalProperties": false,
                 "required": ["url"]
             }
+        },
+        "sourcecache": {
+            "type": "object",
+            "properties": {
+                "description": {"type": "string"},
+                "path": {"type": "string"}
+            },
+            "additionalProperties": false,
+            "required": ["path"]
         }
     }
 }

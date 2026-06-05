@@ -39,10 +39,13 @@ def test_mirror_init(systems_path, mount_path):
 
     assert mirrors_obj.bootstrap == {"url": "https://mirror.spack.io"}
 
-    assert mirrors_obj.source_caches == {
+    assert mirrors_obj.source_mirrors == {
         "mirror1": {"url": "https://github.com", "public_key": "../../test-gpg-pub.asc"},
         "mirror2": {"url": "https://github.com/spack"},
     }
+
+    # the writable, populate-as-you-go source cache
+    assert mirrors_obj.source_cache == {"path": "/scratch/spack-sources"}
 
     # the build cache mirror name is derived from the build cache's 'name' field
     assert mirrors_obj.build_cache_mirror == "buildcache"
@@ -72,9 +75,36 @@ def test_command_line_cache(systems_path, mount_path):
     assert mirrors.buildcache["cmdline"]
     assert mirrors.buildcache["mount_specific"]
 
+    # it has a signing key, so it is pushed to
+    assert mirrors.push_to_build_cache == "buildcache"
+
     # the bootstrap and source mirrors from mirrors.yaml are still present
     assert mirrors.bootstrap is not None
-    assert set(mirrors.source_caches) == {"mirror1", "mirror2"}
+    assert set(mirrors.source_mirrors) == {"mirror1", "mirror2"}
+
+
+def test_keyless_command_line_cache(tmp_path, systems_path, mount_path):
+    """A cache.yaml without a key configures a read-only (fetch-only) build cache."""
+
+    mirrors = mirror.Mirrors(
+        systems_path / "mirror-ok", mount_path, cmdline_cache=systems_path / "mirror-ok/cache-nokey.yaml"
+    )
+
+    # the cache exists (so it is fetched from), but has no signing key ...
+    assert mirrors.build_cache_mirror == "buildcache"
+    assert "private_key" not in mirrors.buildcache
+
+    # ... so it is never pushed to
+    assert mirrors.push_to_build_cache is None
+
+    files = mirrors.config_files(tmp_path)
+
+    # no private key is written
+    assert tmp_path / "key_store" / "buildcache.priv.gpg" not in files
+
+    # the mirror is emitted with a fetch url but no push url
+    data = yaml.safe_load(files[tmp_path / "mirrors.yaml"])
+    assert data["mirrors"]["buildcache"] == {"fetch": {"url": "/tmp/foo/user-environment"}}
 
 
 def test_config_files(tmp_path, systems_path, mount_path):
@@ -85,6 +115,7 @@ def test_config_files(tmp_path, systems_path, mount_path):
 
     expected = {
         tmp_path / "mirrors.yaml",
+        tmp_path / "config.yaml",
         tmp_path / "bootstrap.yaml",
         tmp_path / "bootstrap" / "bootstrap-mirror" / "metadata.yaml",
         tmp_path / "key_store" / "buildcache.priv.gpg",
@@ -111,12 +142,14 @@ def test_spack_mirrors_yaml(tmp_path, systems_path, mount_path):
                 "push": {"url": "https://mirror.spack.io"},
             },
             "mirror1": {
+                "source": True,
+                "binary": False,
                 "fetch": {"url": "https://github.com"},
-                "push": {"url": "https://github.com"},
             },
             "mirror2": {
+                "source": True,
+                "binary": False,
                 "fetch": {"url": "https://github.com/spack"},
-                "push": {"url": "https://github.com/spack"},
             },
         }
     }
@@ -215,15 +248,37 @@ def test_keys(systems_path, tmp_path, mount_path):
     assert set(mirrors_obj.gpg_key_paths(tmp_path)) == key_files
 
 
+def test_source_cache_config(tmp_path, systems_path, mount_path):
+    """The writable source cache is emitted to config.yaml as config:source_cache."""
+
+    mirrors_obj = mirror.Mirrors(systems_path / "mirror-ok", mount_path)
+    files = mirrors_obj.config_files(tmp_path)
+
+    data = yaml.safe_load(files[tmp_path / "config.yaml"])
+    assert data == {"config": {"source_cache": "/scratch/spack-sources"}}
+
+
+def test_source_cache_absent(tmp_path, systems_path, mount_path):
+    """No config.yaml is generated when no source cache is configured."""
+
+    # mirror-no-sourcecache has no sourcecache entry
+    mirrors_obj = mirror.Mirrors(systems_path / "mirror-no-sourcecache", mount_path)
+    files = mirrors_obj.config_files(tmp_path)
+
+    assert mirrors_obj.source_cache is None
+    assert tmp_path / "config.yaml" not in files
+
+
 @pytest.mark.parametrize(
     "system_name",
     [
         "mirror-bad-key",
         "mirror-bad-keypath",
+        "mirror-bad-sourcecache",
     ],
 )
-def test_bad_key(systems_path, mount_path, system_name):
-    """Check that MirrorError is raised at construction for bad keys."""
+def test_bad_config(systems_path, mount_path, system_name):
+    """Check that MirrorError is raised at construction for bad keys or a bad source cache path."""
 
     with pytest.raises(mirror.MirrorError):
         mirror.Mirrors(systems_path / system_name, mount_path)

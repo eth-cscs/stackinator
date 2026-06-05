@@ -8,7 +8,7 @@ nav:
     - 'Recipes': recipes.md
     - 'Cluster Configuration': cluster-config.md
     - 'Interfaces': interfaces.md
-    - 'Build Caches': build-caches.md
+    - 'Mirrors & Build Caches': build-caches.md
     - 'Spack 1.0': porting.md
   - 'Development': development.md
 # - Tutorial: tutorial.md
