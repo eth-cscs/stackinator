@@ -213,6 +213,8 @@ class Recipe:
             return repo_path
         return None
 
+    _RESERVED_REPO_NAMES = {"alps", "recipe"}
+
     @property
     def spack_package_repos(self):
         packages = self.config["spack"]["packages"]
@@ -225,7 +227,7 @@ class Recipe:
                     "repo_path": "repos/spack_repo/builtin",
                 }
             ]
-        return [
+        repos = [
             {
                 "name": name,
                 "url": val["repo"],
@@ -234,6 +236,15 @@ class Recipe:
             }
             for name, val in packages.items()
         ]
+        for repo in repos:
+            name = repo["name"]
+            if name in self._RESERVED_REPO_NAMES:
+                raise RuntimeError(
+                    f"The package repo name '{name}' is reserved for stackinator internal use. "
+                    f"Reserved names are: {self._RESERVED_REPO_NAMES}. "
+                    "Choose a different name in config.yaml:spack:packages."
+                )
+        return repos
 
     # Returns:
     #   Path: of the recipe extra path if it exists
