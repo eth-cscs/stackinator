@@ -47,6 +47,11 @@ class Mirrors:
                          it fetches sources (spack config:source_cache). None if
                          absent. This is not a mirror: it has no key and no url, and
                          is emitted to config.yaml rather than mirrors.yaml.
+      * misc_cache     - at most one, a writable local directory for spack's misc
+                         cache (package/build-cache indices and the concretization
+                         cache that lives under it) (spack config:misc_cache). None
+                         if absent. Like source_cache it is not a mirror and is
+                         emitted to config.yaml.
 
     All input processing - loading and schema-validating the system mirrors.yaml,
     validating urls, and reading/decoding/validating gpg keys - happens eagerly in
@@ -86,6 +91,7 @@ class Mirrors:
         self.bootstrap: Optional[Dict] = None
         self.source_mirrors: Dict[str, Dict] = {}
         self.source_cache: Optional[Dict] = None
+        self.misc_cache: Optional[Dict] = None
 
         # The mirror configuration is supplied with --mirror, not the system
         # configuration. Reject a mirrors.yaml in the system config so it is not
@@ -154,24 +160,26 @@ class Mirrors:
             )
 
         # The bootstrap mirror, the read-only source mirrors, and the writable
-        # source cache, if any are defined.
+        # source and misc caches, if any are defined.
         self.bootstrap = raw_mirrors.get("bootstrap")
         self.source_mirrors = dict(raw_mirrors["sourcemirror"])
         self.source_cache = raw_mirrors.get("sourcecache")
+        self.misc_cache = raw_mirrors.get("misccache")
 
         # Validate that every mirror url is well-formed (see _validate_url).
         for name, mirror in self._iter_mirrors():
             self._validate_url(mirror["url"], name)
 
-        # The source cache is a single writable local directory (spack
-        # config:source_cache), not a mirror: validate that it is an absolute path.
-        # Expand env vars now, because the build sandbox runs `env --ignore-environment`
-        # and so would not expand them at build time.
-        if self.source_cache is not None:
-            path = os.path.expandvars(self.source_cache["path"])
-            if not pathlib.Path(path).is_absolute():
-                raise MirrorError(f"The source cache path '{path}' is not absolute")
-            self.source_cache["path"] = path
+        # The source and misc caches are single writable local directories (spack
+        # config:source_cache / config:misc_cache), not mirrors: validate that each is
+        # an absolute path. Expand env vars now, because the build sandbox runs
+        # `env --ignore-environment` and so would not expand them at build time.
+        for cache_name, cache in (("source", self.source_cache), ("misc", self.misc_cache)):
+            if cache is not None:
+                path = os.path.expandvars(cache["path"])
+                if not pathlib.Path(path).is_absolute():
+                    raise MirrorError(f"The {cache_name} cache path '{path}' is not absolute")
+                cache["path"] = path
 
         # Read, decode and validate every gpg key into memory. Each key is stored
         # as (path-relative-to-config-root, raw bytes); the builder writes these
@@ -341,9 +349,15 @@ class Mirrors:
             spack_mirrors, default_flow_style=False, sort_keys=False
         ).encode()
 
-        # the spack config.yaml setting the writable, populate-as-you-go source cache
+        # the spack config.yaml setting the writable local caches: the populate-as-you-go
+        # source cache and the misc cache (which holds the concretization cache)
+        config_section = {}
         if self.source_cache is not None:
-            config_yaml = {"config": {"source_cache": self.source_cache["path"]}}
+            config_section["source_cache"] = self.source_cache["path"]
+        if self.misc_cache is not None:
+            config_section["misc_cache"] = self.misc_cache["path"]
+        if config_section:
+            config_yaml = {"config": config_section}
             files[config_root / self.CONFIG_YAML] = yaml.dump(config_yaml, default_flow_style=False).encode()
 
         # the bootstrap config and its mirror metadata, if a bootstrap mirror is set

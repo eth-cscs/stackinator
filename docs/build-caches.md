@@ -10,7 +10,7 @@ stack-config -b $build -r $recipe -s $system --mirror mirrors.yaml
 The file is not part of the [system configuration](cluster-config.md): mirror locations are usually specific to the person running the build, so each invocation provides its own.
 Paths inside the file (such as relative gpg key paths) are resolved relative to the directory containing the `mirrors.yaml`, so a self-contained mirror directory (the `mirrors.yaml` plus its keys) can be moved around freely.
 
-A `mirrors.yaml` can describe four kinds of entry, each optional and each documented below:
+A `mirrors.yaml` can describe five kinds of entry, each optional and each documented below:
 
 | Entry | Count | Purpose |
 |-------|-------|---------|
@@ -18,6 +18,7 @@ A `mirrors.yaml` can describe four kinds of entry, each optional and each docume
 | [`bootstrap`](#bootstrap-mirror) | one  | mirror used to bootstrap Spack itself |
 | [`sourcemirror`](#source-mirrors) | many | read-only mirrors that provide package sources |
 | [`sourcecache`](#source-cache)  | one  | writable local cache that fills with sources as you build |
+| [`misccache`](#misc-cache)  | one  | writable local cache for Spack's indices and concretization results |
 
 A complete example:
 
@@ -33,6 +34,8 @@ sourcemirror:
     url: https://example.com/spack-sources
 sourcecache:
   path: /capstor/scratch/$USER/spack-sources
+misccache:
+  path: /capstor/scratch/$USER/spack-misc
 ```
 
 To stop using any entry, remove (or comment out) it from `mirrors.yaml`.
@@ -159,6 +162,22 @@ sourcecache:
 | Field | Required | Description |
 |-------|----------|-------------|
 | `path` | yes | absolute path to a local directory (environment variables are expanded) |
+
+## Misc cache
+
+The misc cache is a single, **writable** local directory for Spack's "misc" cache: the package and build-cache indices, and — importantly — the **concretization cache**, which stores the result of concretizing a set of specs so it does not have to be recomputed.
+Concretization can be a large fraction of build time, so pointing this at a persistent location is worthwhile when build directories are ephemeral (e.g. created in `/dev/shm` and deleted after each build).
+
+```yaml title="mirrors.yaml"
+misccache:
+  path: /capstor/scratch/$USER/spack-misc
+```
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `path` | yes | absolute path to a local directory (environment variables are expanded) |
+
+The concretization cache lives under this directory. Spack populates it automatically: concretization caching is on by default in Spack 1.2 and later, and is opt-in (`concretizer:concretization_cache:enable`) in Spack 1.1. It is keyed by the hash of the solver inputs, so a persistent cache can be reused safely across builds — stale entries simply miss.
 
 ## Keys
 

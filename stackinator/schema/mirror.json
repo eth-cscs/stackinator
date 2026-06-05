@@ -57,6 +57,15 @@
             },
             "additionalProperties": false,
             "required": ["path"]
+        },
+        "misccache": {
+            "type": "object",
+            "properties": {
+                "description": {"type": "string", "default": ""},
+                "path": {"type": "string"}
+            },
+            "additionalProperties": false,
+            "required": ["path"]
         }
     }
 }

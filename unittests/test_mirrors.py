@@ -67,6 +67,9 @@ def test_mirror_init(clean_root, mount_path, systems_path, mirror_ok):
     # the writable, populate-as-you-go source cache
     assert mirrors_obj.source_cache == {"path": "/scratch/spack-sources", "description": ""}
 
+    # the writable misc cache (holds the concretization cache)
+    assert mirrors_obj.misc_cache == {"path": "/scratch/spack-misc", "description": ""}
+
     # the build cache mirror name is derived from the build cache's 'name' field
     assert mirrors_obj.build_cache_mirror == "buildcache"
 
@@ -319,26 +322,46 @@ def test_keys(tmp_path, clean_root, mount_path, mirror_ok):
     assert set(mirrors_obj.gpg_key_paths(tmp_path)) == key_files
 
 
-def test_source_cache_config(tmp_path, clean_root, mount_path, mirror_ok):
-    """The writable source cache is emitted to config.yaml as config:source_cache."""
+def test_local_caches_config(tmp_path, clean_root, mount_path, mirror_ok):
+    """The writable source and misc caches are emitted to config.yaml under config:."""
 
     mirrors_obj = mirror.Mirrors(clean_root, mount_path, mirror_file=mirror_ok)
     files = mirrors_obj.config_files(tmp_path)
 
     data = yaml.safe_load(files[tmp_path / "config.yaml"])
-    assert data == {"config": {"source_cache": "/scratch/spack-sources"}}
+    assert data == {
+        "config": {
+            "source_cache": "/scratch/spack-sources",
+            "misc_cache": "/scratch/spack-misc",
+        }
+    }
 
 
-def test_source_cache_absent(tmp_path, clean_root, mount_path, systems_path):
-    """No config.yaml is generated when no source cache is configured."""
+def test_misc_cache_only(tmp_path, clean_root, mount_path):
+    """A mirror file with a misc cache but no source cache still emits config:misc_cache."""
 
-    # mirror-no-sourcecache has no sourcecache entry
+    mirror_file = tmp_path / "mirrors.yaml"
+    mirror_file.write_text("misccache:\n  path: /scratch/only-misc\n")
+
+    mirrors_obj = mirror.Mirrors(clean_root, mount_path, mirror_file=mirror_file)
+    files = mirrors_obj.config_files(tmp_path)
+
+    assert mirrors_obj.source_cache is None
+    data = yaml.safe_load(files[tmp_path / "config.yaml"])
+    assert data == {"config": {"misc_cache": "/scratch/only-misc"}}
+
+
+def test_local_caches_absent(tmp_path, clean_root, mount_path, systems_path):
+    """No config.yaml is generated when neither a source nor a misc cache is configured."""
+
+    # mirror-no-sourcecache has neither a sourcecache nor a misccache entry
     mirrors_obj = mirror.Mirrors(
         clean_root, mount_path, mirror_file=systems_path / "mirror-no-sourcecache/mirrors.yaml"
     )
     files = mirrors_obj.config_files(tmp_path)
 
     assert mirrors_obj.source_cache is None
+    assert mirrors_obj.misc_cache is None
     assert tmp_path / "config.yaml" not in files
 
 
@@ -348,10 +371,11 @@ def test_source_cache_absent(tmp_path, clean_root, mount_path, systems_path):
         "mirror-bad-key",
         "mirror-bad-keypath",
         "mirror-bad-sourcecache",
+        "mirror-bad-misccache",
     ],
 )
 def test_bad_config(clean_root, mount_path, systems_path, system_name):
-    """Check that MirrorError is raised at construction for bad keys or a bad source cache path."""
+    """Check that MirrorError is raised at construction for bad keys or a bad cache path."""
 
     with pytest.raises(mirror.MirrorError):
         mirror.Mirrors(clean_root, mount_path, mirror_file=systems_path / system_name / "mirrors.yaml")
