@@ -37,10 +37,9 @@ def test_config_yaml(yaml_path):
         schema.ConfigValidator.validate(raw)
         assert raw["store"] == "/user-environment"
         assert raw["spack"]["commit"] is None
-        assert raw["spack"]["packages"].get("commit") is None
         assert raw["description"] is None
 
-    # no spack:commit
+    # single repo format with packages commit
     config = dedent("""
     version: 2
     name: env-without-spack-commit
@@ -56,27 +55,22 @@ def test_config_yaml(yaml_path):
     )
     schema.ConfigValidator.validate(raw)
     assert raw["spack"]["commit"] is None
-    assert raw["spack"]["packages"]["commit"] is not None
+    assert raw["spack"]["packages"]["commit"] == "develop-packages"
     assert raw["description"] is None
 
-    # no spack:packages:commit
-    config = dedent("""
-    version: 2
-    name: env-without-spack-packages-commit
-    spack:
-        repo: https://github.com/spack/spack.git
-        commit: develop
-        packages:
+    # single repo format missing packages commit should fail
+    with pytest.raises(Exception):
+        config = dedent("""
+        version: 2
+        name: env-no-pkg-commit
+        spack:
             repo: https://github.com/spack/spack.git
-    """)
-    raw = yaml.load(
-        config,
-        Loader=yaml.Loader,
-    )
-    schema.ConfigValidator.validate(raw)
-    assert raw["spack"]["commit"] == "develop"
-    assert raw["spack"]["packages"].get("commit") is None
-    assert raw["description"] is None
+            commit: develop
+            packages:
+                repo: https://github.com/spack/spack.git
+        """)
+        raw = yaml.load(config, Loader=yaml.Loader)
+        schema.ConfigValidator.validate(raw)
 
     # full config
     with open(yaml_path / "config.full.yaml") as fid:
@@ -107,12 +101,13 @@ def test_config_yaml(yaml_path):
         packages:
             my-packages:
                 repo: https://github.com/example/spack-packages.git
+                commit: v1.0
     """)
     raw = yaml.load(config, Loader=yaml.Loader)
     schema.ConfigValidator.validate(raw)
     assert "my-packages" in raw["spack"]["packages"]
     assert raw["spack"]["packages"]["my-packages"]["repo"] == "https://github.com/example/spack-packages.git"
-    assert raw["spack"]["packages"]["my-packages"]["commit"] is None
+    assert raw["spack"]["packages"]["my-packages"]["commit"] == "v1.0"
 
     # map format: multiple entries with commits
     config = dedent("""
@@ -168,6 +163,7 @@ def test_config_yaml(yaml_path):
         packages:
             my-packages:
                 repo: https://github.com/example/spack-packages.git
+                commit: v1.0
                 path: custom/repo/location
     """)
     raw = yaml.load(config, Loader=yaml.Loader)

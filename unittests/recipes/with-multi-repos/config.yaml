@@ -10,4 +10,5 @@ spack:
             path: custom/path/to/packages
         other-packages:
             repo: https://github.com/example/other-packages.git
+            commit: v2.0
 version: 2
