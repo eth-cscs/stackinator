@@ -40,7 +40,10 @@ class Mirrors:
                          has the mount_specific flag). With a private key it signs
                          and pushes packages too; without one it is read-only. None
                          if no build cache is configured.
-      * bootstrap      - at most one, used to bootstrap spack itself. None if absent.
+      * bootstrap      - at most one, used to bootstrap spack itself (a local spack
+                         bootstrap mirror directory, or a remote url). Needs no key
+                         (bootstrap binaries are sha256-verified) and is emitted to
+                         bootstrap.yaml, not the mirrors list. None if absent.
       * source_mirrors - a name -> config mapping of any number of read-only source
                          mirrors (spack mirrors.yaml entries).
       * source_cache   - at most one, a writable local directory that spack fills as
@@ -64,7 +67,7 @@ class Mirrors:
     KEY_STORE_DIR = "key_store"
     MIRRORS_YAML = "mirrors.yaml"
     CONFIG_YAML = "config.yaml"
-    BOOTSTRAP_MIRROR = "bootstrap"
+    BOOTSTRAP_YAML = "bootstrap.yaml"
 
     def __init__(
         self,
@@ -181,6 +184,30 @@ class Mirrors:
                     raise MirrorError(f"The {cache_name} cache path '{path}' is not absolute")
                 cache["path"] = path
 
+        # Resolve the bootstrap mirror. It is either a remote url, or a local spack
+        # bootstrap mirror directory (a `spack bootstrap mirror` output) whose own
+        # metadata/{sources,binaries} directories we reference directly.
+        self._bootstrap_remote = False
+        self._bootstrap_root: Optional[str] = None
+        self._bootstrap_metadata_dirs: List[str] = []
+        if self.bootstrap is not None:
+            url = self.bootstrap["url"]
+            self._validate_url(url, "bootstrap")
+            if self._is_remote_url(url):
+                self._bootstrap_remote = True
+            else:
+                root = self._local_path(url)
+                if not root.is_dir():
+                    raise MirrorError(f"The bootstrap mirror directory '{root}' does not exist")
+                present = [sub for sub in ("sources", "binaries") if (root / "metadata" / sub).is_dir()]
+                if not present:
+                    raise MirrorError(
+                        f"The bootstrap mirror directory '{root}' has no 'metadata/sources' or "
+                        f"'metadata/binaries' directory (is it a 'spack bootstrap mirror' output?)."
+                    )
+                self._bootstrap_root = root.as_posix()
+                self._bootstrap_metadata_dirs = present
+
         # Read, decode and validate every gpg key into memory. Each key is stored
         # as (path-relative-to-config-root, raw bytes); the builder writes these
         # verbatim into the build directory's key store.
@@ -224,17 +251,32 @@ class Mirrors:
         return None
 
     def _iter_mirrors(self):
-        """Yield (spack mirror name, config dict) for every configured mirror.
+        """Yield (spack mirror name, config dict) for every real spack mirror.
 
-        The build cache's name is configurable (the 'name' field); the bootstrap
-        and source mirrors are named by their key in mirrors.yaml.
+        These are the entries written to the spack mirrors.yaml that may carry a
+        public key: the build cache (whose name is the configurable 'name' field) and
+        the source mirrors (named by their key in mirrors.yaml). The bootstrap mirror
+        is not a mirrors.yaml entry and has no key, so it is handled separately.
         """
 
         if self.buildcache is not None:
             yield self.buildcache["name"], self.buildcache
-        if self.bootstrap is not None:
-            yield self.BOOTSTRAP_MIRROR, self.bootstrap
         yield from self.source_mirrors.items()
+
+    @staticmethod
+    def _is_remote_url(url: str) -> bool:
+        """True if url is a remote url (has a non-file scheme and a host)."""
+
+        parsed = urllib.parse.urlparse(url)
+        return bool(parsed.scheme) and parsed.scheme != "file" and bool(parsed.netloc)
+
+    @staticmethod
+    def _local_path(url: str) -> pathlib.Path:
+        """The local filesystem path for a file:// url or a bare path (env vars expanded)."""
+
+        if url.startswith("file://"):
+            url = url[len("file://") :]
+        return pathlib.Path(os.path.expandvars(url))
 
     def _validate_url(self, url: str, name: str):
         """Validate that a mirror url is well-formed.
@@ -333,10 +375,6 @@ class Mirrors:
                 entry["push"] = {"url": url}
             spack_mirrors["mirrors"][self.buildcache["name"]] = entry
 
-        if self.bootstrap is not None:
-            url = self.bootstrap["url"]
-            spack_mirrors["mirrors"][self.BOOTSTRAP_MIRROR] = {"fetch": {"url": url}, "push": {"url": url}}
-
         # source mirrors are read-only and provide sources only: fetch url, no push.
         for name, mirror in self.source_mirrors.items():
             spack_mirrors["mirrors"][name] = {
@@ -360,18 +398,30 @@ class Mirrors:
             config_yaml = {"config": config_section}
             files[config_root / self.CONFIG_YAML] = yaml.dump(config_yaml, default_flow_style=False).encode()
 
-        # the bootstrap config and its mirror metadata, if a bootstrap mirror is set
+        # the spack bootstrap.yaml, if a bootstrap mirror is set. Bootstrapping reads
+        # bootstrap:sources (not the mirrors list), and each source's `metadata` is a
+        # directory describing it. No gpg key is involved (bootstrap binaries are
+        # sha256-verified).
         if self.bootstrap is not None:
-            metadata_dir = config_root / "bootstrap" / "bootstrap-mirror"
-            bootstrap_yaml = {
-                "bootstrap": {
-                    "sources": [{"name": "bootstrap-mirror", "metadata": str(metadata_dir)}],
-                    "trusted": {"bootstrap-mirror": True},
-                }
-            }
-            metadata_yaml = {"type": "install", "info": {"url": self.bootstrap["url"]}}
+            sources = []
+            trusted = {}
+            if self._bootstrap_remote:
+                # a remote mirror: generate a local source descriptor pointing at it.
+                # this covers source bootstrapping; remote binary bootstrapping (which
+                # needs per-package sha256 metadata) is not supported.
+                metadata_dir = config_root / "bootstrap" / "bootstrap-mirror"
+                metadata_yaml = {"type": "install", "info": {"url": self.bootstrap["url"]}}
+                files[metadata_dir / "metadata.yaml"] = yaml.dump(metadata_yaml, default_flow_style=False).encode()
+                sources.append({"name": "bootstrap-mirror", "metadata": str(metadata_dir)})
+                trusted["bootstrap-mirror"] = True
+            else:
+                # a local spack bootstrap mirror: reference its own metadata directories.
+                for sub in self._bootstrap_metadata_dirs:
+                    name = f"bootstrap-{sub}"
+                    sources.append({"name": name, "metadata": f"{self._bootstrap_root}/metadata/{sub}"})
+                    trusted[name] = True
 
-            files[metadata_dir / "metadata.yaml"] = yaml.dump(metadata_yaml, default_flow_style=False).encode()
-            files[config_root / "bootstrap.yaml"] = yaml.dump(bootstrap_yaml, default_flow_style=False).encode()
+            bootstrap_yaml = {"bootstrap": {"sources": sources, "trusted": trusted}}
+            files[config_root / self.BOOTSTRAP_YAML] = yaml.dump(bootstrap_yaml, default_flow_style=False).encode()
 
         return files

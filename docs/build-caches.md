@@ -112,15 +112,35 @@ env --ignore-environment PATH=/usr/bin:/bin:`pwd -P`/spack/bin make cache-force
 Spack bootstraps some of its own dependencies (such as the `clingo` concretizer) on first use.
 A bootstrap mirror lets it do this without reaching the internet — useful on air-gapped systems.
 
+No key is needed: bootstrap binaries are verified by their sha256 sum, not by a GPG signature.
+
+The `url` can take two forms.
+
+**A local bootstrap mirror directory** (recommended) — a directory created with `spack bootstrap mirror`, which contains its own `metadata/sources` and `metadata/binaries` descriptors:
+
 ```yaml title="mirrors.yaml"
 bootstrap:
-  url: https://bootstrap.spack.io
+  url: /capstor/scratch/team/bootstrap-mirror
 ```
+
+Stackinator references the mirror's own metadata directly, so both source and binary bootstrapping work. Create one on a connected system and copy it across:
+
+```bash
+spack bootstrap mirror --binary-packages /capstor/scratch/team/bootstrap-mirror
+```
+
+**A remote url** — `https://`, `s3://` or `oci://`:
+
+```yaml title="mirrors.yaml"
+bootstrap:
+  url: https://bootstrap.example.com/mirror
+```
+
+A remote mirror supports **source** bootstrapping only; remote binary bootstrapping is not supported (it needs the per-package metadata that a local mirror directory provides).
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `url`        | yes | location of the bootstrap mirror |
-| `public_key` | no  | PGP key used to verify the bootstrap binaries |
+| `url` | yes | a local `spack bootstrap mirror` directory, or a remote `https`/`s3`/`oci` url |
 
 ## Source mirrors
 

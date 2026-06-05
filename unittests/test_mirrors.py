@@ -55,7 +55,6 @@ def test_mirror_init(clean_root, mount_path, systems_path, mirror_ok):
     assert mirrors_obj.bootstrap == {
         "url": "https://mirror.spack.io",
         "description": "",
-        "public_key": None,
     }
 
     # non-required fields are always present, defaulted to "" / None by the schema
@@ -207,10 +206,6 @@ def test_spack_mirrors_yaml(tmp_path, clean_root, mount_path, mirror_ok):
 
     valid_spack_yaml = {
         "mirrors": {
-            "bootstrap": {
-                "fetch": {"url": "https://mirror.spack.io"},
-                "push": {"url": "https://mirror.spack.io"},
-            },
             "buildcache": {
                 "fetch": {"url": "https://mirror.spack.io"},
                 "push": {"url": "https://mirror.spack.io"},
@@ -272,8 +267,8 @@ def test_mount_specific_disabled(tmp_path, clean_root, mount_path, mirror_ok):
     assert data["mirrors"]["buildcache"]["fetch"]["url"] == "https://mirror.spack.io"
 
 
-def test_bootstrap_configs(tmp_path, clean_root, mount_path, mirror_ok):
-    """Check that spack bootstrap configs are generated correctly"""
+def test_remote_bootstrap_configs(tmp_path, clean_root, mount_path, mirror_ok):
+    """A remote bootstrap url generates a local source descriptor pointing at it."""
 
     valid_yaml = {
         "bootstrap": {
@@ -301,6 +296,55 @@ def test_bootstrap_configs(tmp_path, clean_root, mount_path, mirror_ok):
 
     metadata = yaml.safe_load(files[tmp_path / "bootstrap/bootstrap-mirror/metadata.yaml"])
     assert metadata == valid_metadata
+
+    # the bootstrap mirror is not added to the spack mirrors list
+    mirrors = yaml.safe_load(files[tmp_path / "mirrors.yaml"])
+    assert "bootstrap" not in mirrors["mirrors"]
+
+
+def test_local_bootstrap_configs(tmp_path, clean_root, mount_path):
+    """A local bootstrap mirror dir is referenced via its own metadata directories."""
+
+    # fake a `spack bootstrap mirror` output directory
+    boot = tmp_path / "bootstrap-mirror"
+    (boot / "metadata" / "sources").mkdir(parents=True)
+    (boot / "metadata" / "binaries").mkdir(parents=True)
+
+    mirror_file = tmp_path / "mirrors.yaml"
+    mirror_file.write_text(f"bootstrap:\n  url: {boot}\n")
+
+    config_root = tmp_path / "config"
+    mirrors_obj = mirror.Mirrors(clean_root, mount_path, mirror_file=mirror_file)
+    files = mirrors_obj.config_files(config_root)
+
+    bs_data = yaml.safe_load(files[config_root / "bootstrap.yaml"])
+    assert bs_data == {
+        "bootstrap": {
+            "sources": [
+                {"name": "bootstrap-sources", "metadata": f"{boot}/metadata/sources"},
+                {"name": "bootstrap-binaries", "metadata": f"{boot}/metadata/binaries"},
+            ],
+            "trusted": {"bootstrap-sources": True, "bootstrap-binaries": True},
+        }
+    }
+
+    # no metadata is generated (it lives in the mirror), and nothing in the mirrors list
+    assert not any(p.name == "metadata.yaml" for p in files)
+    mirrors = yaml.safe_load(files[config_root / "mirrors.yaml"])
+    assert "bootstrap" not in mirrors["mirrors"]
+
+
+def test_local_bootstrap_missing_metadata(tmp_path, clean_root, mount_path):
+    """A local bootstrap dir without metadata/sources|binaries is rejected."""
+
+    boot = tmp_path / "not-a-bootstrap-mirror"
+    boot.mkdir()
+
+    mirror_file = tmp_path / "mirrors.yaml"
+    mirror_file.write_text(f"bootstrap:\n  url: {boot}\n")
+
+    with pytest.raises(mirror.MirrorError):
+        mirror.Mirrors(clean_root, mount_path, mirror_file=mirror_file)
 
 
 def test_keys(tmp_path, clean_root, mount_path, mirror_ok):

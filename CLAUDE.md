@@ -207,7 +207,7 @@ BUILD/
   config/               # global spack configuration scope
     packages.yaml
     repos.yaml
-    mirrors.yaml        # if --mirror provided: buildcache/bootstrap/sourcemirror entries
+    mirrors.yaml        # if --mirror provided: buildcache/sourcemirror entries
     config.yaml         # if --mirror provided with a sourcecache/misccache (config:source_cache/misc_cache)
     bootstrap.yaml      # if --mirror provided with a bootstrap mirror
     key_store/          # if --mirror provided with gpg keys (decoded *.gpg)
@@ -307,12 +307,12 @@ The build runs inside a bwrap sandbox (`bwrap-mutable-root.sh`) that:
 Spack mirrors and caches are configured in a single `mirrors.yaml` supplied with `stack-config --mirror <file>` (see `docs/build-caches.md` for the full reference). It can describe five optional entities:
 
 - **`buildcache`** (one): binary cache of built packages — the big build-time speed up. With a `private_key` it signs and pushes packages it builds; without one it is read-only (fetch only). `mount_specific: true` stores binaries in a per-mount-point subdir (Spack binaries embed the install prefix, so each mount point needs its own cache). Packages are pushed per-environment after a successful build; `cuda`, `nvhpc`, `perl` are excluded from pushes. `make cache-force` force-pushes everything built so far.
-- **`bootstrap`** (one): mirror for bootstrapping Spack itself (air-gapped clingo etc.).
+- **`bootstrap`** (one): for bootstrapping Spack itself (clingo etc.). The `url` is either a local `spack bootstrap mirror` directory (referenced via its own `metadata/sources`+`metadata/binaries`) or a remote url (source-only). Needs **no key** (bootstrap binaries are sha256-verified) → emitted as `config/bootstrap.yaml` (+ a generated `metadata.yaml` only for the remote case); it is NOT a `mirrors.yaml` entry.
 - **`sourcemirror`** (many): read-only mirrors providing package source archives.
 - **`sourcecache`** (one): a writable local dir Spack fills as it fetches sources → emitted as `config:source_cache`.
 - **`misccache`** (one): a writable local dir for Spack's misc cache (package/build-cache indices and the **concretization cache** that lives under it) → emitted as `config:misc_cache`. Useful to persist across ephemeral builds. Concretization caching is on by default in Spack ≥ 1.2, opt-in in 1.1.
 
-`sourcecache`/`misccache` are emitted to `config/config.yaml`; `buildcache`/`bootstrap`/`sourcemirror` to `config/mirrors.yaml` (+ `bootstrap.yaml` + decoded keys under `config/key_store/`).
+`sourcecache`/`misccache` are emitted to `config/config.yaml`; `bootstrap` to `config/bootstrap.yaml`; `buildcache`/`sourcemirror` to `config/mirrors.yaml` (+ decoded keys under `config/key_store/`).
 
 **Legacy:** a binary cache can still be configured with a `cache.yaml` (`root` + optional `key`) passed to `-c/--cache`. This path is deprecated in favour of a `buildcache` entry and will be removed.
 
