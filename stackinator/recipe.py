@@ -224,7 +224,7 @@ class Recipe:
                     "name": "builtin",
                     "url": packages["repo"],
                     "ref": packages.get("commit"),
-                    "repo_path": "repos/spack_repo/builtin",
+                    "repo_path": packages.get("path", "repos/spack_repo/builtin"),
                 }
             ]
         repos = [
