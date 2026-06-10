@@ -27,6 +27,17 @@ GPG_KEY_MIME_TYPES = (
 )
 
 
+def _supports_concretization_cache(spack_version: str) -> bool:
+    """Whether the given "major.minor" spack version supports the concretizer cache.
+
+    The concretizer:concretization_cache config key was introduced in spack 1.1;
+    spack 1.0 rejects it (its concretizer schema forbids unknown keys).
+    """
+
+    major_minor = tuple(int(x) for x in spack_version.split("."))
+    return major_minor >= (1, 1)
+
+
 class MirrorError(RuntimeError):
     """Exception class for errors thrown by mirror configuration problems."""
 
@@ -52,11 +63,12 @@ class Mirrors:
                          it fetches sources (spack config:source_cache). None if
                          absent. This is not a mirror: it has no key and no url, and
                          is emitted to config.yaml rather than mirrors.yaml.
-      * misc_cache     - at most one, a writable local directory for spack's misc
-                         cache (package/build-cache indices and the concretization
-                         cache that lives under it) (spack config:misc_cache). None
-                         if absent. Like source_cache it is not a mirror and is
-                         emitted to config.yaml.
+      * concretizer_cache - at most one, a writable local directory persisting spack's
+                         concretization results (concretizer:concretization_cache).
+                         None if absent. Like source_cache it is not a mirror; it is
+                         emitted to concretizer.yaml. It is only emitted for spack
+                         >= 1.1 (spack 1.0 rejects the config key); when requested
+                         against spack 1.0 it is skipped with a warning.
 
     All input processing - loading and schema-validating the system mirrors.yaml,
     validating urls, and reading/decoding/validating gpg keys - happens eagerly in
@@ -70,11 +82,13 @@ class Mirrors:
     MIRRORS_YAML = "mirrors.yaml"
     CONFIG_YAML = "config.yaml"
     BOOTSTRAP_YAML = "bootstrap.yaml"
+    CONCRETIZER_YAML = "concretizer.yaml"
 
     def __init__(
         self,
         system_config_root: pathlib.Path,
         mount_path: pathlib.Path,
+        spack_version: str,
         mirror_file: Optional[pathlib.Path] = None,
         cmdline_cache: Optional[pathlib.Path] = None,
     ):
@@ -82,6 +96,8 @@ class Mirrors:
 
         Mirrors are supplied with the --mirror command line option (mirror_file).
         mount_path is the recipe mount point (used to make a build cache mount-specific).
+        spack_version is the best-effort "major.minor" spack version, used to gate the
+        concretizer cache (only emitted for spack >= 1.1).
         cmdline_cache is an optional legacy cache.yaml passed on the command line (--cache).
 
         Relative paths in the mirror file (e.g. gpg keys) are resolved relative to the
@@ -96,7 +112,7 @@ class Mirrors:
         self.bootstrap: Optional[Dict] = None
         self.source_mirrors: Dict[str, Dict] = {}
         self.source_cache: Optional[Dict] = None
-        self.misc_cache: Optional[Dict] = None
+        self.concretizer_cache: Optional[Dict] = None
 
         # The mirror configuration is supplied with --mirror, not the system
         # configuration. Reject a mirrors.yaml in the system config so it is not
@@ -164,27 +180,41 @@ class Mirrors:
                 f"{yaml.dump([self.buildcache], default_flow_style=False)}"
             )
 
-        # The bootstrap mirror, the read-only source mirrors, and the writable
-        # source and misc caches, if any are defined.
+        # The bootstrap mirror, the read-only source mirrors, the writable source
+        # cache, and the writable concretizer cache, if any are defined.
         self.bootstrap = raw_mirrors.get("bootstrap")
         self.source_mirrors = dict(raw_mirrors["sourcemirror"])
         self.source_cache = raw_mirrors.get("sourcecache")
-        self.misc_cache = raw_mirrors.get("misccache")
+        self.concretizer_cache = raw_mirrors.get("concretizer")
 
         # Validate that every mirror url is well-formed (see _validate_url).
         for name, mirror in self._iter_mirrors():
             self._validate_url(mirror["url"], name)
 
-        # The source and misc caches are single writable local directories (spack
-        # config:source_cache / config:misc_cache), not mirrors: validate that each is
-        # an absolute path. Expand env vars now, because the build sandbox runs
-        # `env --ignore-environment` and so would not expand them at build time.
-        for cache_name, cache in (("source", self.source_cache), ("misc", self.misc_cache)):
+        # The source and concretizer caches are single writable local directories
+        # (spack config:source_cache / concretizer:concretization_cache), not mirrors:
+        # validate that each is an absolute path. Expand env vars now, because the
+        # build sandbox runs `env --ignore-environment` and so would not expand them
+        # at build time.
+        for cache_name, cache in (("source", self.source_cache), ("concretizer", self.concretizer_cache)):
             if cache is not None:
                 path = os.path.expandvars(cache["path"])
                 if not pathlib.Path(path).is_absolute():
                     raise MirrorError(f"The {cache_name} cache path '{path}' is not absolute")
                 cache["path"] = path
+
+        # The concretizer cache (concretizer:concretization_cache) was introduced in
+        # spack 1.1; spack 1.0 rejects the config key. Determine whether to emit it
+        # based on the best-effort spack version, and warn (not error) if it was
+        # requested but cannot be configured.
+        self._emit_concretizer_cache = self.concretizer_cache is not None and _supports_concretization_cache(
+            spack_version
+        )
+        if self.concretizer_cache is not None and not self._emit_concretizer_cache:
+            self._logger.warning(
+                f"The concretizer cache is not supported by spack {spack_version} (requires >= 1.1) "
+                "and will not be configured."
+            )
 
         # Resolve the bootstrap mirror. It is either a remote url, or a local spack
         # bootstrap mirror directory (a `spack bootstrap mirror` output) whose own
@@ -391,16 +421,25 @@ class Mirrors:
             spack_mirrors, default_flow_style=False, sort_keys=False
         ).encode()
 
-        # the spack config.yaml setting the writable local caches: the populate-as-you-go
-        # source cache and the misc cache (which holds the concretization cache)
-        config_section = {}
+        # the spack config.yaml setting the populate-as-you-go source cache (spack
+        # config:source_cache).
         if self.source_cache is not None:
-            config_section["source_cache"] = self.source_cache["path"]
-        if self.misc_cache is not None:
-            config_section["misc_cache"] = self.misc_cache["path"]
-        if config_section:
-            config_yaml = {"config": config_section}
+            config_yaml = {"config": {"source_cache": self.source_cache["path"]}}
             files[config_root / self.CONFIG_YAML] = yaml.dump(config_yaml, default_flow_style=False).encode()
+
+        # the spack concretizer.yaml persisting concretization results. enable is set
+        # explicitly because it is opt-in in spack 1.1 (on by default only in >= 1.2).
+        # _emit_concretizer_cache gates this on the spack version (>= 1.1).
+        if self._emit_concretizer_cache:
+            concretizer_yaml = {
+                "concretizer": {
+                    "concretization_cache": {
+                        "enable": True,
+                        "url": self.concretizer_cache["path"],
+                    }
+                }
+            }
+            files[config_root / self.CONCRETIZER_YAML] = yaml.dump(concretizer_yaml, default_flow_style=False).encode()
 
         # the spack bootstrap.yaml, if a bootstrap mirror is set. Bootstrapping reads
         # bootstrap:sources (not the mirrors list), and each source's `metadata` is a

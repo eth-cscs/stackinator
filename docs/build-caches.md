@@ -18,7 +18,7 @@ A `mirrors.yaml` can describe five kinds of entry, each optional and each docume
 | [`bootstrap`](#bootstrap-mirror) | one  | mirror used to bootstrap Spack itself |
 | [`sourcemirror`](#source-mirrors) | many | read-only mirrors that provide package sources |
 | [`sourcecache`](#source-cache)  | one  | writable local cache that fills with sources as you build |
-| [`misccache`](#misc-cache)  | one  | writable local cache for Spack's indices and concretization results |
+| [`concretizer`](#concretizer-cache)  | one  | writable local cache that persists concretization results |
 
 A complete example:
 
@@ -34,8 +34,8 @@ sourcemirror:
     url: https://example.com/spack-sources
 sourcecache:
   path: /capstor/scratch/$USER/spack-sources
-misccache:
-  path: /capstor/scratch/$USER/spack-misc
+concretizer:
+  path: /capstor/scratch/$USER/spack-concretizer
 ```
 
 To stop using any entry, remove (or comment out) it from `mirrors.yaml`.
@@ -184,21 +184,31 @@ sourcecache:
 |-------|----------|-------------|
 | `path` | yes | absolute path to a local directory (environment variables are expanded) |
 
-## Misc cache
+## Concretizer cache
 
-The misc cache is a single, **writable** local directory for Spack's "misc" cache: the package and build-cache indices, and — importantly — the **concretization cache**, which stores the result of concretizing a set of specs so it does not have to be recomputed.
+The concretizer cache is a single, **writable** local directory in which Spack persists its **concretization results** — the output of concretizing a set of specs, so it does not have to be recomputed.
 Concretization can be a large fraction of build time, so pointing this at a persistent location is worthwhile when build directories are ephemeral (e.g. created in `/dev/shm` and deleted after each build).
 
 ```yaml title="mirrors.yaml"
-misccache:
-  path: /capstor/scratch/$USER/spack-misc
+concretizer:
+  path: /capstor/scratch/$USER/spack-concretizer
 ```
 
 | Field | Required | Description |
 |-------|----------|-------------|
 | `path` | yes | absolute path to a local directory (environment variables are expanded) |
 
-The concretization cache lives under this directory. Spack populates it automatically: concretization caching is on by default in Spack 1.2 and later, and is opt-in (`concretizer:concretization_cache:enable`) in Spack 1.1. It is keyed by the hash of the solver inputs, so a persistent cache can be reused safely across builds — stale entries simply miss.
+This emits a `concretizer.yaml` that sets `concretizer:concretization_cache:{enable: true, url}`.
+The cache is keyed by the hash of the solver inputs, so it can be reused safely across builds — stale entries simply miss.
+
+!!! warning "It does not eliminate concretization time"
+    The cache stores only the *result of the solve* for a given set of inputs. Before it can be consulted, Spack still has to rebuild the full concretization problem on every run — loading the package recipes and enumerating the reusable packages — and that setup work is often the larger part of concretization. So a cache hit skips the solver but not the setup: concretization gets faster, not free.
+
+    The win is therefore largest for repeated builds of the same stack against a stable build cache (the previous solve is replayed), and smallest when the bulk of concretization time is in setup. The cache never makes concretization slower.
+
+!!! note "Requires Spack ≥ 1.1"
+    The `concretizer:concretization_cache` config key was introduced in Spack 1.1, and Spack 1.0 rejects it.
+    Stackinator infers the Spack version from the `spack.commit` in `config.yaml` (defaulting to a supported version when the commit is a branch or arbitrary SHA that cannot be pinned). When it detects Spack 1.0 it skips the concretizer cache with a warning rather than producing a config that would fail the build.
 
 ## Keys
 

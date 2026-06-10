@@ -53,5 +53,5 @@ sourcemirror:
     url: https://github.com/spack
 sourcecache:
   path: /scratch/spack-sources
-misccache:
-  path: /scratch/spack-misc
+concretizer:
+  path: /scratch/spack-concretizer

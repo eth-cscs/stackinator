@@ -56,7 +56,7 @@
             "additionalProperties": false,
             "required": ["path"]
         },
-        "misccache": {
+        "concretizer": {
             "type": "object",
             "properties": {
                 "description": {"type": "string", "default": ""},

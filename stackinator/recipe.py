@@ -176,12 +176,19 @@ class Recipe:
                 )
                 raise RuntimeError("Ivalid default-view in the recipe.")
 
+        # determine the version of spack being used: it is inferred (best effort)
+        # from the spack commit in config.yaml, defaulting to the latest supported
+        # version when it cannot be determined. This must precede the mirror
+        # configuration, which gates the concretizer cache on the spack version.
+        self.spack_version = self.find_spack_version(args.develop)
+
         # resolve the mirror configuration provided with --mirror. --cache is the
         # legacy path.
         self._logger.debug("Configuring mirrors.")
         self.mirrors = mirror.Mirrors(
             self.system_config_path,
             self.mount,
+            self.spack_version,
             pathlib.Path(args.mirror) if args.mirror else None,
             pathlib.Path(args.cache) if args.cache else None,
         )
@@ -197,11 +204,6 @@ class Recipe:
             self._logger.debug(f"pre install hook {self.pre_install_hook}")
         else:
             self._logger.debug("no pre install hook provided")
-
-        # determine the version of spack being used:
-        # currently this just returns 1.0... develop is ignored
-        # --develop flag will imply the next release of spack after 1.0 is supported properly
-        self.spack_version = self.find_spack_version(args.develop)
 
     # Returns:
     #   Path: if the recipe contains a spack package repository
@@ -276,10 +278,30 @@ class Recipe:
     def with_modules(self) -> bool:
         return self.modules is not None
 
-    # In Stackinator 6 we replaced logic required to determine the
-    # pre 1.0 Spack version.
+    # Make a best-effort determination of the "major.minor" version of spack being
+    # used, inferred from the spack commit in config.yaml. This is only a hint: the
+    # commit can be an arbitrary branch/tag/sha, so when the version cannot be pinned
+    # we default to the latest supported version ("1.1"). Returns a "major.minor"
+    # string (e.g. "1.0", "1.1").
     def find_spack_version(self, develop):
-        return "1.0"
+        # the latest supported version, used when the version cannot be determined
+        # (an explicit --develop, the default branch, or an unrecognised commit).
+        default = "1.1"
+
+        if develop:
+            return default
+
+        commit = self.config["spack"]["commit"]
+        if commit is None or commit in ("develop", "main"):
+            return default
+
+        # match a release branch/tag (releases/v1.0, v1.1, v1.1.2) or a bare "1.0",
+        # and extract the major.minor version.
+        match = re.search(r"v?(\d+)\.(\d+)(?:\.\d+)?", commit)
+        if match:
+            return f"{match.group(1)}.{match.group(2)}"
+
+        return default
 
     @property
     def default_view(self):

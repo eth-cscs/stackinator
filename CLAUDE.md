@@ -29,7 +29,7 @@ stackinator/           # Python package
     config.json
     compilers.json
     environments.json
-    mirror.json          # mirrors.yaml schema (buildcache/bootstrap/sourcemirror/sourcecache/misccache)
+    mirror.json          # mirrors.yaml schema (buildcache/bootstrap/sourcemirror/sourcecache/concretizer)
     cache.json           # legacy -c/--cache cache.yaml schema
     modules.json
   templates/           # Jinja2 templates for all generated files
@@ -208,7 +208,8 @@ BUILD/
     packages.yaml
     repos.yaml
     mirrors.yaml        # if --mirror provided: buildcache/sourcemirror entries
-    config.yaml         # if --mirror provided with a sourcecache/misccache (config:source_cache/misc_cache)
+    config.yaml         # if --mirror provided with a sourcecache (config:source_cache)
+    concretizer.yaml    # if --mirror provided with a concretizer cache (concretizer:concretization_cache), spack >= 1.1
     bootstrap.yaml      # if --mirror provided with a bootstrap mirror
     key_store/          # if --mirror provided with gpg keys (decoded *.gpg)
   compilers/
@@ -262,8 +263,8 @@ Writes all files to the build path. Key responsibilities:
 
 ### `Mirrors` class (`mirror.py`)
 A clean exemplar of the "recipe validates & renders, builder just prints" pattern. Constructed by `Recipe` from the `--mirror` file path; does ALL mirror input processing eagerly in `__init__` (loads + schema-validates `mirrors.yaml`, validates mirror urls, decodes/validates gpg keys to in-memory bytes, checks cache paths are absolute and expands env vars). Then presents pure static artifacts:
-- typed members: `buildcache`, `bootstrap`, `source_mirrors`, `source_cache`, `misc_cache`
-- `config_files(config_root) -> {abs_path: bytes}` — the `mirrors.yaml`, `config.yaml`, `bootstrap.yaml`, and gpg key files the builder writes verbatim
+- typed members: `buildcache`, `bootstrap`, `source_mirrors`, `source_cache`, `concretizer_cache`
+- `config_files(config_root) -> {abs_path: bytes}` — the `mirrors.yaml`, `config.yaml`, `concretizer.yaml`, `bootstrap.yaml`, and gpg key files the builder writes verbatim
 - `gpg_key_paths(config_root)` and the `build_cache_mirror` / `push_to_build_cache` properties (the latter is `None` for a keyless, read-only build cache)
 
 Mirror/cache config is supplied ONLY via `--mirror`; a `mirrors.yaml` found in the system config dir is rejected with an error (it was never a system-config artifact). Relative gpg-key paths resolve against the `--mirror` file's own directory.
@@ -310,9 +311,9 @@ Spack mirrors and caches are configured in a single `mirrors.yaml` supplied with
 - **`bootstrap`** (one): for bootstrapping Spack itself (clingo etc.). The `url` is either a local `spack bootstrap mirror` directory (referenced via its own `metadata/sources`+`metadata/binaries`) or a remote url (source-only). Needs **no key** (bootstrap binaries are sha256-verified) → emitted as `config/bootstrap.yaml` (+ a generated `metadata.yaml` only for the remote case); it is NOT a `mirrors.yaml` entry.
 - **`sourcemirror`** (many): read-only mirrors providing package source archives.
 - **`sourcecache`** (one): a writable local dir Spack fills as it fetches sources → emitted as `config:source_cache`.
-- **`misccache`** (one): a writable local dir for Spack's misc cache (package/build-cache indices and the **concretization cache** that lives under it) → emitted as `config:misc_cache`. Useful to persist across ephemeral builds. Concretization caching is on by default in Spack ≥ 1.2, opt-in in 1.1.
+- **`concretizer`** (one): a writable local dir persisting Spack's **concretization results** → emitted as `concretizer:concretization_cache:{enable,url}` in `config/concretizer.yaml`. Useful to persist across ephemeral builds. The config key requires Spack ≥ 1.1; Stackinator infers the Spack version from `config.yaml:spack.commit` (via `Recipe.find_spack_version`, defaulting to the latest supported version when the commit can't be pinned) and **skips the cache with a warning** for Spack 1.0 (which rejects the key).
 
-`sourcecache`/`misccache` are emitted to `config/config.yaml`; `bootstrap` to `config/bootstrap.yaml`; `buildcache`/`sourcemirror` to `config/mirrors.yaml` (+ decoded keys under `config/key_store/`).
+`sourcecache` is emitted to `config/config.yaml`; `concretizer` to `config/concretizer.yaml`; `bootstrap` to `config/bootstrap.yaml`; `buildcache`/`sourcemirror` to `config/mirrors.yaml` (+ decoded keys under `config/key_store/`).
 
 **Legacy:** a binary cache can still be configured with a `cache.yaml` (`root` + optional `key`) passed to `-c/--cache`. This path is deprecated in favour of a `buildcache` entry and will be removed.
 
