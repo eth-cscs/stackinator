@@ -45,7 +45,9 @@ class Mirrors:
                          (bootstrap binaries are sha256-verified) and is emitted to
                          bootstrap.yaml, not the mirrors list. None if absent.
       * source_mirrors - a name -> config mapping of any number of read-only source
-                         mirrors (spack mirrors.yaml entries).
+                         mirrors (spack mirrors.yaml entries). They need no key:
+                         sources are verified against the checksums in the package
+                         recipes, never with gpg.
       * source_cache   - at most one, a writable local directory that spack fills as
                          it fetches sources (spack config:source_cache). None if
                          absent. This is not a mirror: it has no key and no url, and
@@ -222,11 +224,13 @@ class Mirrors:
                 (key_store / f"{name}.priv.gpg", self._read_key(self.buildcache["private_key"], name))
             )
 
-        # Any mirror may provide a public key, used to verify downloaded packages.
-        for name, mirror in self._iter_mirrors():
-            public_key = mirror["public_key"]
-            if public_key is not None:
-                self._key_files.append((key_store / f"{name}.pub.gpg", self._read_key(public_key, name)))
+        # The build cache may provide a public key, used to verify the packages
+        # fetched from it. It is the only mirror with keys at all: sources (and
+        # bootstrap binaries) are checksum-verified, and spack consults the gpg
+        # keyring only when verifying signed build-cache binaries.
+        if self.buildcache is not None and self.buildcache["public_key"] is not None:
+            name = self.buildcache["name"]
+            self._key_files.append((key_store / f"{name}.pub.gpg", self._read_key(self.buildcache["public_key"], name)))
 
     @property
     def build_cache_mirror(self) -> Optional[str]:
@@ -253,10 +257,10 @@ class Mirrors:
     def _iter_mirrors(self):
         """Yield (spack mirror name, config dict) for every real spack mirror.
 
-        These are the entries written to the spack mirrors.yaml that may carry a
-        public key: the build cache (whose name is the configurable 'name' field) and
-        the source mirrors (named by their key in mirrors.yaml). The bootstrap mirror
-        is not a mirrors.yaml entry and has no key, so it is handled separately.
+        These are the entries written to the spack mirrors.yaml: the build cache
+        (whose name is the configurable 'name' field) and the source mirrors (named
+        by their key in mirrors.yaml). The bootstrap mirror is not a mirrors.yaml
+        entry, so it is handled separately.
         """
 
         if self.buildcache is not None:

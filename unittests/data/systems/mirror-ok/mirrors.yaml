@@ -49,7 +49,6 @@ buildcache:
 sourcemirror:
   mirror1:
     url: https://github.com
-    public_key: ../../test-gpg-pub.asc
   mirror2:
     url: https://github.com/spack
 sourcecache:

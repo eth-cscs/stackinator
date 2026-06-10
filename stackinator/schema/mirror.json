@@ -41,8 +41,7 @@
                 "type": "object",
                 "properties": {
                     "description": {"type": "string", "default": ""},
-                    "url": {"type": "string"},
-                    "public_key": {"type": ["string", "null"], "default": null}
+                    "url": {"type": "string"}
                 },
                 "additionalProperties": false,
                 "required": ["url"]

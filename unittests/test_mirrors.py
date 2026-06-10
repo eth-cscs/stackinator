@@ -57,10 +57,10 @@ def test_mirror_init(clean_root, mount_path, systems_path, mirror_ok):
         "description": "",
     }
 
-    # non-required fields are always present, defaulted to "" / None by the schema
+    # non-required fields are always present, defaulted to "" by the schema
     assert mirrors_obj.source_mirrors == {
-        "mirror1": {"url": "https://github.com", "public_key": "../../test-gpg-pub.asc", "description": ""},
-        "mirror2": {"url": "https://github.com/spack", "public_key": None, "description": ""},
+        "mirror1": {"url": "https://github.com", "description": ""},
+        "mirror2": {"url": "https://github.com/spack", "description": ""},
     }
 
     # the writable, populate-as-you-go source cache
@@ -193,7 +193,6 @@ def test_config_files(tmp_path, clean_root, mount_path, mirror_ok):
         tmp_path / "bootstrap" / "bootstrap-mirror" / "metadata.yaml",
         tmp_path / "key_store" / "buildcache.priv.gpg",
         tmp_path / "key_store" / "buildcache.pub.gpg",
-        tmp_path / "key_store" / "mirror1.pub.gpg",
     }
     assert set(files.keys()) == expected
 
@@ -347,19 +346,20 @@ def test_local_bootstrap_missing_metadata(tmp_path, clean_root, mount_path):
         mirror.Mirrors(clean_root, mount_path, mirror_file=mirror_file)
 
 
-def test_keys(tmp_path, clean_root, mount_path, mirror_ok):
+def test_keys(tmp_path, clean_root, mount_path, systems_path, mirror_ok):
     """Check that gpg keys are decoded, relocated and reported consistently."""
 
     mirrors_obj = mirror.Mirrors(clean_root, mount_path, mirror_file=mirror_ok)
     files = mirrors_obj.config_files(tmp_path)
 
-    # public keys are set up for the buildcache and mirror1
+    # the buildcache is the only mirror with keys (sources are checksum-verified)
     pub_files = {p for p in files if p.name.endswith(".pub.gpg")}
-    assert {p.name for p in pub_files} == {"buildcache.pub.gpg", "mirror1.pub.gpg"}
+    assert {p.name for p in pub_files} == {"buildcache.pub.gpg"}
 
-    # the buildcache public key (inline base64) and mirror1's (a file) are the same
-    # key, so the decoded bytes must match
-    assert files[tmp_path / "key_store/buildcache.pub.gpg"] == files[tmp_path / "key_store/mirror1.pub.gpg"]
+    # the buildcache public key is inlined base64 in the fixture; the decoded bytes
+    # must match the key file it was encoded from
+    with (systems_path / "../test-gpg-pub.asc").open("rb") as pub_key_file:
+        assert files[tmp_path / "key_store/buildcache.pub.gpg"] == pub_key_file.read()
 
     # gpg_key_paths reports exactly the key files that config_files writes
     key_files = {p for p in files if p.parent.name == "key_store"}

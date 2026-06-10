@@ -158,8 +158,9 @@ sourcemirror:
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `url`        | yes | location of the source mirror |
-| `public_key` | no  | PGP key used to verify sources |
+| `url` | yes | location of the source mirror |
+
+Source mirrors need no keys: Spack verifies every downloaded source against the checksum in its package recipe, whether it comes from the upstream url or a mirror.
 
 Populate a source mirror on an internet-connected system with Spack:
 
@@ -172,7 +173,7 @@ spack mirror create --directory /path/to/mirror --all
 A source cache is a single, **writable** local directory that Spack fills as it downloads sources.
 On internet-connected systems Spack checks the cache first; on a miss it downloads the source and stores it, so later builds reuse it and download times shrink over time.
 
-Unlike a source mirror it needs no key, is written to automatically, and is created on demand.
+Unlike a source mirror it is written to automatically, and is created on demand.
 
 ```yaml title="mirrors.yaml"
 sourcecache:
@@ -201,9 +202,9 @@ The concretization cache lives under this directory. Spack populates it automati
 
 ## Keys
 
-The `private_key` and `public_key` fields accept either:
+The build cache's `private_key` and `public_key` fields accept either:
 
-* a **path** — absolute, or relative to the system configuration directory; or
+* a **path** — absolute, or relative to the directory containing `mirrors.yaml`; or
 * a **base64-encoded key** inlined directly in `mirrors.yaml`.
 
 ```yaml
