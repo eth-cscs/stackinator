@@ -18,7 +18,7 @@ all:{% for env in environments %} {{ env }}/generated/build_cache{% endfor %}
 {% for env, config in environments.items() %}
 {{ env }}/generated/build_cache: {{ env }}/generated/view_config
 {% if buildcache %}
-	$(SPACK) --color=never -e ./{{ env }} buildcache create --rebuild-index --only=package {{ buildcache }} \
+	$(SPACK) --color=never -e ./{{ env }} buildcache create --only=package {{ buildcache }} \
 	$$($(SPACK_HELPER) -e ./{{ env }} find --format '{name};{/hash};version={version}' \
 	| grep -v -E '^({% for p in config.exclude_from_cache %}{{ pipejoiner() }}{{ p }}{% endfor %});'\
 	| grep -v -E 'version=git\.'\
