@@ -1,14 +1,14 @@
 # Mirrors and Build Caches
 
 Spack can use *mirrors* and *caches* to speed up image builds and to build on systems with limited or no internet access.
-They are configured in a single `mirrors.yaml` file that you supply on the command line:
+
+They are configured in a single YAML file passed to `stack-config` using the `--mirror` flag:
 
 ```bash
 stack-config -b $build -r $recipe -s $system --mirror mirrors.yaml
 ```
 
 The file is not part of the [system configuration](cluster-config.md): mirror locations are usually specific to the person running the build, so each invocation provides its own.
-Paths inside the file (such as relative gpg key paths) are resolved relative to the directory containing the `mirrors.yaml`, so a self-contained mirror directory (the `mirrors.yaml` plus its keys) can be moved around freely.
 
 A `mirrors.yaml` can describe five kinds of entry, each optional and each documented below:
 
@@ -20,23 +20,29 @@ A `mirrors.yaml` can describe five kinds of entry, each optional and each docume
 | [`sourcecache`](#source-cache)  | one  | writable local cache that fills with sources as you build |
 | [`concretizer`](#concretizer-cache)  | one  | writable local cache that persists concretization results |
 
-A complete example:
+!!! example
+    ```yaml title="mirrors.yaml"
+    buildcache:
+      url: file:///capstor/scratch/team/uenv-cache
+      private_key: /capstor/scratch/bobsmith/.keys/spack-push-key.gpg
+      mount_specific: true
+    bootstrap:
+      url: https://bootstrap.spack.io
+    sourcemirror:
+      # more than one source mirror can be configred.
+      netmirror:
+        url: https://example.com/spack-sources
+      localmirror:
+        url: file://scratch/group15/spack-sources
+    sourcecache:
+      path: /capstor/scratch/bobsmith/spack-sources
+    concretizer:
+      path: /capstor/scratch/bobsmith/spack-concretizer
+    ```
 
-```yaml title="mirrors.yaml"
-buildcache:
-  url: file:///capstor/scratch/team/uenv-cache
-  private_key: $SCRATCH/.keys/spack-push-key.gpg
-  mount_specific: true
-bootstrap:
-  url: https://bootstrap.spack.io
-sourcemirror:
-  mirror1:
-    url: https://example.com/spack-sources
-sourcecache:
-  path: /capstor/scratch/$USER/spack-sources
-concretizer:
-  path: /capstor/scratch/$USER/spack-concretizer
-```
+!!! note
+    Paths inside the file (such as relative gpg key paths) are resolved relative to the directory containing the `mirrors.yaml`, so a self-contained mirror directory (the `mirrors.yaml` plus its keys) can be moved around freely.
+
 
 To stop using any entry, remove (or comment out) it from `mirrors.yaml`.
 
@@ -50,7 +56,7 @@ During a build Spack fetches packages from the cache when it can, and signs and 
 ```yaml title="mirrors.yaml"
 buildcache:
   url: file:///capstor/scratch/team/uenv-cache
-  private_key: $SCRATCH/.keys/spack-push-key.gpg
+  private_key: /capstor/scratch/bobsmith/.keys/spack-push-key.gpg
 ```
 
 | Field | Required | Description |
@@ -79,7 +85,7 @@ Set `mount_specific: true` to append the mount point to the cache URL, giving ea
 ```yaml
 buildcache:
   url: file:///capstor/scratch/team/uenv-cache
-  private_key: $SCRATCH/.keys/spack-push-key.gpg
+  private_key: /capstor/scratch/bobsmith/.keys/spack-push-key.gpg
   mount_specific: true   # packages stored under .../uenv-cache/user-environment
 ```
 
@@ -89,11 +95,11 @@ A build cache needs an empty directory and a PGP signing key:
 
 ```bash
 # 1. create the cache directory
-mkdir -p $SCRATCH/uenv-cache
+mkdir -p /capstor/scratch/bobsmith/uenv-cache
 
 # 2. generate and export a signing key
 spack gpg create <name> <e-mail>
-spack gpg export --secret $SCRATCH/.keys/spack-push-key.gpg
+spack gpg export --secret /capstor/scratch/bobsmith/.keys/spack-push-key.gpg
 ```
 
 See [Keys](#keys) for where to store the key.
@@ -177,7 +183,7 @@ Unlike a source mirror it is written to automatically, and is created on demand.
 
 ```yaml title="mirrors.yaml"
 sourcecache:
-  path: /capstor/scratch/$USER/spack-sources
+  path: /capstor/scratch/bobsmith/spack-sources
 ```
 
 | Field | Required | Description |
@@ -191,7 +197,7 @@ Concretization can be a large fraction of build time, so pointing this at a pers
 
 ```yaml title="mirrors.yaml"
 concretizer:
-  path: /capstor/scratch/$USER/spack-concretizer
+  path: /capstor/scratch/bobsmith/spack-concretizer
 ```
 
 | Field | Required | Description |
@@ -201,14 +207,17 @@ concretizer:
 This emits a `concretizer.yaml` that sets `concretizer:concretization_cache:{enable: true, url}`.
 The cache is keyed by the hash of the solver inputs, so it can be reused safely across builds — stale entries simply miss.
 
-!!! warning "It does not eliminate concretization time"
-    The cache stores only the *result of the solve* for a given set of inputs. Before it can be consulted, Spack still has to rebuild the full concretization problem on every run — loading the package recipes and enumerating the reusable packages — and that setup work is often the larger part of concretization. So a cache hit skips the solver but not the setup: concretization gets faster, not free.
+!!! info "concretizer cache is not a silver bullet"
+    The cache stores only the *result of the solve* for a given set of inputs.
+    Before it can be consulted, Spack still has to rebuild the full concretization problem on every run, loading the package recipes and enumerating the reusable packages, and that setup work is often the larger part of concretization.
+    So a cache hit skips the solver but not the setup: concretization gets faster, not free.
 
-    The win is therefore largest for repeated builds of the same stack against a stable build cache (the previous solve is replayed), and smallest when the bulk of concretization time is in setup. The cache never makes concretization slower.
+    The win is therefore largest for repeated builds of the same stack against a stable build cache (the previous solve is replayed), and smallest when the bulk of concretization time is in setup.
 
 !!! note "Requires Spack ≥ 1.1"
     The `concretizer:concretization_cache` config key was introduced in Spack 1.1, and Spack 1.0 rejects it.
-    Stackinator infers the Spack version from the `spack.commit` in `config.yaml` (defaulting to a supported version when the commit is a branch or arbitrary SHA that cannot be pinned). When it detects Spack 1.0 it skips the concretizer cache with a warning rather than producing a config that would fail the build.
+    Stackinator infers the Spack version from the `spack.commit` in `config.yaml` (defaulting to a supported version when the commit is a branch or arbitrary SHA that cannot be pinned).
+    When it detects Spack 1.0 it skips the concretizer cache with a warning rather than producing a config that would fail the build.
 
 ## Keys
 
@@ -235,7 +244,7 @@ chmod 600 $SCRATCH/.keys/spack-push-key.gpg
 
 See the [Spack documentation](https://spack.readthedocs.io/en/latest/getting_started.html#gpg-signing) for more on GPG keys.
 
-!!! failure "Don't use `$HOME`"
+!!! warning "Don't use `$HOME`"
     The build remounts `~` as a tmpfs, so keys under `$HOME` are not visible during the build and Spack will fail to read them. Use scratch storage instead.
 
 ## Legacy `--cache` option
