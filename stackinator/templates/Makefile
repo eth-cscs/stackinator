@@ -34,9 +34,9 @@ pre-install: spack-setup
 mirror-setup: spack-setup{% if pre_install_hook %} pre-install{% endif %}
 
 {% if cache %}
-	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) buildcache keys --install --trust
+	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) buildcache keys --install --trust --yes-to-all
 {% if cache.key %}
-	$(SANDBOX) $(SPACK) gpg trust {{ cache.key }}
+	$(SANDBOX) $(SPACK) gpg trust --yes-to-all {{ cache.key }}
 {% endif %}
 {% endif %}
 	touch mirror-setup
