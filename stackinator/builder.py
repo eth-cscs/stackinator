@@ -258,7 +258,11 @@ class Builder:
         with (config_path / "packages.yaml").open("w") as f:
             f.write(yaml.dump(recipe.packages))
 
-        config_yaml = {"config": {"install_tree": {"root": str(recipe.mount)}}}
+        # Force the legacy ("old") installer: the new spack 1.2 installer drives a
+        # live TUI via selectors/pipes/non-blocking fds that fails with EBADF under
+        # the non-interactive `make` build on older Cray/SLES stacks (system Python
+        # 3.6). The TUI is pointless for a batch build in any case.
+        config_yaml = {"config": {"install_tree": {"root": str(recipe.mount)}, "installer": "old"}}
         with (config_path / "config.yaml").open("w") as f:
             f.write(yaml.dump(config_yaml))
 
@@ -333,9 +337,10 @@ class Builder:
         meta_extra_path = meta_path / "extra"
         if meta_extra_path.exists():
             shutil.rmtree(meta_extra_path)
-        meta_extra_path.mkdir(exist_ok=True)
         if recipe.user_extra is not None:
             install(recipe.user_extra, meta_extra_path)
+        else:
+            meta_extra_path.mkdir()
 
         # --- debug helper ---
         debug_template = jinja_env.get_template("stack-debug.sh")
