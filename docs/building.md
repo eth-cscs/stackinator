@@ -12,10 +12,23 @@ stack-config --build $BUILD_PATH ...
 
 # perform the build
 cd $BUILD_PATH
-env --ignore-environment PATH=/usr/bin:/bin:`pwd -P`/spack/bin make modules store.squashfs -j32
+env --ignore-environment PATH=/usr/bin:/bin:`pwd -P`/spack/bin make modules store.squashfs NJOBS=32
 ```
 
 The call to `make` is wrapped with with `env --ignore-env` to unset all environment variables, to improve reproducability of builds.
+
+## Controlling build parallelism
+
+The number of packages and compilation jobs that Spack runs concurrently is set with the `NJOBS` make variable:
+
+```
+make store.squashfs NJOBS=64
+```
+
+Set `NJOBS` to the number of cores available on the build node (it defaults to `16` if not provided).
+
+!!! note
+    Do not use `make -jN` to control build parallelism. The `install` step clears `MAKEFLAGS` before invoking Spack — this avoids a crash with GNU make older than 4.4, whose legacy file-descriptor jobserver Spack mishandles — so the outer `make -j` flag does not reach Spack. `NJOBS` is passed to Spack as `spack install --jobs`, and is the only flag that governs build parallelism.
 
 Build times for stacks typically vary between 30 minutes to 3 hours, depending on the specific packages that have to be built.
 Using [build caches](build-caches.md) and building in shared memory (see below) are the most effective methods to speed up builds.

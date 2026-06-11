@@ -45,28 +45,37 @@ concretize: mirror-setup env/spack.yaml
 	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) concretize
 	touch concretize
 
+# Clear MAKEFLAGS for the install. When run with `make -j`, GNU make advertises a
+# jobserver in MAKEFLAGS. GNU make < 4.4 uses the legacy fd form (`--jobserver-auth=R,W`)
+# and closes those fds before running a non-recursive recipe, so they are invalid in the
+# spack process. Spack's jobserver probe validates them with `fcntl(fd, F_GETFD) != -1`,
+# a C idiom that in Python *raises* OSError(EBADF) instead of returning -1 - so the
+# install aborts with `[Errno 9] Bad file descriptor` (independent of Python version).
+# Hiding MAKEFLAGS makes spack create its own FIFO jobserver sized by `config:build_jobs`.
+# Outer-make `-j` no longer governs spack; set build_jobs to control parallelism (or use
+# GNU make >= 4.4, whose `fifo:` jobserver spack parses correctly).
 install: concretize
-	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) install
+	MAKEFLAGS= $(SANDBOX) $(SPACK) -e $(ENV_ROOT) install --jobs $(NJOBS)
 	touch install
 
-cleanup: install
+cache-push: install
+{% if push_to_cache and cache.key %}
+	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) buildcache create --rebuild-index --only=package alpscache \
+	$$($(SANDBOX) $(SPACK_HELPER) -e $(ENV_ROOT) find --format '{name};{/hash};version={version}' \
+	| grep -v -E '^({% for p in exclude_from_cache %}{{ pipejoiner() }}{{ p }}{% endfor %});'\
+	| grep -v -E 'version=git\.'\
+	| cut -d ';' -f2) 2>&1 \
+	| awk -v f="$(BUILD_ROOT)/gpg.log" '/^gpg:/{print > f; next} /^==> Fetching/{next} {print; fflush()}'
+{% endif %}
+	touch cache-push
+
+cleanup: cache-push
 {% if cleanup == "build" %}
 	$(SANDBOX) $(SPACK) gc --yes-to-all --keep-build-dependencies --except-environment $(ENV_ROOT)
 {% elif cleanup == "runtime" %}
 	$(SANDBOX) $(SPACK) gc --yes-to-all --except-environment $(ENV_ROOT)
 {% endif %}
 	touch cleanup
-
-{% if push_to_cache and cache.key %}
-cache-push: install
-	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) buildcache create --rebuild-index --only=package alpscache \
-	$$($(SANDBOX) $(SPACK_HELPER) -e $(ENV_ROOT) find --format '{name};{/hash};version={version}' \
-	| grep -v -E '^({% for p in exclude_from_cache %}{{ pipejoiner() }}{{ p }}{% endfor %});'\
-	| grep -v -E 'version=git\.'\
-	| cut -d ';' -f2)\
-	| grep -Ev '^==> Fetching|^gpg:'
-	touch cache-push
-{% endif %}
 
 # Generate compiler-config.yaml for use by view and generate-config steps.
 compiler-config.yaml: cleanup

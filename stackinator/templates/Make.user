@@ -54,6 +54,13 @@ export SPACK_USER_CACHE_PATH := $(BUILD_ROOT)/cache
 export SPACK_INSTALL_FLAGS := --verbose
 {% endif %}
 
+# Number of concurrent build jobs for `spack install`. The new installer treats this as a
+# global cap across all packages building at once.
+# Set it explicitly because the install recipe clears MAKEFLAGS (see the Makefile),
+# so the outer `make -j` no longer reaches spack.
+# Override on the build node, e.g. `make store.squashfs NJOBS=64`.
+NJOBS ?= 32
+
 # Reproducibility
 export LC_ALL := en_US.UTF-8
 export TZ := UTC

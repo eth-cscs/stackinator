@@ -18,17 +18,7 @@ spack:
         reuse: false
       packages:
         gcc:
-          variants: [build_type=Release +bootstrap +profiled +strip ~binutils]
-        mpc:
-          variants: [libs=static]
-        gmp:
-          variants: [libs=static]
-        mpfr:
-          variants: [libs=static]
-        zstd:
-          variants: [libs=static]
-        zlib:
-          variants: [~shared]
+          variants: [build_type=Release +bootstrap +strip ~binutils]
 
 {% endif %}
 {% if compilers.nvhpc %}

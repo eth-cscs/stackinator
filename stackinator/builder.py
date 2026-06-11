@@ -258,11 +258,7 @@ class Builder:
         with (config_path / "packages.yaml").open("w") as f:
             f.write(yaml.dump(recipe.packages))
 
-        # Force the legacy ("old") installer: the new spack 1.2 installer drives a
-        # live TUI via selectors/pipes/non-blocking fds that fails with EBADF under
-        # the non-interactive `make` build on older Cray/SLES stacks (system Python
-        # 3.6). The TUI is pointless for a batch build in any case.
-        config_yaml = {"config": {"install_tree": {"root": str(recipe.mount)}, "installer": "old"}}
+        config_yaml = {"config": {"install_tree": {"root": str(recipe.mount)}}}
         with (config_path / "config.yaml").open("w") as f:
             f.write(yaml.dump(config_yaml))
 
