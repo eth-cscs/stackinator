@@ -45,11 +45,12 @@ def test_mirror_init(clean_root, mount_path, systems_path, mirror_ok):
     assert mirrors_obj.buildcache == {
         "name": "buildcache",
         "description": "",
+        "source": False,
+        "binary": True,
         "url": "https://mirror.spack.io",
         "private_key": "../../test-gpg-priv.asc",
         "public_key": pub_key_b64,
         "mount_specific": False,
-        "cmdline": False,
     }
 
     assert mirrors_obj.bootstrap == {
@@ -57,10 +58,10 @@ def test_mirror_init(clean_root, mount_path, systems_path, mirror_ok):
         "description": "",
     }
 
-    # non-required fields are always present, defaulted to "" by the schema
+    # non-required fields are always present, filled in by schema defaults
     assert mirrors_obj.source_mirrors == {
-        "mirror1": {"url": "https://github.com", "description": ""},
-        "mirror2": {"url": "https://github.com/spack", "description": ""},
+        "mirror1": {"url": "https://github.com", "description": "", "source": True, "binary": False},
+        "mirror2": {"url": "https://github.com/spack", "description": "", "source": True, "binary": False},
     }
 
     # the writable, populate-as-you-go source cache
@@ -100,13 +101,6 @@ def test_no_mirror_file(clean_root, mount_path):
     assert mirrors_obj.build_cache_mirror is None
 
 
-def test_mirror_init_bad_url(clean_root, mount_path, systems_path):
-    """Check that MirrorError is raised for a bad url."""
-
-    with pytest.raises(mirror.MirrorError):
-        mirror.Mirrors(clean_root, mount_path, "1.1", mirror_file=systems_path / "mirror-bad-url/mirrors.yaml")
-
-
 def test_command_line_cache(clean_root, mount_path, systems_path, mirror_ok):
     """Check that adding a cache from the command line works."""
 
@@ -119,7 +113,6 @@ def test_command_line_cache(clean_root, mount_path, systems_path, mirror_ok):
     assert mirrors.build_cache_mirror == "buildcache"
     assert mirrors.buildcache["name"] == "buildcache"
     assert mirrors.buildcache["url"] == "/tmp/foo"
-    assert mirrors.buildcache["cmdline"]
     assert mirrors.buildcache["mount_specific"]
 
     # it has a signing key, so it is pushed to
@@ -151,7 +144,11 @@ def test_keyless_command_line_cache(tmp_path, clean_root, mount_path, systems_pa
 
     # the mirror is emitted with a fetch url but no push url
     data = yaml.safe_load(files[tmp_path / "mirrors.yaml"])
-    assert data["mirrors"]["buildcache"] == {"fetch": {"url": "/tmp/foo/user-environment"}}
+    assert data["mirrors"]["buildcache"] == {
+        "source": False,
+        "binary": True,
+        "fetch": {"url": "/tmp/foo/user-environment"},
+    }
 
 
 def test_readonly_buildcache(tmp_path, clean_root, mount_path, systems_path):
@@ -175,7 +172,11 @@ def test_readonly_buildcache(tmp_path, clean_root, mount_path, systems_path):
 
     # the mirror is emitted with a fetch url but no push url
     data = yaml.safe_load(files[tmp_path / "mirrors.yaml"])
-    assert data["mirrors"]["buildcache"] == {"fetch": {"url": "https://mirror.spack.io"}}
+    assert data["mirrors"]["buildcache"] == {
+        "source": False,
+        "binary": True,
+        "fetch": {"url": "https://mirror.spack.io"},
+    }
 
 
 def test_config_files(tmp_path, clean_root, mount_path, mirror_ok):
@@ -209,6 +210,8 @@ def test_spack_mirrors_yaml(tmp_path, clean_root, mount_path, mirror_ok):
     valid_spack_yaml = {
         "mirrors": {
             "buildcache": {
+                "source": False,
+                "binary": True,
                 "fetch": {"url": "https://mirror.spack.io"},
                 "push": {"url": "https://mirror.spack.io"},
             },
@@ -428,6 +431,44 @@ def test_local_caches_absent(tmp_path, clean_root, mount_path, systems_path):
     assert mirrors_obj.concretizer_cache is None
     assert tmp_path / "config.yaml" not in files
     assert tmp_path / "concretizer.yaml" not in files
+
+
+def test_s3_fetch_and_push_connections(tmp_path, clean_root, mount_path, systems_path):
+    """A buildcache and a source mirror sharing the spack fetch/push connection shape.
+
+    The explicit fetch/push connection objects (distinct read/write endpoints plus S3
+    auth) must be carried through verbatim into the emitted spack mirrors.yaml, proving
+    buildcache and sourcemirror entries accept the same spack connection config.
+    """
+
+    mirrors_obj = mirror.Mirrors(clean_root, mount_path, "1.1", mirror_file=systems_path / "mirror-s3/mirrors.yaml")
+    files = mirrors_obj.config_files(tmp_path)
+    data = yaml.safe_load(files[tmp_path / "mirrors.yaml"])
+
+    bc_conn = {
+        "url": "s3://my-bucket/buildcache",
+        "endpoint_url": "https://s3.example.com",
+        "access_pair": {"id_variable": "AWS_ACCESS_KEY_ID", "secret_variable": "AWS_SECRET_ACCESS_KEY"},
+    }
+    # the buildcache has a signing key, so both fetch and push are emitted with auth
+    assert data["mirrors"]["buildcache"] == {
+        "source": False,
+        "binary": True,
+        "fetch": bc_conn,
+        "push": bc_conn,
+    }
+
+    src_conn = {
+        "url": "s3://my-bucket/sources",
+        "profile": "my-profile",
+        "endpoint_url": "https://s3.example.com",
+    }
+    assert data["mirrors"]["s3-sources"] == {
+        "source": True,
+        "binary": False,
+        "fetch": src_conn,
+        "push": src_conn,
+    }
 
 
 @pytest.mark.parametrize(

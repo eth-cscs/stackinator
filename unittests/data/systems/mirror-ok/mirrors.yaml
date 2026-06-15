@@ -45,7 +45,6 @@ buildcache:
     gllMF++N8+7T4/ehkA/hs2udYRkSCANLQ3I3"
   private_key: ../../test-gpg-priv.asc
   mount_specific: false
-  cmdline: false
 sourcemirror:
   mirror1:
     url: https://github.com

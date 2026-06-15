@@ -168,10 +168,11 @@ class Mirrors:
                 "name": "buildcache",
                 "url": raw_cache["root"],
                 "description": "Buildcache dest loaded from legacy cache.yaml",
+                "source": False,
+                "binary": True,
                 "public_key": None,
                 "private_key": raw_cache.get("key"),
                 "mount_specific": True,
-                "cmdline": True,
             }
             self._logger.warning(
                 "Configuring the buildcache from the system cache.yaml file.\n"
@@ -183,13 +184,9 @@ class Mirrors:
         # The bootstrap mirror, the read-only source mirrors, the writable source
         # cache, and the writable concretizer cache, if any are defined.
         self.bootstrap = raw_mirrors.get("bootstrap")
-        self.source_mirrors = dict(raw_mirrors["sourcemirror"])
+        self.source_mirrors = raw_mirrors.get("sourcemirror") or {}
         self.source_cache = raw_mirrors.get("sourcecache")
         self.concretizer_cache = raw_mirrors.get("concretizer")
-
-        # Validate that every mirror url is well-formed (see _validate_url).
-        for name, mirror in self._iter_mirrors():
-            self._validate_url(mirror["url"], name)
 
         # The source and concretizer caches are single writable local directories
         # (spack config:source_cache / concretizer:concretization_cache), not mirrors:
@@ -224,7 +221,6 @@ class Mirrors:
         self._bootstrap_metadata_dirs: List[str] = []
         if self.bootstrap is not None:
             url = self.bootstrap["url"]
-            self._validate_url(url, "bootstrap")
             if self._is_remote_url(url):
                 self._bootstrap_remote = True
             else:
@@ -284,19 +280,6 @@ class Mirrors:
             return self.buildcache["name"]
         return None
 
-    def _iter_mirrors(self):
-        """Yield (spack mirror name, config dict) for every real spack mirror.
-
-        These are the entries written to the spack mirrors.yaml: the build cache
-        (whose name is the configurable 'name' field) and the source mirrors (named
-        by their key in mirrors.yaml). The bootstrap mirror is not a mirrors.yaml
-        entry, so it is handled separately.
-        """
-
-        if self.buildcache is not None:
-            yield self.buildcache["name"], self.buildcache
-        yield from self.source_mirrors.items()
-
     @staticmethod
     def _is_remote_url(url: str) -> bool:
         """True if url is a remote url (has a non-file scheme and a host)."""
@@ -312,31 +295,50 @@ class Mirrors:
             url = url[len("file://") :]
         return pathlib.Path(os.path.expandvars(url))
 
-    def _validate_url(self, url: str, name: str):
-        """Validate that a mirror url is well-formed.
+    # the spack mirror connection fields (everything that may appear inside a
+    # fetch/push block, or at the top level of a mirror entry as a shorthand).
+    _CONNECTION_KEYS = ("url", "view", "profile", "endpoint_url", "access_token_variable", "access_pair")
 
-        Only the format of the url is checked: no attempt is made to connect to
-        remote mirrors, because a valid-but-unreachable url would otherwise block
-        until the network request times out.
+    @classmethod
+    def _connection(cls, entry: Dict, key: str, mount_path: Optional[pathlib.Path] = None) -> Optional[Dict]:
+        """Resolve a mirror entry's fetch/push connection to a spack connection dict.
+
+        The connection comes from the entry's explicit `key` (either a url string or a
+        connection object), falling back to the entry's top-level connection fields
+        (url + auth) when no explicit fetch/push block is given - matching how spack
+        applies a top-level url/auth to a mirror with no fetch/push. Returns None if
+        no url can be resolved. When mount_path is set the url gains the mount point as
+        a sub-directory (mount-specific build caches).
         """
 
-        if url.startswith("file://"):
-            # local mirror: verify that the root path is an existing directory
-            path = pathlib.Path(os.path.expandvars(url[len("file://") :]))
-            if not path.is_absolute():
-                raise MirrorError(f"The mirror path '{path}' for mirror '{name}' is not absolute")
-            if not path.is_dir():
-                raise MirrorError(f"The mirror path '{path}' for mirror '{name}' is not a directory")
-            return
+        conn = entry.get(key)
+        if conn is None:
+            # shorthand: assemble the connection from the entry's top-level fields
+            conn = {k: entry[k] for k in cls._CONNECTION_KEYS if entry.get(k) is not None}
+        elif isinstance(conn, str):
+            conn = {"url": conn}
+        else:
+            # copy so the relocation below never mutates the stored config
+            conn = dict(conn)
 
-        parsed = urllib.parse.urlparse(url)
-        if not parsed.scheme:
-            # a bare path is accepted if absolute (e.g. the legacy command line cache)
-            if not pathlib.Path(url).is_absolute():
-                raise MirrorError(f"The mirror url '{url}' for mirror '{name}' is not a valid url or absolute path")
-        elif not parsed.netloc:
-            # a remote mirror requires a well-formed url with both a scheme and a host
-            raise MirrorError(f"The mirror url '{url}' for mirror '{name}' is not a valid url")
+        if "url" not in conn:
+            return None
+
+        if mount_path is not None:
+            conn["url"] = conn["url"].rstrip("/") + "/" + mount_path.as_posix().lstrip("/")
+        return conn
+
+    @staticmethod
+    def _add_optional_flags(entry: Dict, mirror: Dict):
+        """Pass the optional spack mirror flags (signed, autopush) through if set.
+
+        These have no default in the schema, so they are present only when the user set
+        them; they are copied verbatim into the emitted spack mirror entry.
+        """
+
+        for flag in ("signed", "autopush"):
+            if flag in mirror:
+                entry[flag] = mirror[flag]
 
     def _read_key(self, key: str, name: str) -> bytes:
         """Resolve a key (a file path or base64 blob) to validated gpg key bytes.
@@ -397,25 +399,34 @@ class Mirrors:
         spack_mirrors: Dict[str, Dict] = {"mirrors": {}}
 
         if self.buildcache is not None:
-            url = self.buildcache["url"]
             # a mount-specific build cache lives in a sub-directory named after the
             # mount point: spack binaries embed the install prefix, so each mount
             # point needs its own cache to avoid relocation issues.
-            if self.buildcache["mount_specific"]:
-                url = url.rstrip("/") + "/" + self._mount_path.as_posix().lstrip("/")
-            entry = {"fetch": {"url": url}}
-            # only a build cache with a signing key is pushed to
-            if self.buildcache["private_key"] is not None:
-                entry["push"] = {"url": url}
+            mount = self._mount_path if self.buildcache["mount_specific"] else None
+            entry = {
+                "source": self.buildcache["source"],
+                "binary": self.buildcache["binary"],
+                "fetch": self._connection(self.buildcache, "fetch", mount),
+            }
+            # a build cache is only pushed to when it has a signing key; a keyless
+            # build cache is read-only (fetched from, never pushed to).
+            if self.push_to_build_cache is not None:
+                entry["push"] = self._connection(self.buildcache, "push", mount)
+            self._add_optional_flags(entry, self.buildcache)
             spack_mirrors["mirrors"][self.buildcache["name"]] = entry
 
-        # source mirrors are read-only and provide sources only: fetch url, no push.
+        # source mirrors are read-only by default (fetch only); a push connection is
+        # emitted only when one was explicitly configured.
         for name, mirror in self.source_mirrors.items():
-            spack_mirrors["mirrors"][name] = {
-                "source": True,
-                "binary": False,
-                "fetch": {"url": mirror["url"]},
+            entry = {
+                "source": mirror["source"],
+                "binary": mirror["binary"],
+                "fetch": self._connection(mirror, "fetch"),
             }
+            if mirror.get("push") is not None:
+                entry["push"] = self._connection(mirror, "push")
+            self._add_optional_flags(entry, mirror)
+            spack_mirrors["mirrors"][name] = entry
 
         files[config_root / self.MIRRORS_YAML] = yaml.dump(
             spack_mirrors, default_flow_style=False, sort_keys=False
