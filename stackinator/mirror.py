@@ -177,8 +177,12 @@ class Mirrors:
             self._logger.warning(
                 "Configuring the buildcache from the system cache.yaml file.\n"
                 "Please switch to using either the '--cache' option or the 'mirrors.yaml' file instead.\n"
-                f"The equivalent 'mirrors.yaml' would look like: \n"
-                f"{yaml.dump([self.buildcache], default_flow_style=False)}"
+                "The equivalent 'mirrors.yaml' would look like: \n\n"
+                "buildcache:\n"
+                "  mount_specific: true\n"
+                f"  private_key: {self.buildcache['private_key']}\n"
+                f"  url: {self.buildcache['url']}\n\n"
+                "see https://eth-cscs.github.io/stackinator/mirrors for more information"
             )
 
         # The bootstrap mirror, the read-only source mirrors, the writable source
