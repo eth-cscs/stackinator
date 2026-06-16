@@ -52,7 +52,9 @@ environments: compilers
 
 {% if modules %}
 modules-done: environments generate-config
-	$(SANDBOX) $(SPACK) -C $(BUILD_ROOT)/modules module tcl refresh --upstream-modules --delete-tree --yes-to-all
+	{% for module_type in module_types %}
+	$(SANDBOX) $(SPACK) -C $(BUILD_ROOT)/modules module {{ module_type }} refresh --upstream-modules --delete-tree --yes-to-all
+	{% endfor %}
 	touch modules-done
 {% endif %}
 

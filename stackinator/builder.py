@@ -220,11 +220,18 @@ class Builder:
         # generate top level makefiles
         makefile_template = jinja_env.get_template("Makefile")
 
+        # Extract module types that were configured in recipe.py
+        module_types = []
+        if recipe.with_modules and recipe.modules:
+            roots = recipe.modules.get("modules", {}).get("default", {}).get("roots", {})
+            module_types = list(roots.keys())
+
         with (self.path / "Makefile").open("w") as f:
             f.write(
                 makefile_template.render(
                     cache=recipe.mirror,
                     modules=recipe.with_modules,
+                    module_types=module_types,
                     post_install_hook=recipe.post_install_hook,
                     pre_install_hook=recipe.pre_install_hook,
                     spack_version=spack_version,
