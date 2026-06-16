@@ -1,3 +1,4 @@
+[](){#ref-configuring}
 # Configuring Spack Stacks
 
 Stackinator generates the make files and spack configurations that build the spack environments that are packaged together in the spack stack.
@@ -10,13 +11,13 @@ stack-config --build $BUILD_PATH --recipe $RECIPE_PATH --system $SYSTEM_CONFIG_P
 
 The following flags are required:
 
-* `-b/--build`: the path where the [build](building.md) is to be performed.
-* `-r/--recipe`: the path with the [recipe](recipes.md) yaml files that describe the environment.
-* `-s/--system`: the path containing the [system configuration](cluster-config.md) for the target cluster.
+* `-b/--build`: the path where the [build][ref-building] is to be performed.
+* `-r/--recipe`: the path with the [recipe][ref-recipes] yaml files that describe the environment.
+* `-s/--system`: the path containing the [system configuration][ref-cluster-config] for the target cluster.
 
 The following flags are optional:
 
-* `--mirror`: path to a [mirrors.yaml](build-caches.md) file configuring build caches and mirrors.
+* `--mirror`: path to a [mirrors.yaml][ref-mirrors] file configuring build caches and mirrors.
 * `-c/--cache`: legacy build cache configuration file (deprecated; use `--mirror`).
 * `-m/--mount`: override the [mount point](installing.md) where the stack will be installed.
 * `--version`: print the stackinator version.

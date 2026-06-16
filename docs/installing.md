@@ -1,3 +1,4 @@
+[](){#ref-installing}
 # Installing Stacks
 
 The installation path of the software stack is set when the stack is configured.
@@ -45,4 +46,6 @@ The `store` sub-directory contains the full software stack installation tree.
 ### SquashFS installation
 
 The `store.squashfs` file is a compressed [SquashFS](https://tldp.org/HOWTO/SquashFS-HOWTO/whatis.html) image of the contents of the `store` path.
-This can be mounted at runtime using [`squashfs-mount`](https://github.com/eth-cscs/squashfs-mount) or the [Slurm plugin](https://github.com/eth-cscs/slurm-uenv-mount/), or mounted by a system-administrator using [`mount`](https://man7.org/linux/man-pages/man2/mount.2.html), in order the to take advantage of the benefits of SquashFS over shared file systems.
+This can be mounted at runtime using [`uenv`](https://github.com/eth-cscs/uenv) or the uenv Slurm plugin.
+
+Images can also be mounted by a system-administrator using [`mount`](https://man7.org/linux/man-pages/man2/mount.2.html), which is used in production at CSCS to permanantly mount software stacks used by the weather service on their operational cluster when nodes boot.

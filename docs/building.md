@@ -1,6 +1,7 @@
+[](){#ref-building}
 # Building Spack Stacks
 
-Once a stack has been [configured](configuring.md) using `stack-config`, it's time to build the software stack.
+Once a stack has been [configured][ref-configuring] using `stack-config`, it's time to build the software stack.
 
 ## How to Build
 
@@ -18,7 +19,7 @@ env --ignore-environment PATH=/usr/bin:/bin:`pwd -P`/spack/bin make modules stor
 The call to `make` is wrapped with with `env --ignore-env` to unset all environment variables, to improve reproducability of builds.
 
 Build times for stacks typically vary between 30 minutes to 3 hours, depending on the specific packages that have to be built.
-Using [build caches](build-caches.md) and building in shared memory (see below) are the most effective methods to speed up builds.
+Using [build caches][ref-mirrors] and building in shared memory (see below) are the most effective methods to speed up builds.
 
 ## Where to Build
 

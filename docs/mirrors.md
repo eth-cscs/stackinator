@@ -1,3 +1,4 @@
+[](){#ref-mirrors}
 # Mirrors and Build Caches
 
 Spack can use *mirrors* and *caches* to speed up image builds and to build on systems with limited or no internet access.
@@ -8,7 +9,7 @@ They are configured in a single YAML file passed to `stack-config` using the `--
 stack-config -b $build -r $recipe -s $system --mirror mirrors.yaml
 ```
 
-The file is not part of the [system configuration](cluster-config.md): mirror locations are usually specific to the person running the build, so each invocation provides its own.
+The file is not part of the [system configuration][ref-cluster-config]: mirror locations are usually specific to the person running the build, so each invocation provides its own.
 
 A `mirrors.yaml` can describe five kinds of entry, each optional and each documented below:
 
