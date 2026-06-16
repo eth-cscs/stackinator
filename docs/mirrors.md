@@ -62,18 +62,18 @@ buildcache:
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `url`            | yes¹ | location of the cache (a `file://` path, or an `http(s)://`, `s3://` or `oci://` URL) |
+| `url`            | yes[^1]| location of the cache (a `file://` path, or an `http(s)://`, `s3://` or `oci://` URL) |
 | `private_key`    | no  | PGP key used to sign and push packages (see [Keys](#keys)); omit for a read-only cache |
 | `public_key`     | no  | PGP key used to verify downloaded packages |
 | `name`           | no  | name Spack registers the mirror under (default `buildcache`) |
 | `mount_specific` | no  | store the cache in a per-mount-point sub-directory (default `false`) |
-| `fetch` / `push` | no¹ | separate read/write [connections](#connections-and-authentication), used instead of a single `url` |
+| `fetch` / `push` | no[^1] | separate read/write [connections](#connections-and-authentication), used instead of a single `url` |
 | `binary`         | no  | the cache holds binary packages (default `true`) |
 | `source`         | no  | the cache also holds package sources (default `false`) |
 | `signed`         | no  | whether Spack signs/verifies binaries with GPG (passed through to Spack) |
 | `autopush`       | no  | Spack pushes each package as soon as it is installed (passed through to Spack) |
 
-¹ Give either a top-level `url` *or* explicit `fetch`/`push` connections — see [Connections and authentication](#connections-and-authentication).
+[^1]: Give either a top-level `url` *or* explicit `fetch`/`push` connections — see [Connections and authentication](#connections-and-authentication).
 
 ### Read-only build cache
 
@@ -172,14 +172,12 @@ sourcemirror:
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `url`            | yes¹ | location of the source mirror |
-| `fetch` / `push` | no¹ | separate read/write [connections](#connections-and-authentication), used instead of a single `url` |
+| `url`            | yes[^1] | location of the source mirror |
+| `fetch` / `push` | no[^1] | separate read/write [connections](#connections-and-authentication), used instead of a single `url` |
 | `source`         | no  | the mirror holds package sources (default `true`) |
 | `binary`         | no  | the mirror also holds binary packages (default `false`) |
 | `signed`         | no  | whether Spack signs/verifies binaries with GPG (passed through to Spack) |
 | `autopush`       | no  | Spack pushes to the mirror as soon as a package is installed (passed through to Spack) |
-
-¹ Give either a top-level `url` *or* explicit `fetch`/`push` connections — see [Connections and authentication](#connections-and-authentication).
 
 Source mirrors need no keys: Spack verifies every downloaded source against the checksum in its package recipe, whether it comes from the upstream url or a mirror.
 

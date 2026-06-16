@@ -17,6 +17,7 @@ theme:
   features:
     - content.code.copy
     - content.code.annotate
+    - content.footnote.tooltips
     - navigation.tabs
   palette:
     primary: deep orange
@@ -25,6 +26,7 @@ plugins:
   - autorefs
 markdown_extensions:
   - attr_list # for internal links
+  - footnotes
   - md_in_html
   - admonition
   - pymdownx.details
