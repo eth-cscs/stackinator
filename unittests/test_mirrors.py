@@ -142,12 +142,15 @@ def test_keyless_command_line_cache(tmp_path, clean_root, mount_path, systems_pa
     # no private key is written
     assert tmp_path / "key_store" / "buildcache.priv.gpg" not in files
 
-    # the mirror is emitted with a fetch url but no push url
+    # spack requires both fetch and push to be present even for a read-only cache,
+    # so push mirrors the fetch url; whether packages are pushed is gated separately
+    # by push_to_build_cache (None here, as there is no signing key).
     data = yaml.safe_load(files[tmp_path / "mirrors.yaml"])
     assert data["mirrors"]["buildcache"] == {
         "source": False,
         "binary": True,
         "fetch": {"url": "/tmp/foo/user-environment"},
+        "push": {"url": "/tmp/foo/user-environment"},
     }
 
 
@@ -170,12 +173,15 @@ def test_readonly_buildcache(tmp_path, clean_root, mount_path, systems_path):
     # no private key is written
     assert tmp_path / "key_store" / "buildcache.priv.gpg" not in files
 
-    # the mirror is emitted with a fetch url but no push url
+    # spack requires both fetch and push to be present even for a read-only cache,
+    # so push mirrors the fetch url; whether packages are pushed is gated separately
+    # by push_to_build_cache (None here, as there is no signing key).
     data = yaml.safe_load(files[tmp_path / "mirrors.yaml"])
     assert data["mirrors"]["buildcache"] == {
         "source": False,
         "binary": True,
         "fetch": {"url": "https://mirror.spack.io"},
+        "push": {"url": "https://mirror.spack.io"},
     }
 
 

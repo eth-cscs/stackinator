@@ -403,28 +403,26 @@ class Mirrors:
             # mount point: spack binaries embed the install prefix, so each mount
             # point needs its own cache to avoid relocation issues.
             mount = self._mount_path if self.buildcache["mount_specific"] else None
+            # spack requires both fetch and push connections to be present in the
+            # mirror entry, even for a read-only (keyless) build cache. Whether
+            # packages are actually pushed to the cache is governed separately by
+            # push_to_build_cache (only a build cache with a signing key is pushed to).
             entry = {
                 "source": self.buildcache["source"],
                 "binary": self.buildcache["binary"],
                 "fetch": self._connection(self.buildcache, "fetch", mount),
+                "push": self._connection(self.buildcache, "push", mount),
             }
-            # a build cache is only pushed to when it has a signing key; a keyless
-            # build cache is read-only (fetched from, never pushed to).
-            if self.push_to_build_cache is not None:
-                entry["push"] = self._connection(self.buildcache, "push", mount)
             self._add_optional_flags(entry, self.buildcache)
             spack_mirrors["mirrors"][self.buildcache["name"]] = entry
 
-        # source mirrors are read-only by default (fetch only); a push connection is
-        # emitted only when one was explicitly configured.
         for name, mirror in self.source_mirrors.items():
             entry = {
                 "source": mirror["source"],
                 "binary": mirror["binary"],
                 "fetch": self._connection(mirror, "fetch"),
+                "push": self._connection(mirror, "push"),
             }
-            if mirror.get("push") is not None:
-                entry["push"] = self._connection(mirror, "push")
             self._add_optional_flags(entry, mirror)
             spack_mirrors["mirrors"][name] = entry
 
