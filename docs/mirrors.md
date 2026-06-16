@@ -61,11 +61,18 @@ buildcache:
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `url`            | yes | location of the cache (a `file://` path, or an `http(s)://`, `s3://` or `oci://` URL) |
+| `url`            | yes¹ | location of the cache (a `file://` path, or an `http(s)://`, `s3://` or `oci://` URL) |
 | `private_key`    | no  | PGP key used to sign and push packages (see [Keys](#keys)); omit for a read-only cache |
 | `public_key`     | no  | PGP key used to verify downloaded packages |
 | `name`           | no  | name Spack registers the mirror under (default `buildcache`) |
 | `mount_specific` | no  | store the cache in a per-mount-point sub-directory (default `false`) |
+| `fetch` / `push` | no¹ | separate read/write [connections](#connections-and-authentication), used instead of a single `url` |
+| `binary`         | no  | the cache holds binary packages (default `true`) |
+| `source`         | no  | the cache also holds package sources (default `false`) |
+| `signed`         | no  | whether Spack signs/verifies binaries with GPG (passed through to Spack) |
+| `autopush`       | no  | Spack pushes each package as soon as it is installed (passed through to Spack) |
+
+¹ Give either a top-level `url` *or* explicit `fetch`/`push` connections — see [Connections and authentication](#connections-and-authentication).
 
 ### Read-only build cache
 
@@ -164,7 +171,14 @@ sourcemirror:
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `url` | yes | location of the source mirror |
+| `url`            | yes¹ | location of the source mirror |
+| `fetch` / `push` | no¹ | separate read/write [connections](#connections-and-authentication), used instead of a single `url` |
+| `source`         | no  | the mirror holds package sources (default `true`) |
+| `binary`         | no  | the mirror also holds binary packages (default `false`) |
+| `signed`         | no  | whether Spack signs/verifies binaries with GPG (passed through to Spack) |
+| `autopush`       | no  | Spack pushes to the mirror as soon as a package is installed (passed through to Spack) |
+
+¹ Give either a top-level `url` *or* explicit `fetch`/`push` connections — see [Connections and authentication](#connections-and-authentication).
 
 Source mirrors need no keys: Spack verifies every downloaded source against the checksum in its package recipe, whether it comes from the upstream url or a mirror.
 
@@ -173,6 +187,61 @@ Populate a source mirror on an internet-connected system with Spack:
 ```bash
 spack mirror create --directory /path/to/mirror --all
 ```
+
+## Connections and authentication
+
+Both the [build cache](#build-cache) and [source mirrors](#source-mirrors) describe *where* and *how* Spack reaches a mirror with the same connection model, taken directly from Spack's own [`mirrors.yaml`](https://spack.readthedocs.io/en/latest/mirrors.html). Stackinator passes these fields through to Spack unchanged.
+
+The simplest form is a single `url`, used for both reading and writing:
+
+```yaml title="mirrors.yaml"
+buildcache:
+  url: file:///capstor/scratch/team/uenv-cache
+  private_key: $SCRATCH/.keys/spack-push-key.gpg
+```
+
+When the read and write endpoints differ, or the mirror needs authentication, replace the top-level `url` with explicit `fetch` and `push` connection blocks. This example is an S3 build cache with credentials supplied through environment variables:
+
+```yaml title="mirrors.yaml"
+buildcache:
+  private_key: $SCRATCH/.keys/spack-push-key.gpg
+  fetch:
+    url: s3://my-bucket/buildcache
+    endpoint_url: https://s3.example.com
+    access_pair:
+      id_variable: AWS_ACCESS_KEY_ID
+      secret_variable: AWS_SECRET_ACCESS_KEY
+  push:
+    url: s3://my-bucket/buildcache
+    endpoint_url: https://s3.example.com
+    access_pair:
+      id_variable: AWS_ACCESS_KEY_ID
+      secret_variable: AWS_SECRET_ACCESS_KEY
+```
+
+A connection — whether given as the top-level shorthand or inside a `fetch`/`push` block — accepts:
+
+| Field | Description |
+|-------|-------------|
+| `url`                   | location of the mirror (`file://`, `http(s)://`, `s3://` or `oci://`) |
+| `endpoint_url`          | custom endpoint URL for S3-compatible storage |
+| `profile`               | AWS profile name to use for S3 authentication |
+| `access_token_variable` | environment variable holding an access token for OCI registry authentication |
+| `access_pair`           | ID + secret credential pair (see below) |
+| `view`                  | mirror view (passed through to Spack) |
+
+`access_pair` holds the credential pair:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `secret_variable` | yes | environment variable holding the secret key |
+| `id_variable`     | one of | environment variable holding the access key ID |
+| `id`              | one of | the access key ID as a literal string (prefer `id_variable`) |
+
+!!! warning "Keep secrets out of the file"
+    Reference credentials through environment variables (`*_variable`) rather than writing them into `mirrors.yaml`. The secret itself is never a required field — only the *name* of the variable that holds it.
+
+See Spack's [mirror documentation](https://spack.readthedocs.io/en/latest/mirrors.html) for the full reference on these fields.
 
 ## Source cache
 
