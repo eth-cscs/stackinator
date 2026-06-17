@@ -225,11 +225,13 @@ def test_spack_mirrors_yaml(tmp_path, clean_root, mount_path, mirror_ok):
                 "source": True,
                 "binary": False,
                 "fetch": {"url": "https://github.com"},
+                "push": {"url": "https://github.com"},
             },
             "mirror2": {
                 "source": True,
                 "binary": False,
                 "fetch": {"url": "https://github.com/spack"},
+                "push": {"url": "https://github.com/spack"},
             },
         }
     }
