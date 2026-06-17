@@ -74,9 +74,38 @@ class Recipe:
                 # Note:
                 # modules root should match MODULEPATH set by envvars and used by uenv view "modules"
                 # so we enforce that the user does not override it in modules.yaml
-                self.modules["modules"].setdefault("default", {}).setdefault("roots", {}).setdefault(
-                    "tcl", (self.mount / "modules").as_posix()
-                )
+
+                # Spack supports these module types (as of Spack 1.0+)
+                VALID_MODULE_TYPES = {"tcl", "lmod"}
+
+                # Update the root path for each module type that the user configured
+                # This respects the user's choice of tcl, lmod, or both
+                defaults = self.modules["modules"].setdefault("default", {})
+                roots = defaults.setdefault("roots", {})
+
+                # Determine which module types to configure
+                # Priority: 1) explicit roots:, 2) enable: list, 3) default to tcl
+                if not roots:
+                    # No explicit roots configured, check enable: list
+                    enabled = defaults.get("enable", [])
+                    if enabled:
+                        # Use the enabled module types
+                        module_types = enabled
+                    else:
+                        # No enable list either, default to tcl for backward compatibility
+                        module_types = ["tcl"]
+                else:
+                    # Use explicitly configured roots
+                    module_types = list(roots.keys())
+
+                # Set the root path for each module type
+                for module_type in module_types:
+                    if module_type not in VALID_MODULE_TYPES:
+                        raise ValueError(
+                            f"Invalid module type '{module_type}' in modules.yaml. "
+                            f"Supported types: {', '.join(sorted(VALID_MODULE_TYPES))}"
+                        )
+                    roots[module_type] = (self.mount / "modules").as_posix()
 
         # DEPRECATED field `config:modules`
         if "modules" in self.config:
