@@ -10,6 +10,7 @@ spack-version:
 
 # Sanity check: confirm spack works and bootstrap the concretizer.
 spack-setup: spack-version
+	$(call banner,Spack setup)
 	@printf "spack arch... " ; \
 	arch="$$($(SANDBOX) $(SPACK) arch)"; \
 	printf "%s\n" "$$arch"; \
@@ -27,12 +28,14 @@ spack-setup: spack-version
 
 {% if pre_install_hook %}
 pre-install: spack-setup
+	$(call banner,Pre-install hook)
 	$(SANDBOX) $(STORE)/pre-install-hook
 	touch pre-install
 {% endif %}
 
 mirror-setup: spack-setup{% if pre_install_hook %} pre-install{% endif %}
 
+	$(call banner,Build cache / mirror setup)
 {% if cache %}
 	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) buildcache keys --install --trust --yes-to-all
 {% if cache.key %}
@@ -42,6 +45,7 @@ mirror-setup: spack-setup{% if pre_install_hook %} pre-install{% endif %}
 	touch mirror-setup
 
 concretize: mirror-setup env/spack.yaml
+	$(call banner,Concretize)
 	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) concretize
 	touch concretize
 
@@ -55,10 +59,12 @@ concretize: mirror-setup env/spack.yaml
 # Outer-make `-j` no longer governs spack; set build_jobs to control parallelism (or use
 # GNU make >= 4.4, whose `fifo:` jobserver spack parses correctly).
 install: concretize
+	$(call banner,Install packages)
 	MAKEFLAGS= $(SANDBOX) $(SPACK) -e $(ENV_ROOT) install --jobs $(NJOBS)
 	touch install
 
 cache-push: install
+	$(call banner,Push to build cache)
 {% if push_to_cache and cache.key %}
 	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) buildcache create --rebuild-index --only=package alpscache \
 	$$($(SANDBOX) $(SPACK_HELPER) -e $(ENV_ROOT) find --format '{name};{/hash};version={version}' \
@@ -70,6 +76,7 @@ cache-push: install
 	touch cache-push
 
 cleanup: cache-push
+	$(call banner,Cleanup)
 {% if cleanup == "build" %}
 	$(SANDBOX) $(SPACK) gc --yes-to-all --keep-build-dependencies --except-environment $(ENV_ROOT)
 {% elif cleanup == "runtime" %}
@@ -79,6 +86,7 @@ cleanup: cache-push
 
 # Generate compiler-config.yaml for use by view and generate-config steps.
 compiler-config.yaml: cleanup
+	$(call banner,Generate compiler config)
 	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) python $(BUILD_ROOT)/compiler-config.py \
 {% if system_gcc %}
 		--system-packages=$(BUILD_ROOT)/config/packages.yaml \
@@ -89,6 +97,7 @@ compiler-config.yaml: cleanup
 {% for name, config in environments.items() %}
 {% for view in config.views %}
 views/{{ view.name }}: install compiler-config.yaml
+	$(call banner,View: {{ view.name }})
 	mkdir -p $(dir $@)
 	$(SANDBOX) mkdir -p $(STORE)/env/{{ view.name }}
 	$(SANDBOX) sh -c '$(SPACK) env activate -d $(ENV_ROOT) --with-view {{ view.name }} --sh > $(STORE)/env/{{ view.name }}/activate.sh'
@@ -106,31 +115,38 @@ views: {% for name, config in environments.items() %}{% for view in config.views
 	touch views
 
 generate-config: install compiler-config.yaml
+	$(call banner,Generate upstream spack config)
 	$(SANDBOX) $(MAKE) -j1 -C generate-config
 
 {% if modules %}
 modules-done: install generate-config
+	$(call banner,Generate modules)
 	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) module tcl refresh --upstream-modules --delete-tree --yes-to-all
 	touch modules-done
 {% endif %}
 
 env-meta: generate-config views{% if modules %} modules-done{% endif %}
 
+	$(call banner,Generate uenv metadata)
 	$(SANDBOX) $(BUILD_ROOT)/envvars.py uenv \
 		{% if modules %}--modules {% endif %}\
 		--spack='{{ spack_meta.url }},{{ spack_meta.ref }},{{ spack_meta.commit }}' \
-		--spack-packages='{{ spack_meta.packages_url }},{{ spack_meta.packages_ref }},{{ spack_meta.packages_commit }}' \
+{% for pkg_repo in spack_meta.packages %}
+		--spack-package-repo='{{ pkg_repo.name }},{{ pkg_repo.url }},{{ pkg_repo.ref }},{{ pkg_repo.commit }}' \
+{% endfor %}
 		$(STORE)
 	touch env-meta
 
 {% if post_install_hook %}
 post-install: env-meta
+	$(call banner,Post-install hook)
 	$(SANDBOX) $(STORE)/post-install-hook
 	touch post-install
 {% endif %}
 
 store.squashfs: env-meta{% if post_install_hook %} post-install{% endif %}{% if push_to_cache and cache.key %} cache-push{% endif %}
 
+	$(call banner,Create squashfs image)
 	$(SANDBOX) find $(STORE)/repos -type d -name __pycache__ -exec rm -r {} +
 	$(SANDBOX) chmod -R a+rX $(STORE)
 	$(SANDBOX) env -u SOURCE_DATE_EPOCH \

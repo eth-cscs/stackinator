@@ -713,8 +713,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.command == "uenv":
-        print("!!! running meta")
         meta_impl(args)
     elif args.command == "view":
-        print("!!! running view")
         view_impl(args)
