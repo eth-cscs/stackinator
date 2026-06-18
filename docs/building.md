@@ -1,6 +1,7 @@
+[](){#ref-building}
 # Building Spack Stacks
 
-Once a stack has been [configured](configuring.md) using `stack-config`, it's time to build the software stack.
+Once a stack has been [configured][ref-configuring] using `stack-config`, it's time to build the software stack.
 
 ## How to Build
 
@@ -31,7 +32,7 @@ Set `NJOBS` to the number of cores available on the build node (it defaults to `
     Do not use `make -jN` to control build parallelism. The `install` step clears `MAKEFLAGS` before invoking Spack — this avoids a crash with GNU make older than 4.4, whose legacy file-descriptor jobserver Spack mishandles — so the outer `make -j` flag does not reach Spack. `NJOBS` is passed to Spack as `spack install --jobs`, and is the only flag that governs build parallelism.
 
 Build times for stacks typically vary between 30 minutes to 3 hours, depending on the specific packages that have to be built.
-Using [build caches](build-caches.md) and building in shared memory (see below) are the most effective methods to speed up builds.
+Using [build caches][ref-mirrors] and building in shared memory (see below) are the most effective methods to speed up builds.
 
 ## Where to Build
 

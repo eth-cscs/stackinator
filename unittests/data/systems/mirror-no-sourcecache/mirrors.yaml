@@ -1,0 +1,5 @@
+bootstrap:
+  url: https://mirror.spack.io
+sourcemirror:
+  mirror1:
+    url: https://github.com

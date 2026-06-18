@@ -1,0 +1,13 @@
+gcc-env:
+  compiler: [gcc]
+  unify: true
+  specs:
+  - osu-micro-benchmarks@5.9
+  - hdf5 +mpi
+  network:
+    mpi: cray-mpich
+tools:
+  compiler: [gcc]
+  unify: true
+  specs:
+  - cmake

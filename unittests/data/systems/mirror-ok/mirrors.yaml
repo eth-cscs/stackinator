@@ -1,0 +1,56 @@
+bootstrap:
+  url: https://mirror.spack.io
+buildcache:
+  url: https://mirror.spack.io
+  public_key: "\
+    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\
+    gllMF++N8+7T4/ehkA/hs2udYRkSCANLQ3I3"
+  private_key: ../../test-gpg-priv.asc
+  mount_specific: false
+sourcemirror:
+  mirror1:
+    url: https://github.com
+  mirror2:
+    url: https://github.com/spack
+sourcecache:
+  path: /scratch/spack-sources
+concretizer:
+  path: /scratch/spack-concretizer

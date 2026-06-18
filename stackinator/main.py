@@ -74,6 +74,7 @@ def log_header(args):
     root_logger.info(f"  system     : {args.system}")
     mount = args.mount or "default"
     root_logger.info(f"  mount      : {mount}")
+    root_logger.info(f"  mirror     : {args.mirror}")
     root_logger.info(f"  build cache: {args.cache}")
     root_logger.info(f"  develop    : {args.develop}")
 
@@ -81,13 +82,37 @@ def log_header(args):
 def make_argparser():
     parser = argparse.ArgumentParser(description=("Generate a build configuration for a spack stack from a recipe."))
     parser.add_argument("--version", action="version", version=f"stackinator version {VERSION}")
-    parser.add_argument("-b", "--build", required=True, type=str)
+    parser.add_argument(
+        "-b",
+        "--build",
+        required=True,
+        type=str,
+        help="Where to set up the stackinator build directory. ('/tmp' is not allowed, use '/var/tmp')",
+    )
     parser.add_argument("--no-bwrap", action="store_true", required=False)
-    parser.add_argument("-r", "--recipe", required=True, type=str)
-    parser.add_argument("-s", "--system", required=True, type=str)
+    parser.add_argument(
+        "-r", "--recipe", required=True, type=str, help="Name of (and/or path to) the Stackinator recipe."
+    )
+    parser.add_argument(
+        "-s", "--system", required=True, type=str, help="Name of (and/or path to) the Stackinator system configuration."
+    )
     parser.add_argument("-d", "--debug", action="store_true")
-    parser.add_argument("-m", "--mount", required=False, type=str)
-    parser.add_argument("-c", "--cache", required=False, type=str)
+    parser.add_argument(
+        "-m", "--mount", required=False, type=str, help="The mount point where the environment will be located."
+    )
+    parser.add_argument(
+        "--mirror",
+        required=False,
+        type=str,
+        help="Path to a mirrors.yaml file describing build caches and mirrors.",
+    )
+    parser.add_argument(
+        "-c",
+        "--cache",
+        required=False,
+        type=str,
+        help="Legacy build cache configuration file (deprecated; use --mirror).",
+    )
     parser.add_argument("--develop", action="store_true", required=False)
 
     return parser
@@ -111,8 +136,7 @@ def main():
         root_logger.info("\nConfiguration finished, run the following to build the environment:\n")
         root_logger.info(f"cd {builder.path}")
         root_logger.info(
-            "env --ignore-environment PATH=/usr/bin:/bin:`pwd -P`/spack/bin HOME=$HOME "
-            "make store.squashfs NJOBS=32"
+            "env --ignore-environment PATH=/usr/bin:/bin:`pwd -P`/spack/bin HOME=$HOME make store.squashfs NJOBS=32"
         )
         root_logger.info(f"see logfile for more information {logfile}")
         return 0

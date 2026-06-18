@@ -1,3 +1,4 @@
+[](){#ref-cluster-config}
 # Cluster Configuration
 
 Spack stacks are built on bare-metal clusters using a minimum of dependencies from the underlying system.
@@ -10,7 +11,7 @@ A cluster configuration is a directory with the following structure:
 └─ repos.yaml       # optional reference to additional site packages
 ```
 
-The configuration is provided during the [configuration](configuring.md) step with the `--system/-s` flag.
+The configuration is provided during the [configuration][ref-configuring] step with the `--system/-s` flag.
 The following example targets the Clariden system at CSCS:
 
 ```bash
@@ -93,6 +94,13 @@ packages:
         version: ["git.59b6de6a91d9637809677c50cc48b607a91a9acb=main"]
     ```
 
+### Configuring Spack mirrors
+
+Mirrors and caches are **not** part of the system configuration.
+They are supplied per-invocation with `stack-config --mirror <file>`, because the locations involved (build caches, source caches) are often specific to the user running the build and may not be accessible to everyone using a system.
+
+See [Mirrors and Build Caches][ref-mirrors] for the full reference and examples.
+
 ## Site and System Configurations
 
 The `repo.yaml` configuration can be used to provide a list of additional Spack package repositories to use on the target system.
@@ -129,8 +137,8 @@ If custom package definitions are provided for the same package in more than one
 
 The following precedence is applied, where 1 has higher precedence than 2 or 3:
 
-1. packages defined in the (optional) `repo` path in the [recipe](recipes.md#custom-spack-packages)
-2. packages defined in the (optional) site repo(s) defined in the `repo/repos.yaml` file of cluster configuration (documented here)
-3. packages provided by Spack (in the `var/spack/repos/builtin` path)
+1. packages defined in the (optional) `repo` path in the [recipe][custom-spack-packages]
+2. packages defined in the (optional) site repo(s) defined in the `repo/repos.yaml` file of the cluster configuration (documented here)
+3. packages defined in the package repositories configured in `config.yaml:spack:packages`, in the order specified (which typically includes `builtin`)
 
-As of Stackinator v4, the definitions of some custom repositories (mainly CSCS' custom cray-mpich and its dependencies) was removed from Stackinator, and moved to the the site configuration
+As of Stackinator v4, the definitions of some custom repositories (mainly CSCS' custom cray-mpich and its dependencies) was removed from Stackinator, and moved to the site configuration.

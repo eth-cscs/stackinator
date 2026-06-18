@@ -1,3 +1,8 @@
 repos:
+{% if has_recipe_repo %}
+  recipe: {{ recipe_repo_path }}
+{% endif %}
   alps: {{ repo_path }}
-  builtin: {{ builtin_repo_path }}
+{% for repo in package_repos %}
+  {{ repo.name }}: {{ repo.path }}
+{% endfor %}

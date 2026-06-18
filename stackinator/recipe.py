@@ -5,7 +5,7 @@ import re
 import jinja2
 import yaml
 
-from . import cache, root_logger, schema, spack_util
+from . import root_logger, schema, spack_util, mirror
 from .etc.envvars import EnvVarSet
 
 
@@ -74,9 +74,38 @@ class Recipe:
                 # Note:
                 # modules root should match MODULEPATH set by envvars and used by uenv view "modules"
                 # so we enforce that the user does not override it in modules.yaml
-                self.modules["modules"].setdefault("default", {}).setdefault("roots", {}).setdefault(
-                    "tcl", (self.mount / "modules").as_posix()
-                )
+
+                # Spack supports these module types (as of Spack 1.0+)
+                VALID_MODULE_TYPES = {"tcl", "lmod"}
+
+                # Update the root path for each module type that the user configured
+                # This respects the user's choice of tcl, lmod, or both
+                defaults = self.modules["modules"].setdefault("default", {})
+                roots = defaults.setdefault("roots", {})
+
+                # Determine which module types to configure
+                # Priority: 1) explicit roots:, 2) enable: list, 3) default to tcl
+                if not roots:
+                    # No explicit roots configured, check enable: list
+                    enabled = defaults.get("enable", [])
+                    if enabled:
+                        # Use the enabled module types
+                        module_types = enabled
+                    else:
+                        # No enable list either, default to tcl for backward compatibility
+                        module_types = ["tcl"]
+                else:
+                    # Use explicitly configured roots
+                    module_types = list(roots.keys())
+
+                # Set the root path for each module type
+                for module_type in module_types:
+                    if module_type not in VALID_MODULE_TYPES:
+                        raise ValueError(
+                            f"Invalid module type '{module_type}' in modules.yaml. "
+                            f"Supported types: {', '.join(sorted(VALID_MODULE_TYPES))}"
+                        )
+                    roots[module_type] = (self.mount / "modules").as_posix()
 
         self._logger.debug("creating packages")
 
@@ -143,12 +172,22 @@ class Recipe:
                     f"The default-view '{self._default_view}' is not the name of a view defined in environments.yaml"
                 )
 
-        # mirrors.yaml in a recipe is no longer supported — use --cache instead
-        mirrors_path = self.path / "mirrors.yaml"
-        if mirrors_path.is_file():
-            raise RuntimeError("mirrors.yaml in a recipe is not supported; use the --cache flag instead.")
+        # determine the version of spack being used: it is inferred (best effort)
+        # from the spack commit in config.yaml, defaulting to the latest supported
+        # version when it cannot be determined. This must precede the mirror
+        # configuration, which gates the concretizer cache on the spack version.
+        self.spack_version = self.find_spack_version(args.develop)
 
-        self.mirror = (args.cache, self.mount)
+        # resolve the mirror configuration provided with --mirror. --cache is the
+        # legacy path.
+        self._logger.debug("Configuring mirrors.")
+        self.mirrors = mirror.Mirrors(
+            self.system_config_path,
+            self.mount,
+            self.spack_version,
+            pathlib.Path(args.mirror) if args.mirror else None,
+            pathlib.Path(args.cache) if args.cache else None,
+        )
 
         # optional post install hook
         if self.post_install_hook is not None:
@@ -181,6 +220,53 @@ class Recipe:
             return repo_path
         return None
 
+    _RESERVED_REPO_NAMES = {"alps", "recipe"}
+
+    @property
+    def spack_package_repos(self):
+        packages = self.config["spack"]["packages"]
+        if isinstance(packages.get("repo"), str):
+            return [
+                {
+                    "name": "builtin",
+                    "url": packages["repo"],
+                    "ref": packages.get("commit"),
+                    "repo_path": packages.get("path", "repos/spack_repo/builtin"),
+                }
+            ]
+        repos = [
+            {
+                "name": name,
+                "url": val["repo"],
+                "ref": val.get("commit"),
+                "repo_path": val.get("path", f"repos/spack_repo/{name}"),
+            }
+            for name, val in packages.items()
+        ]
+        for repo in repos:
+            name = repo["name"]
+            if name in self._RESERVED_REPO_NAMES:
+                raise RuntimeError(
+                    f"The package repo name '{name}' is reserved for stackinator internal use. "
+                    f"Reserved names are: {self._RESERVED_REPO_NAMES}. "
+                    "Choose a different name in config.yaml:spack:packages."
+                )
+        return repos
+
+    # Returns:
+    #   Path: if the recipe specified a build cache mirror
+    #   None: if no build cache mirror is used
+    @property
+    def build_cache_mirror(self):
+        return self.mirrors.build_cache_mirror
+
+    # Returns:
+    #   str:  the build cache mirror name to push built packages to
+    #   None: if there is no build cache, or it is read-only (no signing key)
+    @property
+    def push_to_build_cache(self):
+        return self.mirrors.push_to_build_cache
+
     # Returns:
     #   Path: of the recipe extra path if it exists
     #   None: if there is no user-provided extra path in the recipe
@@ -211,32 +297,6 @@ class Recipe:
             return hook_path
         return None
 
-    # Returns a dictionary with the following fields
-    #
-    # root: /path/to/cache
-    # path: /path/to/cache/user-environment
-    # key: /path/to/private-pgp-key
-    @property
-    def mirror(self):
-        return self._mirror
-
-    # configuration is a tuple with two fields:
-    # - a Path of the yaml file containing the cache configuration
-    # - the mount point of the image
-    @mirror.setter
-    def mirror(self, configuration):
-        self._logger.debug(f"configuring build cache mirror with {configuration}")
-        self._mirror = None
-
-        file, mount = configuration
-
-        if file is not None:
-            mirror_config_path = pathlib.Path(file)
-            if not mirror_config_path.is_file():
-                raise FileNotFoundError(f"The cache configuration '{file}' is not a file")
-
-            self._mirror = cache.configuration_from_file(mirror_config_path, pathlib.Path(mount))
-
     @property
     def config(self):
         return self._config
@@ -255,6 +315,31 @@ class Recipe:
     @property
     def with_modules(self) -> bool:
         return self.modules is not None
+
+    # Make a best-effort determination of the "major.minor" version of spack being
+    # used, inferred from the spack commit in config.yaml. This is only a hint: the
+    # commit can be an arbitrary branch/tag/sha, so when the version cannot be pinned
+    # we default to the latest supported version ("1.1"). Returns a "major.minor"
+    # string (e.g. "1.0", "1.1").
+    def find_spack_version(self, develop):
+        # the latest supported version, used when the version cannot be determined
+        # (an explicit --develop, the default branch, or an unrecognised commit).
+        default = "1.1"
+
+        if develop:
+            return default
+
+        commit = self.config["spack"]["commit"]
+        if commit is None or commit in ("develop", "main"):
+            return default
+
+        # match a release branch/tag (releases/v1.0, v1.1, v1.1.2) or a bare "1.0",
+        # and extract the major.minor version.
+        match = re.search(r"v?(\d+)\.(\d+)(?:\.\d+)?", commit)
+        if match:
+            return f"{match.group(1)}.{match.group(2)}"
+
+        return default
 
     @property
     def default_view(self):
@@ -350,9 +435,7 @@ class Recipe:
 
         # Compute spec group needs: only compilers with actual (non-system) spec groups.
         for name, config in environments.items():
-            config["needs"] = [
-                c for c in config["compiler"] if not self.compilers.get(c, {}).get("system", False)
-            ]
+            config["needs"] = [c for c in config["compiler"] if not self.compilers.get(c, {}).get("system", False)]
 
         # Build view metadata
         env_names = set()

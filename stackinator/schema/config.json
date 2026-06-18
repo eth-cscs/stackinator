@@ -4,6 +4,28 @@
     "type" : "object",
     "additionalProperties": false,
     "required": ["name", "spack"],
+    "defs": {
+        "repo_def": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["repo"],
+            "properties": {
+                "repo": {
+                    "type": "string"
+                },
+                "commit": {
+                    "oneOf": [
+                        {"type": "string"},
+                        {"type": "null"}
+                    ],
+                    "default": null
+                },
+                "path": {
+                    "type": "string"
+                }
+            }
+        }
+    },
     "properties" : {
         "name" : {
             "type": "string"
@@ -28,21 +50,21 @@
                     "default": null
                 },
                 "packages": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": ["repo"],
-                    "properties" : {
-                        "repo": {
-                            "type": "string"
+                    "oneOf": [
+                        {
+                            "$ref": "#/defs/repo_def"
                         },
-                        "commit": {
-                            "oneOf": [
-                                {"type" : "string"},
-                                {"type" : "null"}
-                            ],
-                            "default": null
+                        {
+                            "type": "object",
+                            "minProperties": 1,
+                            "patternProperties": {
+                                "^\\w[\\w-]*$": {
+                                    "$ref": "#/defs/repo_def"
+                                }
+                            },
+                            "additionalProperties": false
                         }
-                    }
+                    ]
                 }
             }
         },

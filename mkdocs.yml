@@ -8,7 +8,7 @@ nav:
     - 'Recipes': recipes.md
     - 'Cluster Configuration': cluster-config.md
     - 'Interfaces': interfaces.md
-    - 'Build Caches': build-caches.md
+    - 'Mirrors & Build Caches': mirrors.md
     - 'Spack 1.0': porting.md
   - 'Development': development.md
 # - Tutorial: tutorial.md
@@ -17,6 +17,7 @@ theme:
   features:
     - content.code.copy
     - content.code.annotate
+    - content.footnote.tooltips
     - navigation.tabs
   palette:
     primary: deep orange
@@ -25,6 +26,7 @@ plugins:
   - autorefs
 markdown_extensions:
   - attr_list # for internal links
+  - footnotes
   - md_in_html
   - admonition
   - pymdownx.details

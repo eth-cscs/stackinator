@@ -92,10 +92,9 @@ def load_system_compiler_externals(system_packages_path):
         if not isinstance(pkg_data, dict):
             continue
         compiler_externals = [
-            e for e in pkg_data.get("externals", [])
-            if isinstance(e, dict)
-            and "extra_attributes" in e
-            and "compilers" in e["extra_attributes"]
+            e
+            for e in pkg_data.get("externals", [])
+            if isinstance(e, dict) and "extra_attributes" in e and "compilers" in e["extra_attributes"]
         ]
         if compiler_externals:
             packages[pkg_name] = {"externals": compiler_externals, "buildable": False}

@@ -1,7 +1,8 @@
-#!/usr/bin/env -S uv run --script
+#!/usr/bin/env -S uv run --no-refresh --script
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
+#   "python-magic",
 #   "jinja2",
 #   "jsonschema",
 #   "pyYAML",
