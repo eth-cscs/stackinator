@@ -212,6 +212,19 @@ class Builder:
             )
             f.write("\n")
 
+        # --- Write the sandbox wrapper (binds baked in, self-labelling) ---
+        sandbox_template = jinja_env.get_template("sandbox")
+        sandbox_dst = self.path / "sandbox"
+        with sandbox_dst.open("w") as f:
+            f.write(
+                sandbox_template.render(
+                    build_path=self.path,
+                    store=recipe.mount,
+                    no_bwrap=recipe.no_bwrap,
+                )
+            )
+        os.chmod(sandbox_dst, os.stat(sandbox_dst).st_mode | stat.S_IEXEC)
+
         # --- Copy static files from etc/ ---
         etc_path = self.root / "etc"
         for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "envvars.py", "compiler-config.py"]:

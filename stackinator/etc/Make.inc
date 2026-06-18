@@ -1,5 +1,9 @@
 # vi: filetype=make
 
+# Suppress make's recipe echo. Sandboxed commands self-label via the sandbox
+# wrapper, and build phases are announced by the banner macro below.
+.SILENT:
+
 SPACK ?= spack
 SPACK_HELPER := $(SPACK) --color=never
 

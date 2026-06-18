@@ -18,21 +18,12 @@ SPACK_HELPER := $(SPACK) --color=never
 # The Spack installation root.
 STORE := {{ store }}
 
-# When already building inside a sandbox, use `SANDBOX :=` (empty string)
-# Without a sandbox, make sure to hide sensitive data such as ~/.ssh through bubblewrap.
-# Also bind the directories `./tmp -> /tmp` and `./store -> $(STORE)`, so that
-# builds and installs happen inside the current directory. For speed, either
-# put the project itself in-memory, or use a flag like --bind /dev/shm/store
-# $(STORE). Use `bwrap-mutable-root.sh` in case you need to create a new
-# directory at the root /.
-{% if no_bwrap %}
-SANDBOX :=
-{% else %}
-SANDBOX := $(BUILD_ROOT)/bwrap-mutable-root.sh $\
-	--tmpfs ~ $\
-	--bind $(BUILD_ROOT)/tmp /tmp $\
-	--bind $(BUILD_ROOT)/store $(STORE)
-{% endif %}
+# Wrapper that runs a command inside the bubblewrap sandbox (binding ./tmp ->
+# /tmp and ./store -> $(STORE) and hiding ~). It prints a compact
+# `$(BUILD_ROOT)/sandbox <cmd>` label so the build output is readable. The bind
+# mounts live in the wrapper itself; see $(BUILD_ROOT)/sandbox. When no_bwrap is
+# set the wrapper just runs the command directly.
+SANDBOX := $(BUILD_ROOT)/sandbox
 # Makes sure that make -Orecurse continues to print in color.
 export SPACK_COLOR := always
 

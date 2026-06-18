@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Pretty-print the logical command, then run it under the bwrap sandbox.
+# The label goes to stderr so that recipes which capture the sandbox output in
+# command substitution (e.g. `x="$(SANDBOX spack --version)"`) are unaffected.
+if [ -z "${NO_COLOR:-}" ] && [ -t 2 ]; then
+	printf '\033[38;5;45m%s\033[0m %s\n' "$0" "$*" >&2
+else
+	printf '%s %s\n' "$0" "$*" >&2
+fi
+{% if no_bwrap %}
+exec "$@"
+{% else %}
+exec {{ build_path }}/bwrap-mutable-root.sh \
+	--tmpfs ~ \
+	--bind {{ build_path }}/tmp /tmp \
+	--bind {{ build_path }}/store {{ store }} \
+	"$@"
+{% endif %}
