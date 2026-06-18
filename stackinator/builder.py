@@ -136,29 +136,6 @@ class Builder:
         spack_git_commit = self._git_clone(
             "spack", spack["repo"], spack["commit"], spack_path)
 
-
-<< << << < HEAD
-        # Clone spack-packages
-        spack_packages = spack["packages"]
-        spack_packages_path = self.path / "spack-packages"
-        spack_packages_git_commit = self._git_clone(
-            "spack-packages",
-            spack_packages["repo"],
-            spack_packages["commit"],
-            spack_packages_path,
-        )
-
-        spack_meta = {
-            "url": spack["repo"],
-            "ref": spack["commit"],
-            "commit": spack_git_commit,
-            "packages_url": spack_packages["repo"],
-            "packages_ref": spack_packages["commit"],
-            "packages_commit": spack_packages_git_commit,
-== == == =
-        spack_git_commit_result = self._git_clone(
-            "spack", spack_repo, spack_commit, spack_path)
-
         package_repos = recipe.spack_package_repos
         for pkg_repo in package_repos:
             pkg_repo["path"] = self.path / "repos" / pkg_repo["name"]
@@ -166,11 +143,10 @@ class Builder:
                 pkg_repo["name"], pkg_repo["url"], pkg_repo["ref"], pkg_repo["path"])
 
         spack_meta = {
-            "url": spack_repo,
-            "ref": spack_commit,
-            "commit": spack_git_commit_result,
+            "url": spack["repo"],
+            "ref": spack["commit"],
+            "commit": spack_git_commit,
             "packages": package_repos,
->>>>>> > main
         }
 
         # Jinja environment for templates
@@ -181,22 +157,11 @@ class Builder:
             lstrip_blocks=True,
         )
 
-<< << << < HEAD
         # --- Write the unified spack.yaml ---
         with (env_path / "spack.yaml").open("w") as f:
             f.write(recipe.spack_yaml)
             f.write("\n")
 
-        # --- Write Makefile ---
-        has_views = any(env_cfg["views"]
-                        for env_cfg in recipe.environments.values())
-        makefile_template = jinja_env.get_template("Makefile")
-        with (self.path / "Makefile").open("w") as f:
-            f.write(
-                makefile_template.render(
-                    cache=recipe.mirror,
-                    push_to_cache=recipe.mirror is not None,
-== == ===
         # Write the spack mirror config artifacts (mirrors.yaml, bootstrap config,
         # and the relocated gpg keys) into the config scope. These were fully
         # resolved and validated by the recipe, so we just write the bytes. This
@@ -207,7 +172,9 @@ class Builder:
             dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_bytes(content)
 
-        # generate top level makefiles
+        # --- Write Makefile ---
+        has_views = any(env_cfg["views"]
+                        for env_cfg in recipe.environments.values())
         makefile_template=jinja_env.get_template("Makefile")
 
         # Extract module types that were configured in recipe.py
@@ -220,20 +187,16 @@ class Builder:
         with (self.path / "Makefile").open("w") as f:
             f.write(
                 makefile_template.render(
->>>>>> > main
                     modules=recipe.with_modules,
                     module_types=module_types,
                     post_install_hook=recipe.post_install_hook,
                     pre_install_hook=recipe.pre_install_hook,
                     spack_meta=spack_meta,
-<< << << < HEAD
                     environments=recipe.environments,
                     compiler_names=recipe.compiler_names,
-== == ===
                     gpg_keys=recipe.mirrors.gpg_key_paths(config_path),
                     cache=recipe.build_cache_mirror,
                     buildcache_push=recipe.push_to_build_cache,
->>>>>> > main
                     exclude_from_cache=["nvhpc", "cuda", "perl"],
                     has_views=has_views,
                     cleanup=recipe.config["cleanup"],
@@ -283,82 +246,29 @@ class Builder:
                     f.write("\n")
                 os.chmod(hook_dst, os.stat(hook_dst).st_mode | stat.S_IEXEC)
 
-<< << << < HEAD
-        # --- Build the consolidated 'alps' spack package repo ---
-        # Precedence (highest first): recipe/repo > cluster repos.yaml entries > spack builtin
-        repos=[]
-        if recipe.spack_repo is not None:
-            self._logger.debug(f"adding recipe spack package repo: {
-                               recipe.spack_repo}")
-            repos.append(recipe.spack_repo)
-
-        repo_yaml_path=recipe.system_config_path / "repos.yaml"
-        if repo_yaml_path.exists():
-            with repo_yaml_path.open() as fid:
-== == ===
-            with post_hook_destination.open("w") as f:
-                f.write(post_hook_template.render(env=hook_env, verbose=False))
-                f.write("\n")
-
-            os.chmod(
-                post_hook_destination,
-                os.stat(post_hook_destination).st_mode | stat.S_IEXEC,
-            )
-
-        # copy pre install hook file, if provided
-        pre_hook=recipe.pre_install_hook
-        if pre_hook is not None:
-            self._logger.debug("installing pre-install-hook script")
-            jinja_recipe_env=jinja2.Environment(
-                loader=jinja2.FileSystemLoader(recipe.path))
-            pre_hook_template=jinja_recipe_env.get_template("pre-install")
-            pre_hook_destination=store_path / "pre-install-hook"
-
-            with pre_hook_destination.open("w") as f:
-                f.write(pre_hook_template.render(env=hook_env, verbose=False))
-                f.write("\n")
-
-            os.chmod(
-                pre_hook_destination,
-                os.stat(pre_hook_destination).st_mode | stat.S_IEXEC,
-            )
-
-        # Generate the system configuration: the compilers, environments, etc.
-        # that are defined for the target cluster.
-        packages_path=config_path / "packages.yaml"
-
         # the packages.yaml configuration that will be used when building all environments
         # - the system packages.yaml with gcc removed
         # - plus additional packages provided by the recipe
-        global_packages_yaml=yaml.dump(recipe.packages["global"])
-        global_packages_path=config_path / "packages.yaml"
-        with global_packages_path.open("w") as fid:
-            fid.write(global_packages_yaml)
+        with (config_path / "packages.yaml").open("w") as f:
+            f.write(yaml.dump(recipe.packages))
+
+        config_yaml={"config": {"install_tree": {"root": str(recipe.mount)}}}
+        with (config_path / "config.yaml").open("w") as f:
+            f.write(yaml.dump(config_yaml))
 
         # Add custom spack package recipes, configured via Spack repos.
-        # Step 1: copy Spack repos to store_path where they will be used to
-        #         build the stack, and then be part of the upstream provided
-        #         to users of the stack.
-        #
-        # Packages in the recipe are prioritised over cluster specific packages,
-        # etc. The order of preference from highest to lowest is:
-        #
-        # 3. recipe/repo
-        # 2. cluster-config/repos.yaml
-        #   - if the repos.yaml file exists it will contain a list of relative paths
-        #     to search for package
-        # 1. package repos from config.yaml in the order specified (typically
-        #    only spack-packages builtin repo)
-
-        # Build a list of repos with packages to install from system config and recipe.
+        # Build a list of repos with packages to install from system config.
+        # Packages in the recipe are prioritised over cluster specific packages.
+        # Order of preference from highest to lowest:
+        #   3. recipe/repo
+        #   2. cluster-config/repos.yaml entries
+        #   1. package repos from config.yaml (e.g. spack-packages builtin)
         repos=[]
 
         # look for repos.yaml file in the system configuration
-        repo_yaml=recipe.system_config_path / "repos.yaml"
-        if repo_yaml.exists() and repo_yaml.is_file():
-            # open repos.yaml file and reat the list of repos
-            with repo_yaml.open() as fid:
->>>>>> > main
+        repo_yaml_path=recipe.system_config_path / "repos.yaml"
+        if repo_yaml_path.exists() and repo_yaml_path.is_file():
+            with repo_yaml_path.open() as fid:
                 raw=yaml.load(fid, Loader=yaml.Loader)
             for rel_path in raw["repos"]:
                 repo_path=(recipe.system_config_path / rel_path).resolve()
@@ -372,13 +282,10 @@ class Builder:
                     raise RuntimeError(
                         "invalid system-provided package repository")
 
-<< << << < HEAD
-== == ===
         self._logger.debug(f"full list of system spack package repos: {repos}")
 
         # Delete the store/repo path, if it already exists.
         # Do this so that incremental builds (though not officially supported) won't break if a repo is updated.
->> >>>> > main
         repos_path=store_path / "repos" / "spack_repo"
         repo_dst=repos_path / "alps"
         if repo_dst.exists():
@@ -386,22 +293,6 @@ class Builder:
         pkg_dst=repo_dst / "packages"
         pkg_dst.mkdir(mode=0o755, parents=True)
 
-<< << << < HEAD
-        with (repo_dst / "repo.yaml").open("w") as f:
-            f.write("repo:\n  namespace: alps\n  api: v2.0\n")
-
-        # config/ is the SPACK_SYSTEM_CONFIG_PATH scope: all files here are loaded
-        # automatically by every spack command, with or without -e.
-        config_path=self.path / "config"
-        config_path.mkdir(exist_ok=True)
-
-        with (config_path / "packages.yaml").open("w") as f:
-            f.write(yaml.dump(recipe.packages))
-
-        config_yaml={"config": {"install_tree": {"root": str(recipe.mount)}}}
-        with (config_path / "config.yaml").open("w") as f:
-            f.write(yaml.dump(config_yaml))
-== == ===
         # create the repository step 2: create the repo.yaml file that
         # configures the alps repo
         with (repo_dst / "repo.yaml").open("w") as f:
@@ -431,7 +322,6 @@ class Builder:
                     self._logger.debug(f"  installing recipe package {
                                        pkg_path} to {recipe_pkg_dst}")
                     install(pkg_path, dst)
->> >>>> > main
 
         repos_yaml_template=jinja_env.get_template("repos.yaml")
         with (config_path / "repos.yaml").open("w") as f:
@@ -446,31 +336,15 @@ class Builder:
             ]
             f.write(
                 repos_yaml_template.render(
-<< << << < HEAD
-                    repo_path=repo_path.as_posix(), builtin_repo_path=builtin_repo_path.as_posix()
-== == ===
                     repo_path=repo_path.as_posix(),
                     package_repos=package_repos,
                     recipe_repo_path=recipe_repo_path.as_posix(),
                     has_recipe_repo=has_recipe_repo,
                     verbose=False,
->>>>>> > main
                 )
             )
             f.write("\n")
 
-<< << << < HEAD
-        if recipe.mirror:
-            with (config_path / "mirrors.yaml").open("w") as fid:
-                fid.write(cache.generate_mirrors_yaml(recipe.mirror))
-
-        # Copy package definitions into the alps repo (recipe > site > nothing)
-        for repo_src in repos:
-            for pkg_path in (repo_src / "packages").iterdir():
-                dst=pkg_dst / pkg_path.name
-                if pkg_path.is_dir() and not dst.exists():
-                    install(pkg_path, dst)
-== == ===
         # Iterate over the alps and recipe repositories copying their contents
         # to the final repo locations. Because of the order of repos in the
         # repos.yaml config file, recipe packages have precedence.
@@ -499,14 +373,6 @@ class Builder:
                 self._logger.debug(f"{dst_path} exists ... deleting")
                 shutil.rmtree(dst_path)
             install(src_path, dst_path)
->> >>>> > main
-
-        # Copy builtin repo from spack-packages
-        spack_builtin_src=spack_packages_path / "repos" / "spack_repo" / "builtin"
-        spack_builtin_dst=store_path / "repos" / "spack_repo" / "builtin"
-        if spack_builtin_dst.exists():
-            shutil.rmtree(spack_builtin_dst)
-        install(spack_builtin_src, spack_builtin_dst)
 
         # --- generate-config subdirectory ---
         generate_config_path=self.path / "generate-config"
