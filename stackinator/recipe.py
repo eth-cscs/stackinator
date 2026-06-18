@@ -74,9 +74,38 @@ class Recipe:
                 # Note:
                 # modules root should match MODULEPATH set by envvars and used by uenv view "modules"
                 # so we enforce that the user does not override it in modules.yaml
-                self.modules["modules"].setdefault("default", {}).setdefault("roots", {}).setdefault(
-                    "tcl", (self.mount / "modules").as_posix()
-                )
+
+                # Spack supports these module types (as of Spack 1.0+)
+                VALID_MODULE_TYPES = {"tcl", "lmod"}
+
+                # Update the root path for each module type that the user configured
+                # This respects the user's choice of tcl, lmod, or both
+                defaults = self.modules["modules"].setdefault("default", {})
+                roots = defaults.setdefault("roots", {})
+
+                # Determine which module types to configure
+                # Priority: 1) explicit roots:, 2) enable: list, 3) default to tcl
+                if not roots:
+                    # No explicit roots configured, check enable: list
+                    enabled = defaults.get("enable", [])
+                    if enabled:
+                        # Use the enabled module types
+                        module_types = enabled
+                    else:
+                        # No enable list either, default to tcl for backward compatibility
+                        module_types = ["tcl"]
+                else:
+                    # Use explicitly configured roots
+                    module_types = list(roots.keys())
+
+                # Set the root path for each module type
+                for module_type in module_types:
+                    if module_type not in VALID_MODULE_TYPES:
+                        raise ValueError(
+                            f"Invalid module type '{module_type}' in modules.yaml. "
+                            f"Supported types: {', '.join(sorted(VALID_MODULE_TYPES))}"
+                        )
+                    roots[module_type] = (self.mount / "modules").as_posix()
 
         # DEPRECATED field `config:modules`
         if "modules" in self.config:
@@ -214,6 +243,39 @@ class Recipe:
         if spack_util.is_repo(repo_path):
             return repo_path
         return None
+
+    _RESERVED_REPO_NAMES = {"alps", "recipe"}
+
+    @property
+    def spack_package_repos(self):
+        packages = self.config["spack"]["packages"]
+        if isinstance(packages.get("repo"), str):
+            return [
+                {
+                    "name": "builtin",
+                    "url": packages["repo"],
+                    "ref": packages.get("commit"),
+                    "repo_path": packages.get("path", "repos/spack_repo/builtin"),
+                }
+            ]
+        repos = [
+            {
+                "name": name,
+                "url": val["repo"],
+                "ref": val.get("commit"),
+                "repo_path": val.get("path", f"repos/spack_repo/{name}"),
+            }
+            for name, val in packages.items()
+        ]
+        for repo in repos:
+            name = repo["name"]
+            if name in self._RESERVED_REPO_NAMES:
+                raise RuntimeError(
+                    f"The package repo name '{name}' is reserved for stackinator internal use. "
+                    f"Reserved names are: {self._RESERVED_REPO_NAMES}. "
+                    "Choose a different name in config.yaml:spack:packages."
+                )
+        return repos
 
     # Returns:
     #   Path: if the recipe specified a build cache mirror

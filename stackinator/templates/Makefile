@@ -56,14 +56,16 @@ environments: compilers
 
 {% if modules %}
 modules-done: environments generate-config
-	$(SANDBOX) $(SPACK) -C $(BUILD_ROOT)/modules module tcl refresh --upstream-modules --delete-tree --yes-to-all
+	{% for module_type in module_types %}
+	$(SANDBOX) $(SPACK) -C $(BUILD_ROOT)/modules module {{ module_type }} refresh --upstream-modules --delete-tree --yes-to-all
+	{% endfor %}
 	touch modules-done
 {% endif %}
 
 
 env-meta: generate-config environments{% if modules %} modules-done{% endif %}
 
-	$(SANDBOX) $(BUILD_ROOT)/envvars.py uenv {% if modules %}--modules{% endif %} --spack='{{ spack_meta.url }},{{ spack_meta.ref }},{{ spack_meta.commit }}' --spack-packages='{{ spack_meta.packages_url }},{{ spack_meta.packages_ref }},{{ spack_meta.packages_commit }}' $(STORE)
+	$(SANDBOX) $(BUILD_ROOT)/envvars.py uenv {% if modules %}--modules{% endif %} --spack='{{ spack_meta.url }},{{ spack_meta.ref }},{{ spack_meta.commit }}'{% for pkg_repo in spack_meta.packages %} --spack-package-repo='{{ pkg_repo.name }},{{ pkg_repo.url }},{{ pkg_repo.ref }},{{ pkg_repo.commit }}'{% endfor %} $(STORE)
 	touch env-meta
 
 post-install: env-meta

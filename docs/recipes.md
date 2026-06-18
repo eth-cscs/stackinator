@@ -41,6 +41,37 @@ version: 2
 * `version`:  _default = 1_ the version of the uenv recipe (see below)
 * `modules`: (_deprecated_) _optional_ enable/disable module file generation.
 
+It's possible to configure multiple package repositories for the uenv build by providing a dictionary of spack repositories. For example:
+
+```yaml title="config.yaml"
+name: prgenv-gnu
+store: /user-environment
+spack:
+    repo: https://github.com/spack/spack.git
+    commit: releases/v1.0
+    packages:
+        builtin:
+            repo: https://github.com/spack/spack-packages.git
+            commit: develop
+        foo:
+            repo: https://github.com/foo/spack-packages.git
+            commit: v13.2
+            path: repos/spack_repo/foo
+version: 2
+```
+
+The `path` entry is optional and defaults to `repos/spack_repo/${name}`, where the dictionary key is the `name`.
+For the upstream spack-packages repository, the default value can be used.
+
+!!! info
+   The order of package repositories is significant.
+   stackinator follows the same semantics as spack itself, where package repositories further up in the list take precedence over ones later in the list.
+   Refer to the [spack documentation](https://spack.readthedocs.io/en/latest/repositories.html#search-order-and-overriding-packages) for more information.
+
+!!! info
+    `recipe` and `alps` are reserved repository names for internal stackinator use and can't be used for user-specified package repositories.
+    The `recipe` and `alps` repositories have higher precedence than repositories configured in `config.yaml` (see [custom spack packages][ref-custom-spack-packages] for more details).
+
 !!! note "uenv recipe versions"
     Stackinator 6 introduces breaking changes to the uenv recipe format, introduced to support Spack v1.0.
 
@@ -488,9 +519,10 @@ Modules are generated for the installed compilers and packages by spack.
     - `modules:default:arch_folder` defaults to `false`. If set to `true` an error is raised, as Stackinator does not support this feature;
     - `modules:default:roots:tcl` is ignored, as Stackinator automatically configures the module root to be inside the uenv mount point.
 
+[](){#ref-custom-spack-packages}
 ## Custom Spack Packages
 
-An optional package repository can be added to a recipe to provide new or customized Spack packages in addition to Spack's `builtin` package repository, if a `repo` path is provided in the recipe.
+An optional package repository can be added to a recipe to provide new or customized Spack packages in addition to the package repositories configured in `config.yaml`, if a `repo` path is provided in the recipe.
 
 For example, the following `repo` path will add custom package definitions for the `hdf5` and `nvhpc` packages:
 
@@ -502,6 +534,8 @@ repo
    └─ nvhpc
       └─ package.py
 ```
+
+Packages provided together with a recipe will be installed in a separate `recipe` namespace.
 
 Additional custom packages can be provided as part of the cluster configuration, as well as additional site packages.
 These packages are all optional, and will be installed together in a single Spack package repository that is made available to downstream users of the generated uenv stack.
@@ -524,12 +558,13 @@ See the documentation for [cluster configuration](cluster-config.md) for more de
     In the above case, the package `fmt` is backported from `origin/develop` into the `stackinator-recipe`.
 
 !!! alps
-    All packages are installed under a single spack package repository called `alps`.
+    All cluster configuration packages are installed under a single spack package repository called `alps`.
     The CSCS configurations in [github.com/eth-cscs/alps-cluster-config](https://github.com/eth-cscs/alps-cluster-config) provides a site configuration that defines cray-mpich, its dependencies, and the most up to date versions of cuda, nvhpc etc to all clusters on Alps.
+    These site packages are installed under the `alps` Spack package repository namespace.
 
 !!! warning
     Unlike Spack package repositories, any `repos.yaml` file in the `repo` path will be ignored.
-    This is because the provided packages are added to the `alps` namespace.
+    This is because the provided packages are installed in the `recipe` namespace.
 
 ## Post install configuration
 

@@ -23,6 +23,11 @@ jobs:
         done
         exit $errors
     - name: Install Dependencies
-      run: uv sync --group dev
+      run: |
+        uv sync --group dev
+        sudo apt-get install -y jq
     - name: Run Unit Tests
       run: uv run pytest
+    - name: Run Envvars Test
+      working-directory: unittests
+      run: uv run bash ./test-envvars.sh
