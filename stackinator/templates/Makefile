@@ -93,12 +93,12 @@ compiler-config.yaml: cleanup
 {% endif %}
 		$(BUILD_ROOT)/compiler-config.yaml{% if compiler_names %} {{ compiler_names | join(' ') }}{% endif %}
 
-# Generate activate.sh and env.json for each environment view.
+# Generate activate.sh and env.json for each environment view. All views are
+# built in a single target so their output is not interleaved under make -j.
+views: install compiler-config.yaml
 {% for name, config in environments.items() %}
 {% for view in config.views %}
-views/{{ view.name }}: install compiler-config.yaml
 	$(call banner,View: {{ view.name }})
-	mkdir -p $(dir $@)
 	$(SANDBOX) mkdir -p $(STORE)/env/{{ view.name }}
 	$(SANDBOX) sh -c '$(SPACK) env activate -d $(ENV_ROOT) --with-view {{ view.name }} --sh > $(STORE)/env/{{ view.name }}/activate.sh'
 	$(SANDBOX) $(BUILD_ROOT)/envvars.py view \
@@ -106,12 +106,8 @@ views/{{ view.name }}: install compiler-config.yaml
 		--prefix_paths="{{ view.extra.prefix_string }}" \
 		$(STORE)/env/{{ view.name }} \
 		$(BUILD_ROOT)
-	touch $@
-
 {% endfor %}
 {% endfor %}
-views: {% for name, config in environments.items() %}{% for view in config.views %}views/{{ view.name }} {% endfor %}{% endfor %}
-
 	touch views
 
 generate-config: install compiler-config.yaml

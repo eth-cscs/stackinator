@@ -476,11 +476,6 @@ def read_activation_script(filename: str, env: Optional[EnvVarSet] = None) -> En
 
 
 def view_impl(args):
-    print(
-        f"parsing view {args.root}\n  compilers {args.compilers}\n  prefix_paths '{args.prefix_paths}'\n  \
-        build_path '{args.build_path}'"
-    )
-
     if not os.path.isdir(args.root):
         print(f"error - environment root path {args.root} does not exist")
         exit(1)
@@ -523,6 +518,7 @@ def view_impl(args):
                 c = e["extra_attributes"].get("compilers")
                 if not c:
                     continue
+                print(f"compiler symlinks: creating for {e.get('prefix', pkg_name)}")
                 for role, path in c.items():
                     if path is None:
                         continue
@@ -532,16 +528,11 @@ def view_impl(args):
                     else:
                         link_name = os.path.basename(src)
                     dst = os.path.join(bin_path, link_name)
-                    print(f"creating compiler symlink: {src} -> {dst}")
                     if os.path.exists(dst):
-                        print(f"  first removing {dst}")
                         os.remove(dst)
                     os.symlink(src, dst)
 
     if args.prefix_paths:
-        # get the root path of the env
-        print(f"prefix_paths: searching in {root_path}")
-
         for p in args.prefix_paths.split(","):
             name, value = p.split("=")
             paths = []
@@ -550,11 +541,9 @@ def view_impl(args):
                 if os.path.isdir(test_path):
                     paths.append(test_path)
 
-            print(f"{name}:")
-            for p in paths:
-                print(f"  {p}")
-
             if len(paths) > 0:
+                print(f"{name}: {' '.join(paths)}")
+
                 if name in envvars.lists:
                     ld_paths = envvars.lists[name].paths
                     final_paths = [p for p in paths if p not in ld_paths]
