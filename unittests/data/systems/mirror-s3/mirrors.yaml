@@ -1,0 +1,26 @@
+# a buildcache and a source mirror that use the spack-style fetch/push
+# connection objects, with distinct read/write endpoints and S3/OCI auth.
+buildcache:
+  private_key: ../../test-gpg-priv.asc
+  fetch:
+    url: s3://my-bucket/buildcache
+    endpoint_url: https://s3.example.com
+    access_pair:
+      id_variable: AWS_ACCESS_KEY_ID
+      secret_variable: AWS_SECRET_ACCESS_KEY
+  push:
+    url: s3://my-bucket/buildcache
+    endpoint_url: https://s3.example.com
+    access_pair:
+      id_variable: AWS_ACCESS_KEY_ID
+      secret_variable: AWS_SECRET_ACCESS_KEY
+sourcemirror:
+  s3-sources:
+    fetch:
+      url: s3://my-bucket/sources
+      profile: my-profile
+      endpoint_url: https://s3.example.com
+    push:
+      url: s3://my-bucket/sources
+      profile: my-profile
+      endpoint_url: https://s3.example.com

@@ -1,3 +1,4 @@
+[](){#ref-recipes}
 # Recipes
 
 A recipe is a description of all of the compilers and software packages to be installed, along with configuration of modules and environment scripts the stack will provide to users.

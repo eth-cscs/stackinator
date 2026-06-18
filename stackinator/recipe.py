@@ -5,7 +5,7 @@ import re
 import jinja2
 import yaml
 
-from . import cache, root_logger, schema, spack_util
+from . import root_logger, schema, spack_util, mirror
 from .etc.envvars import EnvVarSet
 
 
@@ -205,15 +205,22 @@ class Recipe:
                 )
                 raise RuntimeError("Ivalid default-view in the recipe.")
 
-        # optional mirror configurtion
-        mirrors_path = self.path / "mirrors.yaml"
-        if mirrors_path.is_file():
-            self._logger.warning(
-                "mirrors.yaml have been removed from recipes, use the --cache option on stack-config instead."
-            )
-            raise RuntimeError("Unsupported mirrors.yaml file in recipe.")
+        # determine the version of spack being used: it is inferred (best effort)
+        # from the spack commit in config.yaml, defaulting to the latest supported
+        # version when it cannot be determined. This must precede the mirror
+        # configuration, which gates the concretizer cache on the spack version.
+        self.spack_version = self.find_spack_version(args.develop)
 
-        self.mirror = (args.cache, self.mount)
+        # resolve the mirror configuration provided with --mirror. --cache is the
+        # legacy path.
+        self._logger.debug("Configuring mirrors.")
+        self.mirrors = mirror.Mirrors(
+            self.system_config_path,
+            self.mount,
+            self.spack_version,
+            pathlib.Path(args.mirror) if args.mirror else None,
+            pathlib.Path(args.cache) if args.cache else None,
+        )
 
         # optional post install hook
         if self.post_install_hook is not None:
@@ -226,11 +233,6 @@ class Recipe:
             self._logger.debug(f"pre install hook {self.pre_install_hook}")
         else:
             self._logger.debug("no pre install hook provided")
-
-        # determine the version of spack being used:
-        # currently this just returns 1.0... develop is ignored
-        # --develop flag will imply the next release of spack after 1.0 is supported properly
-        self.spack_version = self.find_spack_version(args.develop)
 
     # Returns:
     #   Path: if the recipe contains a spack package repository
@@ -276,6 +278,20 @@ class Recipe:
         return repos
 
     # Returns:
+    #   Path: if the recipe specified a build cache mirror
+    #   None: if no build cache mirror is used
+    @property
+    def build_cache_mirror(self):
+        return self.mirrors.build_cache_mirror
+
+    # Returns:
+    #   str:  the build cache mirror name to push built packages to
+    #   None: if there is no build cache, or it is read-only (no signing key)
+    @property
+    def push_to_build_cache(self):
+        return self.mirrors.push_to_build_cache
+
+    # Returns:
     #   Path: of the recipe extra path if it exists
     #   None: if there is no user-provided extra path in the recipe
     @property
@@ -305,32 +321,6 @@ class Recipe:
             return hook_path
         return None
 
-    # Returns a dictionary with the following fields
-    #
-    # root: /path/to/cache
-    # path: /path/to/cache/user-environment
-    # key: /path/to/private-pgp-key
-    @property
-    def mirror(self):
-        return self._mirror
-
-    # configuration is a tuple with two fields:
-    # - a Path of the yaml file containing the cache configuration
-    # - the mount point of the image
-    @mirror.setter
-    def mirror(self, configuration):
-        self._logger.debug(f"configuring build cache mirror with {configuration}")
-        self._mirror = None
-
-        file, mount = configuration
-
-        if file is not None:
-            mirror_config_path = pathlib.Path(file)
-            if not mirror_config_path.is_file():
-                raise FileNotFoundError(f"The cache configuration '{file}' is not a file")
-
-            self._mirror = cache.configuration_from_file(mirror_config_path, pathlib.Path(mount))
-
     @property
     def config(self):
         return self._config
@@ -350,10 +340,30 @@ class Recipe:
     def with_modules(self) -> bool:
         return self.modules is not None
 
-    # In Stackinator 6 we replaced logic required to determine the
-    # pre 1.0 Spack version.
+    # Make a best-effort determination of the "major.minor" version of spack being
+    # used, inferred from the spack commit in config.yaml. This is only a hint: the
+    # commit can be an arbitrary branch/tag/sha, so when the version cannot be pinned
+    # we default to the latest supported version ("1.1"). Returns a "major.minor"
+    # string (e.g. "1.0", "1.1").
     def find_spack_version(self, develop):
-        return "1.0"
+        # the latest supported version, used when the version cannot be determined
+        # (an explicit --develop, the default branch, or an unrecognised commit).
+        default = "1.1"
+
+        if develop:
+            return default
+
+        commit = self.config["spack"]["commit"]
+        if commit is None or commit in ("develop", "main"):
+            return default
+
+        # match a release branch/tag (releases/v1.0, v1.1, v1.1.2) or a bare "1.0",
+        # and extract the major.minor version.
+        match = re.search(r"v?(\d+)\.(\d+)(?:\.\d+)?", commit)
+        if match:
+            return f"{match.group(1)}.{match.group(2)}"
+
+        return default
 
     @property
     def default_view(self):
@@ -585,10 +595,9 @@ class Recipe:
         )
 
         makefile_template = env.get_template("Makefile.compilers")
-        push_to_cache = self.mirror is not None
         files["makefile"] = makefile_template.render(
             compilers=self.compilers,
-            push_to_cache=push_to_cache,
+            buildcache=self.push_to_build_cache,
             spack_version=self.spack_version,
         )
 
@@ -616,10 +625,9 @@ class Recipe:
         jenv.filters["py2yaml"] = schema.py2yaml
 
         makefile_template = jenv.get_template("Makefile.environments")
-        push_to_cache = self.mirror is not None
         files["makefile"] = makefile_template.render(
             environments=self.environments,
-            push_to_cache=push_to_cache,
+            buildcache=self.push_to_build_cache,
             spack_version=self.spack_version,
         )
 

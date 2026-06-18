@@ -19,8 +19,8 @@ spack-setup: spack-version
 	printf "spack version... "; \
 	version="$$($(SANDBOX) $(SPACK) --version)"; \
 	printf "%s\n" "$$version"; \
-	printf "checking if spack concretizer works... "; \
-	$(SANDBOX) $(SPACK_HELPER) -d spec zlib > $(BUILD_ROOT)/spack-bootstrap-output 2>&1; \
+	printf "bootstrapping spack... "; \
+	$(SANDBOX) $(SPACK_HELPER) -d bootstrap now > $(BUILD_ROOT)/spack-bootstrap-output 2>&1; \
 	if [ "$$?" != "0" ]; then \
 		printf " failed, see %s\n" $(BUILD_ROOT)/spack-bootstrap-output; \
 		exit 1; \
@@ -34,11 +34,15 @@ pre-install: spack-setup
 mirror-setup: spack-setup{% if pre_install_hook %} pre-install{% endif %}
 
 	{% if cache %}
+	@echo "Pulling and trusting keys from configured buildcaches."
 	$(SANDBOX) $(SPACK) buildcache keys --install --trust
-	{% if cache.key %}
-	$(SANDBOX) $(SPACK) gpg trust {{ cache.key }}
 	{% endif %}
-	{% endif %}
+	@echo "Adding mirror gpg keys."
+	{% for key_path in gpg_keys %}
+	$(SANDBOX) $(SPACK)	gpg trust {{ key_path }}
+	{% endfor %}
+	@echo "Current mirror list:"
+	$(SANDBOX) $(SPACK) mirror list
 	touch mirror-setup
 
 compilers: mirror-setup
@@ -79,14 +83,14 @@ store.squashfs: post-install
 
 # Force push all built packages to the build cache
 cache-force: mirror-setup
-{% if cache.key %}
+{% if buildcache_push %}
 	$(warning ================================================================================)
 	$(warning Generate the config in order to force push partially built compiler environments)
 	$(warning if this step is performed with partially built compiler envs, you will)
 	$(warning likely have to start a fresh build (but that's okay, because build caches FTW))
 	$(warning ================================================================================)
 	$(SANDBOX) $(MAKE) -C generate-config
-	$(SANDBOX) $(SPACK) --color=never -C $(STORE)/config buildcache create --only=package alpscache \
+	$(SANDBOX) $(SPACK) --color=never -C $(STORE)/config buildcache create --only=package {{ buildcache_push }} \
 	$$($(SANDBOX) $(SPACK_HELPER) -C $(STORE)/config find --format '{name};{/hash};version={version}' \
 	| grep -v -E '^({% for p in exclude_from_cache %}{{ pipejoiner() }}{{ p }}{% endfor %});'\
 	| grep -v -E 'version=git\.'\

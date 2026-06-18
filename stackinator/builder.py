@@ -11,7 +11,7 @@ from datetime import datetime
 import jinja2
 import yaml
 
-from . import VERSION, cache, root_logger, spack_util
+from . import VERSION, root_logger, spack_util
 
 _REPO_YAML = """\
 repo:
@@ -171,13 +171,16 @@ class Builder:
         self._environment_meta = meta
 
     def generate(self, recipe):
+        """Setup the recipe build environment."""
         # make the paths, in case bwrap is not used, directly write to recipe.mount
         store_path = self.path / "store" if not recipe.no_bwrap else pathlib.Path(recipe.mount)
         tmp_path = self.path / "tmp"
+        config_path = self.path / "config"
 
         self.path.mkdir(exist_ok=True, parents=True)
         store_path.mkdir(exist_ok=True)
         tmp_path.mkdir(exist_ok=True)
+        config_path.mkdir(exist_ok=True)
 
         # check out the version of spack
         spack_version = recipe.spack_version
@@ -217,6 +220,15 @@ class Builder:
             lstrip_blocks=True,
         )
 
+        # Write the spack mirror config artifacts (mirrors.yaml, bootstrap config,
+        # and the relocated gpg keys) into the config scope. These were fully
+        # resolved and validated by the recipe, so we just write the bytes. This
+        # must precede the Makefile render, which references the gpg key paths.
+        self._logger.debug(f"Writing the spack mirror configs to '{config_path}'")
+        for dest, content in recipe.mirrors.config_files(config_path).items():
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(content)
+
         # generate top level makefiles
         makefile_template = jinja_env.get_template("Makefile")
 
@@ -229,13 +241,15 @@ class Builder:
         with (self.path / "Makefile").open("w") as f:
             f.write(
                 makefile_template.render(
-                    cache=recipe.mirror,
                     modules=recipe.with_modules,
                     module_types=module_types,
                     post_install_hook=recipe.post_install_hook,
                     pre_install_hook=recipe.pre_install_hook,
                     spack_version=spack_version,
                     spack_meta=spack_meta,
+                    gpg_keys=recipe.mirrors.gpg_key_paths(config_path),
+                    cache=recipe.build_cache_mirror,
+                    buildcache_push=recipe.push_to_build_cache,
                     exclude_from_cache=["nvhpc", "cuda", "perl"],
                     verbose=False,
                 )
@@ -303,8 +317,6 @@ class Builder:
 
         # Generate the system configuration: the compilers, environments, etc.
         # that are defined for the target cluster.
-        config_path = self.path / "config"
-        config_path.mkdir(exist_ok=True)
         packages_path = config_path / "packages.yaml"
 
         # the packages.yaml configuration that will be used when building all environments
@@ -314,13 +326,6 @@ class Builder:
         global_packages_path = config_path / "packages.yaml"
         with global_packages_path.open("w") as fid:
             fid.write(global_packages_yaml)
-
-        # generate a mirrors.yaml file if build caches have been configured
-        if recipe.mirror:
-            dst = config_path / "mirrors.yaml"
-            self._logger.debug(f"generate the build cache mirror: {dst}")
-            with dst.open("w") as fid:
-                fid.write(cache.generate_mirrors_yaml(recipe.mirror))
 
         # Add custom spack package recipes, configured via Spack repos.
         # Step 1: copy Spack repos to store_path where they will be used to

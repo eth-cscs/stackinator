@@ -1,0 +1,141 @@
+{
+    "$defs": {
+        "connection": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL pointing to the mirror directory: local filesystem (file://) or remote (http://, https://, s3://, oci://)"
+                },
+                "view": { "type": "string" },
+                "profile": {
+                    "type": ["string", "null"],
+                    "description": "AWS profile name to use for S3 mirror authentication"
+                },
+                "endpoint_url": {
+                    "type": ["string", "null"],
+                    "description": "Custom endpoint URL for S3-compatible storage services"
+                },
+                "access_token_variable": {
+                    "type": ["string", "null"],
+                    "description": "Environment variable containing an access token for OCI registry authentication"
+                },
+                "access_pair": {
+                    "type": "object",
+                    "description": "Authentication credentials for accessing private mirrors with ID and secret pairs",
+                    "required": ["secret_variable"],
+                    "oneOf": [
+                        {"required": ["id"]},
+                        {"required": ["id_variable"]}
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                        "id":              { "type": "string" },
+                        "id_variable":     { "type": "string" },
+                        "secret_variable": { "type": "string" }
+                    }
+                }
+            }
+        },
+        "fetch_and_push": {
+            "anyOf": [
+                { "type": "string" },
+                { "$ref": "#/$defs/connection" }
+            ]
+        }
+    },
+    "type" : "object",
+    "additionalProperties": false,
+    "properties": {
+        "bootstrap": {
+            "type": "object",
+            "properties": {
+                "description": {"type": "string", "default": ""},
+                "url": {"type": "string"}
+            },
+            "additionalProperties": false,
+            "required": ["url"]
+        },
+        "buildcache": {
+            "type": "object",
+            "additionalProperties": false,
+            "anyOf": [
+                {"required": ["url"]},
+                {"required": ["fetch"]},
+                {"required": ["push"]}
+            ],
+            "properties": {
+                "name":           { "type": "string",  "default": "buildcache" },
+                "description":    { "type": "string",  "default": "" },
+                "mount_specific": { "type": "boolean", "default": false },
+                "source":         { "type": "boolean", "default": false },
+                "binary":         { "type": "boolean", "default": true },
+                "signed":         { "type": "boolean" },
+                "autopush":       { "type": "boolean" },
+                "private_key":    {
+                    "oneOf": [ {"type" : "string"}, {"type" : "null"} ],
+                    "default": null
+                },
+                "public_key":    {
+                    "oneOf": [ {"type" : "string"}, {"type" : "null"} ],
+                    "default": null
+                },
+                "url":                   { "type": "string" },
+                "view":                  { "type": "string" },
+                "profile":               { "type": ["string", "null"] },
+                "endpoint_url":          { "type": ["string", "null"] },
+                "access_token_variable": { "type": ["string", "null"] },
+                "access_pair":           { "$ref": "#/$defs/connection/properties/access_pair" },
+                "fetch":                 { "$ref": "#/$defs/fetch_and_push" },
+                "push":                  { "$ref": "#/$defs/fetch_and_push" }
+            }
+        },
+        "sourcemirror": {
+            "type": "object",
+            "default": {},
+            "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "anyOf": [
+                    {"required": ["url"]},
+                    {"required": ["fetch"]},
+                    {"required": ["push"]}
+                ],
+                "properties": {
+                    "description":           { "type": "string",  "default": "" },
+                    "source":                { "type": "boolean", "default": true },
+                    "binary":                { "type": "boolean", "default": false },
+                    "signed":                { "type": "boolean" },
+                    "autopush":              { "type": "boolean" },
+                    "url":                   { "type": "string" },
+                    "view":                  { "type": "string" },
+                    "profile":               { "type": ["string", "null"] },
+                    "endpoint_url":          { "type": ["string", "null"] },
+                    "access_token_variable": { "type": ["string", "null"] },
+                    "access_pair":           { "$ref": "#/$defs/connection/properties/access_pair" },
+                    "fetch":                 { "$ref": "#/$defs/fetch_and_push" },
+                    "push":                  { "$ref": "#/$defs/fetch_and_push" }
+                }
+            }
+        },
+        "sourcecache": {
+            "type": "object",
+            "properties": {
+                "description": {"type": "string", "default": ""},
+                "path": {"type": "string"}
+            },
+            "additionalProperties": false,
+            "required": ["path"]
+        },
+        "concretizer": {
+            "type": "object",
+            "properties": {
+                "description": {"type": "string", "default": ""},
+                "path": {"type": "string"}
+            },
+            "additionalProperties": false,
+            "required": ["path"]
+        }
+    }
+}

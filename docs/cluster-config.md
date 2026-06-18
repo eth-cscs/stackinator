@@ -1,3 +1,4 @@
+[](){#ref-cluster-config}
 # Cluster Configuration
 
 Spack stacks are built on bare-metal clusters using a minimum of dependencies from the underlying system.
@@ -10,7 +11,7 @@ A cluster configuration is a directory with the following structure:
 └─ repos.yaml       # optional reference to additional site packages
 ```
 
-The configuration is provided during the [configuration](configuring.md) step with the `--system/-s` flag.
+The configuration is provided during the [configuration][ref-configuring] step with the `--system/-s` flag.
 The following example targets the Clariden system at CSCS:
 
 ```bash
@@ -92,6 +93,13 @@ packages:
       cassini-headers:
         version: ["git.59b6de6a91d9637809677c50cc48b607a91a9acb=main"]
     ```
+
+### Configuring Spack mirrors
+
+Mirrors and caches are **not** part of the system configuration.
+They are supplied per-invocation with `stack-config --mirror <file>`, because the locations involved (build caches, source caches) are often specific to the user running the build and may not be accessible to everyone using a system.
+
+See [Mirrors and Build Caches][ref-mirrors] for the full reference and examples.
 
 ## Site and System Configurations
 

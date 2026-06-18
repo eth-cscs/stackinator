@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
 # use uv to run mkdocs with mkdocs-material and its dependencies installed
-uv run --group docs mkdocs ${@:-serve}
+uv run --group docs mkdocs ${@:-serve --livereload}
