@@ -59,6 +59,13 @@ def build_compiler_packages(compiler_names):
 
         externals = []
         for spec in specs:
+            # Skip externals such as the system gcc. It is registered in the
+            # cluster packages.yaml and gets pulled into the DB as a bootstrap
+            # dependency, but only compilers actually built into this environment
+            # should be surfaced here. The system compiler is included separately,
+            # and only when selected, via --system-packages.
+            if spec.external:
+                continue
             prefix = str(spec.prefix)
             bins = find_compiler_bins(prefix, name)
             if not bins:

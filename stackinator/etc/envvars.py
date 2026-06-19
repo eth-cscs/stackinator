@@ -511,7 +511,15 @@ def view_impl(args):
         with open(args.compilers, "r") as file:
             data = yaml.safe_load(file)
 
+        # Restrict the symlinked compilers to those wired to this view's
+        # environment (environments.yaml: compiler). When None, link them all.
+        allowed = None
+        if args.compiler_names:
+            allowed = {n for n in args.compiler_names.split(",") if n}
+
         for pkg_name, pkg_data in data["packages"].items():
+            if allowed is not None and pkg_name not in allowed:
+                continue
             for e in pkg_data["externals"]:
                 if "extra_attributes" not in e:
                     continue
@@ -676,6 +684,13 @@ if __name__ == "__main__":
     )
     # only add compilers if this argument is passed
     view_parser.add_argument("--compilers", help="path of the packages.yaml file", type=str, default=None)
+    view_parser.add_argument(
+        "--compiler-names",
+        help="comma-separated compiler package names to symlink into the view; "
+        "restricts --compilers to the compilers wired to this environment",
+        type=str,
+        default=None,
+    )
 
     uenv_parser = subparsers.add_parser(
         "uenv",

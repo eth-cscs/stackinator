@@ -189,7 +189,7 @@ class Builder:
                     environments=recipe.environments,
                     compiler_names=recipe.compiler_names,
                     gpg_keys=recipe.mirrors.gpg_key_paths(config_path),
-                    cache=recipe.build_cache_mirror,
+                    buildcache=recipe.build_cache_mirror,
                     buildcache_push=recipe.push_to_build_cache,
                     exclude_from_cache=["nvhpc", "cuda", "perl"],
                     has_views=has_views,
@@ -256,7 +256,7 @@ class Builder:
         # - the system packages.yaml with gcc removed
         # - plus additional packages provided by the recipe
         with (config_path / "packages.yaml").open("w") as f:
-            f.write(yaml.dump(recipe.packages))
+            f.write(yaml.dump(recipe.packages["build"]))
 
         config_yaml = {"config": {"install_tree": {"root": str(recipe.mount)}}}
         with (config_path / "config.yaml").open("w") as f:
@@ -384,9 +384,12 @@ class Builder:
                     modules=recipe.with_modules,
                     build_path=self.path.as_posix(),
                     compiler_names=recipe.compiler_names,
+                    system_gcc=recipe.system_gcc,
                 )
             )
             f.write("\n")
+        with (generate_config_path / "packages.yaml").open("w") as f:
+            f.write(yaml.dump(recipe.packages["install"]))
 
         # --- modules ---
         if recipe.with_modules:
@@ -394,6 +397,8 @@ class Builder:
             modules_path.mkdir(exist_ok=True)
             with (modules_path / "modules.yaml").open("w") as f:
                 yaml.dump(recipe.modules, f)
+            with (modules_path / "packages.yaml").open("w") as f:
+                f.write(yaml.dump(recipe.packages["install"]))
 
         # --- metadata ---
         meta_path = store_path / "meta"

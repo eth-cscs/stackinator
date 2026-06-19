@@ -144,9 +144,17 @@ class Recipe:
 
         # note that the order that package sets are specified in is significant.
         # arguments to the right have higher precedence.
-        # Global packages.yaml: system + network + recipe packages.
-        # gcc is included here (unlike v2 which isolated it for the bootstrap step).
-        self.packages = {"packages": system_packages | network_packages | recipe_packages}
+        #
+        # build_packages: system + network + recipe packages.
+        # - system gcc is included here because needed to build the software
+        # global_packages: system + network + recipe packages.
+        # - system gcc is only included if building with system gcc
+        build_packages = system_packages | network_packages | recipe_packages
+        install_packages = system_packages | network_packages | recipe_packages
+        if not self.use_system_gcc:
+            del install_packages["gcc"]
+
+        self.packages = {"build": {"packages": build_packages}, "install": {"packages": install_packages}}
 
         # required environments.yaml file
         environments_path = self.path / "environments.yaml"
@@ -504,6 +512,9 @@ class Recipe:
                 compilers[name] = {"specs": [spec_template.format(version=version)], "version": version}
 
         self.compilers = compilers
+
+        # will the uenv use the system gcc instead of bootstrapping gcc
+        self.use_system_gcc =  (gcc_version == "system")
 
     @property
     def system_gcc(self):
