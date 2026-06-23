@@ -229,6 +229,16 @@ class Builder:
             dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_bytes(content)
 
+        # Spack 1.2 makes the new (parallel) installer the default.
+        # Stackinator 6 the behaviour of the old installer, so pin config:installer to
+        # "old" for spack >= 1.2.
+        if spack_version >= (1, 2):
+            config_yaml_path = config_path / "config.yaml"
+            config_doc = yaml.safe_load(config_yaml_path.read_text()) if config_yaml_path.exists() else None
+            config_doc = config_doc or {}
+            config_doc.setdefault("config", {})["installer"] = "old"
+            config_yaml_path.write_text(yaml.dump(config_doc, default_flow_style=False))
+
         # generate top level makefiles
         makefile_template = jinja_env.get_template("Makefile")
 
