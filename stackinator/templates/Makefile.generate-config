@@ -3,33 +3,33 @@ include ../Make.user
 CONFIG_DIR = $(STORE)/config
 MODULE_DIR = $(BUILD_ROOT)/modules
 
-all: $(CONFIG_DIR)/upstreams.yaml $(CONFIG_DIR)/packages.yaml $(CONFIG_DIR)/repos.yaml{% if modules %} $(MODULE_DIR)/upstreams.yaml{% endif %}
-
-# TODO: the upstreams.yaml files are not getting created in either MODULE_DIR or CONFIG_DIR... whats up with that.
+all: $(CONFIG_DIR)/upstreams.yaml $(CONFIG_DIR)/packages.yaml $(CONFIG_DIR)/repos.yaml
 
 $(CONFIG_DIR)/upstreams.yaml:
 	$(call banner,generate $(CONFIG_DIR)/upstreams.yaml)
 	mkdir -p $(CONFIG_DIR)
-	$(SPACK) -e $(ENV_ROOT) config --scope=user add upstreams:system:install_tree:$(STORE)
+	install -m 644 upstreams.yaml $(CONFIG_DIR)/upstreams.yaml
 
-{% if modules %}
-$(MODULE_DIR)/upstreams.yaml:
-	$(call banner,generate $(MODULE_DIR)/upstreams.yaml)
-	$(SPACK) -e $(ENV_ROOT) config --scope=user add upstreams:system:install_tree:$(STORE)
+$(CONFIG_DIR)/packages.yaml:
+	$(call banner,generate $(CONFIG_DIR)/packages.yaml)
+	mkdir -p $(CONFIG_DIR)
+	install -m 644 packages.yaml $(CONFIG_DIR)/packages.yaml
 
-{% endif %}
+$(CONFIG_DIR)/repos.yaml:
+	$(call banner,generate $(CONFIG_DIR)/repos.yaml)
+	mkdir -p $(CONFIG_DIR)
+	install -m 644 $(BUILD_ROOT)/config/repos.yaml $(CONFIG_DIR)/repos.yaml
 
-# Generate packages.yaml with the spack-built compiler externals so that
-# downstream Spack users can find and use the compilers without a compiler.yaml.
-# When the recipe uses the system gcc, also pull it in from the build packages.yaml.
+# TODO: is the packages.yaml that we are installing in CONFIG_DIR/packages.yaml sufficient?
+# we are installing the version that does not contain any gcc (the system gcc is removed), 
+# and the gcc that was built by spack is not included.
 #
-# TODO: we have replaced this with a simple copy of the packages.yaml used to build
-# the software stack
-#   - without gcc when gcc was built in the uenv
-#   - with system gcc when the system gcc was used
 # maybe this will be sufficient with spack 1.2 for downstream consumers: explore with
 # spack-uenv to see whether we still need to explicitly add gcc to the uenv config
 # in order for spack to find it.
+#
+# The code below has a custom script that assembles the compilers, which could be used
+# to add them to the packages.yaml file (but only if we really need it)
 #
 #$(CONFIG_DIR)/packages.yaml: $(CONFIG_DIR)/upstreams.yaml
 #	$(SPACK) -e $(ENV_ROOT) python $(BUILD_ROOT)/compiler-config.py \
@@ -37,11 +37,5 @@ $(MODULE_DIR)/upstreams.yaml:
 #		--system-packages=$(BUILD_ROOT)/config/packages.yaml \
 #{% endif %}
 #		$(CONFIG_DIR)/packages.yaml{% if compiler_names %} {{ compiler_names | join(' ') }}{% endif %}
-
-$(CONFIG_DIR)/packages.yaml:
-	install -m 644 $(BUILD_ROOT)/config/packages.yaml $(CONFIG_DIR)/packages.yaml
-
-$(CONFIG_DIR)/repos.yaml: $(CONFIG_DIR)/packages.yaml
-	install -m 644 $(BUILD_ROOT)/config/repos.yaml $(CONFIG_DIR)/repos.yaml
 
 include ../Make.inc

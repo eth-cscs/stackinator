@@ -115,16 +115,17 @@ class Builder:
         self._environment_meta = meta
 
     def generate(self, recipe):
+        self.path.mkdir(exist_ok=True, parents=True)
+
         store_path = self.path / "store" if not recipe.no_bwrap else pathlib.Path(recipe.mount)
         tmp_path = self.path / "tmp"
         config_path = self.path / "config"
-
-        self.path.mkdir(exist_ok=True, parents=True)
         env_path = self.path / "env"
-        env_path.mkdir(exist_ok=True)
+
         store_path.mkdir(exist_ok=True)
         tmp_path.mkdir(exist_ok=True)
         config_path.mkdir(exist_ok=True)
+        env_path.mkdir(exist_ok=True)
 
         self.configuration_meta = recipe
         self.environment_meta = recipe
@@ -390,6 +391,8 @@ class Builder:
             f.write("\n")
         with (generate_config_path / "packages.yaml").open("w") as f:
             f.write(yaml.dump(recipe.packages["install"]))
+        with (generate_config_path / "upstreams.yaml").open("w") as f:
+            yaml.safe_dump(recipe.upstream_config, f, default_flow_style=False, sort_keys=False)
 
         # --- modules ---
         if recipe.with_modules:
@@ -399,6 +402,8 @@ class Builder:
                 yaml.dump(recipe.modules, f)
             with (modules_path / "packages.yaml").open("w") as f:
                 f.write(yaml.dump(recipe.packages["install"]))
+            with (modules_path / "upstreams.yaml").open("w") as f:
+                yaml.safe_dump(recipe.upstream_config, f, default_flow_style=False, sort_keys=False)
 
         # --- metadata ---
         meta_path = store_path / "meta"

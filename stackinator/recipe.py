@@ -560,3 +560,7 @@ class Recipe:
             has_views=has_views,
             system_gcc=self.system_gcc,
         )
+
+    @property
+    def upstream_config(self):
+        return {"upstreams": {"system": {"install_tree": self.mount.as_posix()}}}
