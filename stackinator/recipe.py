@@ -514,7 +514,7 @@ class Recipe:
         self.compilers = compilers
 
         # will the uenv use the system gcc instead of bootstrapping gcc
-        self.use_system_gcc =  (gcc_version == "system")
+        self.use_system_gcc = gcc_version == "system"
 
     @property
     def system_gcc(self):
