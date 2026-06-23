@@ -35,11 +35,11 @@ mirror-setup: spack-setup{% if pre_install_hook %} pre-install{% endif %}
 
 	{% if cache %}
 	@echo "Pulling and trusting keys from configured buildcaches."
-	$(SANDBOX) $(SPACK) buildcache keys --install --trust
+	$(SANDBOX) $(SPACK) buildcache keys --install --trust{% if spack_version >= (1, 2) %} --yes-to-all{% endif +%}
 	{% endif %}
 	@echo "Adding mirror gpg keys."
 	{% for key_path in gpg_keys %}
-	$(SANDBOX) $(SPACK)	gpg trust {{ key_path }}
+	$(SANDBOX) $(SPACK)	gpg trust{% if spack_version >= (1, 2) %} --yes-to-all{% endif %} {{ key_path }}
 	{% endfor %}
 	@echo "Current mirror list:"
 	$(SANDBOX) $(SPACK) mirror list

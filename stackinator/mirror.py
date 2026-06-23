@@ -8,6 +8,7 @@ import yaml
 import magic
 
 from . import schema, root_logger
+from .spack_util import Version
 
 
 # GPG keys may be presented either ASCII-armored (these headers) or as binary
@@ -27,15 +28,14 @@ GPG_KEY_MIME_TYPES = (
 )
 
 
-def _supports_concretization_cache(spack_version: str) -> bool:
-    """Whether the given "major.minor" spack version supports the concretizer cache.
+def _supports_concretization_cache(spack_version: Version) -> bool:
+    """Whether the given spack version supports the concretizer cache.
 
     The concretizer:concretization_cache config key was introduced in spack 1.1;
     spack 1.0 rejects it (its concretizer schema forbids unknown keys).
     """
 
-    major_minor = tuple(int(x) for x in spack_version.split("."))
-    return major_minor >= (1, 1)
+    return spack_version >= (1, 1)
 
 
 class MirrorError(RuntimeError):
@@ -88,7 +88,7 @@ class Mirrors:
         self,
         system_config_root: pathlib.Path,
         mount_path: pathlib.Path,
-        spack_version: str,
+        spack_version: Version,
         mirror_file: Optional[pathlib.Path] = None,
         cmdline_cache: Optional[pathlib.Path] = None,
     ):
@@ -96,7 +96,7 @@ class Mirrors:
 
         Mirrors are supplied with the --mirror command line option (mirror_file).
         mount_path is the recipe mount point (used to make a build cache mount-specific).
-        spack_version is the best-effort "major.minor" spack version, used to gate the
+        spack_version is the best-effort spack Version, used to gate the
         concretizer cache (only emitted for spack >= 1.1).
         cmdline_cache is an optional legacy cache.yaml passed on the command line (--cache).
 
