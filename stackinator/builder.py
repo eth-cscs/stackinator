@@ -170,7 +170,6 @@ class Builder:
             dest.write_bytes(content)
 
         # --- Write Makefile ---
-        has_views = any(env_cfg["views"] for env_cfg in recipe.environments.values())
         makefile_template = jinja_env.get_template("Makefile")
 
         # Extract module types that were configured in recipe.py
@@ -178,6 +177,8 @@ class Builder:
         if recipe.with_modules and recipe.modules:
             roots = recipe.modules.get("modules", {}).get("default", {}).get("roots", {})
             module_types = list(roots.keys())
+
+        has_views = any(env_cfg["views"] for env_cfg in recipe.environments.values())
 
         with (self.path / "Makefile").open("w") as f:
             f.write(

@@ -324,28 +324,28 @@ class Recipe:
     def with_modules(self) -> bool:
         return self.modules is not None
 
-    # Make a best-effort determination of the "major.minor" version of spack being
+    # Make a best-effort determination of the major.minor version of spack being
     # used, inferred from the spack commit in config.yaml. This is only a hint: the
     # commit can be an arbitrary branch/tag/sha, so when the version cannot be pinned
-    # we default to the latest supported version ("1.1"). Returns a "major.minor"
-    # string (e.g. "1.0", "1.1").
+    # we default to the most recent version expected by default with this tool
+    # ("1.1"). Returns a spack_util.Version.
     def find_spack_version(self, develop):
-        # the latest supported version, used when the version cannot be determined
-        # (an explicit --develop, the default branch, or an unrecognised commit).
-        default = "1.1"
+        # the most recent version expected to be used by default with this tool,
+        # used when the version cannot be determined from an unrecognised commit.
+        default = spack_util.Version(1, 1)
 
+        # the develop and main branches of spack are now at 1.2.
         if develop:
-            return default
+            return spack_util.Version(1, 2)
 
         commit = self.config["spack"]["commit"]
         if commit is None or commit in ("develop", "main"):
-            return default
+            return spack_util.Version(1, 2)
 
-        # match a release branch/tag (releases/v1.0, v1.1, v1.1.2) or a bare "1.0",
-        # and extract the major.minor version.
-        match = re.search(r"v?(\d+)\.(\d+)(?:\.\d+)?", commit)
-        if match:
-            return f"{match.group(1)}.{match.group(2)}"
+        # match a release branch/tag (releases/v1.0, v1.1, v1.1.2) or a bare "1.0".
+        version = spack_util.Version.parse(commit)
+        if version is not None:
+            return version
 
         return default
 
