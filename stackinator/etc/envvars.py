@@ -428,6 +428,12 @@ def read_activation_script(filename: str, env: Optional[EnvVarSet] = None) -> En
     if env is None:
         env = EnvVarSet()
 
+    # any prefix_paths that match entries in _IGNORE_PREFIX_PATHS will be dropped.
+    # e.g. /user/bin is in PATH in activate.sh scripts because it is in
+    # the environment used to build the uenv - but we want to avoid it so that
+    # it does not shadow PATH values set when more than 1 uenv is mounted.
+    _IGNORE_PREFIX_PATHS = {"PATH": ("/usr/bin", "/usr/local/bin", "/bin")}
+
     with open(filename) as fid:
         for line in fid:
             ls = line.strip().rstrip(";")
@@ -459,8 +465,12 @@ def read_activation_script(filename: str, env: Optional[EnvVarSet] = None) -> En
                 rhs = fields[1].lstrip("'").rstrip("'")
                 if name in list_variables:
                     fields = [f for f in rhs.split(":") if len(f.strip()) > 0]
-                    # look for $name as one of the fields (only works for append or prepend)
 
+                    # filter prefixes
+                    ignored_fields = _IGNORE_PREFIX_PATHS.get(name, ())
+                    fields = [f for f in fields if f not in ignored_fields]
+
+                    # look for $name as one of the fields (only works for append or prepend)
                     if len(fields) == 0:
                         env.set_list(name, fields, EnvVarOp.SET)
                     elif fields[0] == f"${name}":
@@ -550,8 +560,6 @@ def view_impl(args):
                     paths.append(test_path)
 
             if len(paths) > 0:
-                print(f"{name}: {' '.join(paths)}")
-
                 if name in envvars.lists:
                     ld_paths = envvars.lists[name].paths
                     final_paths = [p for p in paths if p not in ld_paths]
