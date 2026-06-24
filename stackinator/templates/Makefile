@@ -10,15 +10,15 @@ spack-setup:
 	$(call banner,bootstrap spack)
 	arch="$$($(SANDBOX) $(SPACK) arch)"; \
 	version="$$($(SANDBOX) $(SPACK) --version)"; \
-	printf "spack arch:   ...  %s\n" "$$arch"; \
-	printf "spack version....  %s\n" "$$version"; \
-	printf "bootstrapping spack... "; \
+	printf "spack arch:         ...  %s\n" "$$arch"; \
+	printf "spack version       ...  %s\n" "$$version"; \
+	printf "bootstrapping spack ... "; \
 	$(SANDBOX) $(SPACK_HELPER) bootstrap now > $(BUILD_ROOT)/spack-bootstrap-output 2>&1; \
 	if [ "$$?" != "0" ]; then \
 		printf " failed, see %s\n" $(BUILD_ROOT)/spack-bootstrap-output; \
 		exit 1; \
 	fi; \
-	printf " success\n"; \
+	printf " success, see output in %s\n" $(BUILD_ROOT)/spack-bootstrap-output; \
 	touch spack-setup
 
 pre-install: spack-setup
@@ -31,7 +31,6 @@ pre-install: spack-setup
 	touch pre-install
 
 mirror-setup: pre-install
-
 	$(call banner,build cache / mirror setup)
 	{% if buildcache %}
 	@echo "Pulling and trusting keys from configured buildcaches."
@@ -45,19 +44,18 @@ mirror-setup: pre-install
 	$(SANDBOX) $(SPACK) mirror list
 	touch mirror-setup
 
-concretize: mirror-setup env/spack.yaml
+env/spack.lock: mirror-setup env/spack.yaml
 	$(call banner,concretize)
 	# --non-defaults marks non-default variants and settings in the concretizer output
 	# --force is required to reconcretize when env/spack.yaml is changed
 	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) concretize --non-defaults --force
-	touch concretize
 
 # Clear MAKEFLAGS for the install. When run with `make -j`, GNU make advertises a
 # jobserver in MAKEFLAGS. GNU make < 4.4 uses the legacy fd form (`--jobserver-auth=R,W`)
 # and closes those fds before running a non-recursive recipe, so they are invalid in the
 # spack process - leading to bad file descriptor crashes.
 # Hiding MAKEFLAGS makes spack create its own FIFO jobserver sized by `config:build_jobs`.
-install: concretize
+install: env/spack.lock
 	$(call banner,install packages)
 	MAKEFLAGS= $(SANDBOX) $(SPACK) -e $(ENV_ROOT) install --jobs $(NJOBS)
 	touch install
@@ -149,19 +147,14 @@ post-install: env-meta
 
 # Force push all built packages to the build cache
 cache-force: mirror-setup
+	$(call banner,force push to build cache)
 {% if buildcache_push %}
-	$(warning ================================================================================)
-	$(warning Generate the config in order to force push partially built compiler environments)
-	$(warning if this step is performed with partially built compiler envs, you will)
-	$(warning likely have to start a fresh build (but that's okay, because build caches FTW))
-	$(warning ================================================================================)
-	$(SANDBOX) $(MAKE) -C generate-config
-	$(SANDBOX) $(SPACK) --color=never -C $(STORE)/config buildcache create --only=package {{ buildcache_push }} \
-	$$($(SANDBOX) $(SPACK_HELPER) -C $(STORE)/config find --format '{name};{/hash};version={version}' \
+	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) buildcache create --only=package {{ buildcache }} \
+	$$($(SANDBOX) $(SPACK_HELPER) -e $(ENV_ROOT) find --format '{name};{/hash};version={version}' \
 	| grep -v -E '^({% for p in exclude_from_cache %}{{ pipejoiner() }}{{ p }}{% endfor %});'\
 	| grep -v -E 'version=git\.'\
-	| cut -d ';' -f2)\
-	| grep -Ev '^==> Fetching|^gpg:'
+	| cut -d ';' -f2) 2>&1 \
+	| awk -v f="$(BUILD_ROOT)/gpg.log" '/^gpg:/{print > f; next} /^==> Fetching/{next} {print; fflush()}'
 {% else %}
 	$(warning "pushing to the build cache is not enabled. See the documentation on how to add a key: https://eth-cscs.github.io/stackinator/build-caches/")
 {% endif %}
@@ -178,7 +171,7 @@ store.squashfs: env-meta post-install cache-push
 
 clean:
 	rm -rf -- spack-setup{% if pre_install_hook %} pre-install{% endif %} mirror-setup \
-		concretize install cleanup{% if push_to_cache and cache.key %} cache-push{% endif %} \
+		env/spack.lock install cleanup{% if push_to_cache and cache.key %} cache-push{% endif %} \
 		compiler-config.yaml views generate-config/.done \
 		{% if modules %}modules-done {% endif %}env-meta{% if post_install_hook %} post-install{% endif %} \
 		store.squashfs spack-bootstrap-output
