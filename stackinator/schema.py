@@ -80,19 +80,18 @@ class SchemaValidator:
 
 def check_config_version(instance):
     rversion = instance.get("version", 1)
-    if rversion != 2:
-        if rversion == 1:
+    if rversion != 3:
+        if rversion in (1, 2):
             root_logger.error(
-                dedent("""
-                       The recipe is an old version 1 recipe for Spack v0.23 and earlier.
-                       This version of Stackinator supports Spack 1.0, and has deprecated support for Spack v0.23.
-                       Use version 5 of stackinator, which can be accessed via the releases/v5 branch:
-                       git switch releases/v5
+                dedent(f"""
+                       The recipe uses version {rversion} of the uenv recipe format.
+                       Stackinator v7 only supports version 3 recipes (Spack 1.2+).
 
-                       If this recipe is to be used with Spack 1.0, then please add the field 'version: 2' to
-                       config.yaml in your recipe.
+                       To build version {rversion} recipes, use Stackinator v6:
+                       git switch releases/v6
 
-                       For more information: https://eth-cscs.github.io/stackinator/recipes/#configuration
+                       To port this recipe to version 3, see:
+                       https://eth-cscs.github.io/stackinator/porting/
                        """)
             )
             raise RuntimeError("incompatible uenv recipe version")
@@ -100,7 +99,7 @@ def check_config_version(instance):
             root_logger.error(
                 dedent(f"""
                        The config.yaml file sets an unknown recipe version={rversion}.
-                       This version of Stackinator supports version 2 recipes.
+                       Stackinator v7 supports version 3 recipes.
 
                        For more information: https://eth-cscs.github.io/stackinator/recipes/#configuration
                        """)

@@ -428,6 +428,12 @@ def read_activation_script(filename: str, env: Optional[EnvVarSet] = None) -> En
     if env is None:
         env = EnvVarSet()
 
+    # any prefix_paths that match entries in _IGNORE_PREFIX_PATHS will be dropped.
+    # e.g. /user/bin is in PATH in activate.sh scripts because it is in
+    # the environment used to build the uenv - but we want to avoid it so that
+    # it does not shadow PATH values set when more than 1 uenv is mounted.
+    _IGNORE_PREFIX_PATHS = {"PATH": ("/usr/bin", "/usr/local/bin", "/bin")}
+
     with open(filename) as fid:
         for line in fid:
             ls = line.strip().rstrip(";")
@@ -459,8 +465,12 @@ def read_activation_script(filename: str, env: Optional[EnvVarSet] = None) -> En
                 rhs = fields[1].lstrip("'").rstrip("'")
                 if name in list_variables:
                     fields = [f for f in rhs.split(":") if len(f.strip()) > 0]
-                    # look for $name as one of the fields (only works for append or prepend)
 
+                    # filter prefixes
+                    ignored_fields = _IGNORE_PREFIX_PATHS.get(name, ())
+                    fields = [f for f in fields if f not in ignored_fields]
+
+                    # look for $name as one of the fields (only works for append or prepend)
                     if len(fields) == 0:
                         env.set_list(name, fields, EnvVarOp.SET)
                     elif fields[0] == f"${name}":
@@ -476,11 +486,6 @@ def read_activation_script(filename: str, env: Optional[EnvVarSet] = None) -> En
 
 
 def view_impl(args):
-    print(
-        f"parsing view {args.root}\n  compilers {args.compilers}\n  prefix_paths '{args.prefix_paths}'\n  \
-        build_path '{args.build_path}'"
-    )
-
     if not os.path.isdir(args.root):
         print(f"error - environment root path {args.root} does not exist")
         exit(1)
@@ -503,6 +508,11 @@ def view_impl(args):
     # remove all prefix path variable values that point to a location inside the build path.
     envvars.remove_root(args.build_path)
 
+    # Canonical symlink names for gcc role keys. For other compiler families
+    # (nvhpc, llvm, etc.) the binary names are already canonical, so we fall
+    # back to os.path.basename which gives the right name (nvc, clang, etc.).
+    _GCC_ROLE_CANONICAL = {"c": "gcc", "cxx": "g++", "fortran": "gfortran"}
+
     if args.compilers is not None:
         if not os.path.isfile(args.compilers):
             print(f"error - compiler yaml file {args.compilers} does not exist")
@@ -511,28 +521,36 @@ def view_impl(args):
         with open(args.compilers, "r") as file:
             data = yaml.safe_load(file)
 
-        compilers = []
-        for p in data["packages"].values():
-            for e in p["externals"]:
-                if "extra_attributes" in e:
-                    c = e["extra_attributes"]["compilers"]
-                    if c is not None:
-                        compilers.append(c)
+        # Restrict the symlinked compilers to those wired to this view's
+        # environment (environments.yaml: compiler). When None, link them all.
+        allowed = None
+        if args.compiler_names:
+            allowed = {n for n in args.compiler_names.split(",") if n}
 
-        for c in compilers:
-            source_paths = list(set([os.path.abspath(v) for _, v in c.items() if v is not None]))
-            target_paths = [os.path.join(bin_path, os.path.basename(f)) for f in source_paths]
-            for src, dst in zip(source_paths, target_paths):
-                print(f"creating compiler symlink: {src} -> {dst}")
-                if os.path.exists(dst):
-                    print(f"  first removing {dst}")
-                    os.remove(dst)
-                os.symlink(src, dst)
+        for pkg_name, pkg_data in data["packages"].items():
+            if allowed is not None and pkg_name not in allowed:
+                continue
+            for e in pkg_data["externals"]:
+                if "extra_attributes" not in e:
+                    continue
+                c = e["extra_attributes"].get("compilers")
+                if not c:
+                    continue
+                print(f"compiler symlinks: creating for {e.get('prefix', pkg_name)}")
+                for role, path in c.items():
+                    if path is None:
+                        continue
+                    src = os.path.abspath(path)
+                    if pkg_name == "gcc":
+                        link_name = _GCC_ROLE_CANONICAL.get(role, os.path.basename(src))
+                    else:
+                        link_name = os.path.basename(src)
+                    dst = os.path.join(bin_path, link_name)
+                    if os.path.exists(dst):
+                        os.remove(dst)
+                    os.symlink(src, dst)
 
     if args.prefix_paths:
-        # get the root path of the env
-        print(f"prefix_paths: searching in {root_path}")
-
         for p in args.prefix_paths.split(","):
             name, value = p.split("=")
             paths = []
@@ -540,10 +558,6 @@ def view_impl(args):
                 test_path = f"{root_path}/{path}"
                 if os.path.isdir(test_path):
                     paths.append(test_path)
-
-            print(f"{name}:")
-            for p in paths:
-                print(f"  {p}")
 
             if len(paths) > 0:
                 if name in envvars.lists:
@@ -678,6 +692,13 @@ if __name__ == "__main__":
     )
     # only add compilers if this argument is passed
     view_parser.add_argument("--compilers", help="path of the packages.yaml file", type=str, default=None)
+    view_parser.add_argument(
+        "--compiler-names",
+        help="comma-separated compiler package names to symlink into the view; "
+        "restricts --compilers to the compilers wired to this environment",
+        type=str,
+        default=None,
+    )
 
     uenv_parser = subparsers.add_parser(
         "uenv",
@@ -704,8 +725,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.command == "uenv":
-        print("!!! running meta")
         meta_impl(args)
     elif args.command == "view":
-        print("!!! running view")
         view_impl(args)

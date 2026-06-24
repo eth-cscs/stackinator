@@ -8,13 +8,17 @@
         "repo_def": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["repo", "commit"],
+            "required": ["repo"],
             "properties": {
                 "repo": {
                     "type": "string"
                 },
                 "commit": {
-                    "type": "string"
+                    "oneOf": [
+                        {"type": "string"},
+                        {"type": "null"}
+                    ],
+                    "default": null
                 },
                 "path": {
                     "type": "string"
@@ -85,7 +89,12 @@
             "type": "number",
             "default": 1,
             "minimum": 1,
-            "maximum": 2
+            "maximum": 3
+        },
+        "cleanup" : {
+            "type": "string",
+            "enum": ["none", "runtime", "build"],
+            "default": "none"
         }
     }
 }

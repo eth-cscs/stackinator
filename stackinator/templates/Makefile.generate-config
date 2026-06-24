@@ -3,38 +3,39 @@ include ../Make.user
 CONFIG_DIR = $(STORE)/config
 MODULE_DIR = $(BUILD_ROOT)/modules
 
-# These will be the prefixes of the GCCs, LLVMs and NVHPCs in the respective environments.
-ALL_COMPILER_PREFIXES ={% for compiler in all_compilers %} $$($(SPACK_HELPER) -e ../compilers/{{ compiler }} find --explicit --format='{prefix}' gcc llvm llvm-amdgpu nvhpc intel-oneapi){% endfor %}
+all: $(CONFIG_DIR)/upstreams.yaml $(CONFIG_DIR)/packages.yaml $(CONFIG_DIR)/repos.yaml
 
-
-COMPILER_PREFIXES ={% for compiler in release_compilers %} $$($(SPACK_HELPER) -e ../compilers/{{ compiler }} find --explicit --format='{prefix}' gcc llvm llvm-amdgpu nvhpc intel-oneapi){% endfor %}
-
-
-all: $(CONFIG_DIR)/upstreams.yaml $(CONFIG_DIR)/packages.yaml $(CONFIG_DIR)/repos.yaml{% if modules %} $(MODULE_DIR)/upstreams.yaml $(MODULE_DIR)/compilers.yaml{% endif %}
-
-# Generate the upstream configuration that will be provided by the mounted image
-# (requires packages.yaml to ensure that the path $(CONFIG_DIR) has been created).
-$(CONFIG_DIR)/upstreams.yaml: $(CONFIG_DIR)/packages.yaml
-	$(SPACK) config --scope=user add upstreams:system:install_tree:$(STORE)
-
-# Copy the cluster-specific packages.yaml file to the configuration.
-$(CONFIG_DIR)/packages.yaml:
-	# first create the directory, copy the base config and then update with compilers
+$(CONFIG_DIR)/upstreams.yaml:
+	$(call banner,generate $(CONFIG_DIR)/upstreams.yaml)
 	mkdir -p $(CONFIG_DIR)
-	install -m 644 $(BUILD_ROOT)/config/packages.yaml $(CONFIG_DIR)/packages.yaml
-	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $(COMPILER_PREFIXES))
+	install -m 644 upstreams.yaml $(CONFIG_DIR)/upstreams.yaml
 
-# requires packages.yaml to ensure that the path $(CONFIG_DIR) has been created.
-$(CONFIG_DIR)/repos.yaml: $(CONFIG_DIR)/packages.yaml
+$(CONFIG_DIR)/packages.yaml:
+	$(call banner,generate $(CONFIG_DIR)/packages.yaml)
+	mkdir -p $(CONFIG_DIR)
+	install -m 644 packages.yaml $(CONFIG_DIR)/packages.yaml
+
+$(CONFIG_DIR)/repos.yaml:
+	$(call banner,generate $(CONFIG_DIR)/repos.yaml)
+	mkdir -p $(CONFIG_DIR)
 	install -m 644 $(BUILD_ROOT)/config/repos.yaml $(CONFIG_DIR)/repos.yaml
 
-# Generate a configuration used to generate the module files
-# The configuration in CONFIG_DIR can't be used for this purpose, because a compilers.yaml
-# that includes the bootstrap compiler is required to build the modules.
-$(MODULE_DIR)/packages.yaml: # TODO probably this is going to be dropped
-	$(SPACK) compiler find --scope=user $(call compiler_bin_dirs, $(ALL_COMPILER_PREFIXES))
-
-$(MODULE_DIR)/upstreams.yaml:
-	$(SPACK) config --scope=user add upstreams:system:install_tree:$(STORE)
+# TODO: is the packages.yaml that we are installing in CONFIG_DIR/packages.yaml sufficient?
+# we are installing the version that does not contain any gcc (the system gcc is removed), 
+# and the gcc that was built by spack is not included.
+#
+# maybe this will be sufficient with spack 1.2 for downstream consumers: explore with
+# spack-uenv to see whether we still need to explicitly add gcc to the uenv config
+# in order for spack to find it.
+#
+# The code below has a custom script that assembles the compilers, which could be used
+# to add them to the packages.yaml file (but only if we really need it)
+#
+#$(CONFIG_DIR)/packages.yaml: $(CONFIG_DIR)/upstreams.yaml
+#	$(SPACK) -e $(ENV_ROOT) python $(BUILD_ROOT)/compiler-config.py \
+#{% if system_gcc %}
+#		--system-packages=$(BUILD_ROOT)/config/packages.yaml \
+#{% endif %}
+#		$(CONFIG_DIR)/packages.yaml{% if compiler_names %} {{ compiler_names | join(' ') }}{% endif %}
 
 include ../Make.inc

@@ -21,19 +21,12 @@ repo:
 
 
 def install(src, dst, *, ignore=None, symlinks=False):
-    """Call shutil.copytree or shutil.copy2. copy2 is used if `src` is not a directory.
-    Afterwards run the equivalent of chmod a+rX dst."""
+    """Call shutil.copytree or shutil.copy2, then apply chmod a+rX to dst."""
 
     def apply_permissions_recursive(directory):
-        """Apply permissions recursively to an entire directory."""
-
         def set_permissions(path):
-            """Set permissions for a given path based on chmod a+rX equivalent."""
             mode = os.stat(path).st_mode
-            # Always give read permissions for user, group, and others.
             new_mode = mode | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH
-            # If it's a directory or execute bit is set for owner or group,
-            # set execute bit for all.
             if stat.S_ISDIR(mode) or mode & (stat.S_IXUSR | stat.S_IXGRP):
                 new_mode |= stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
             os.chmod(path, new_mode)
@@ -46,15 +39,9 @@ def install(src, dst, *, ignore=None, symlinks=False):
                 set_permissions(os.path.join(dirpath, filename))
 
     if stat.S_ISDIR(os.stat(src).st_mode):
-        shutil.copytree(
-            src,
-            dst,
-            ignore=ignore,
-            symlinks=symlinks,
-        )
+        shutil.copytree(src, dst, ignore=ignore, symlinks=symlinks)
     else:
         shutil.copy2(src, dst, follow_symlinks=symlinks)
-    # set permissions
     apply_permissions_recursive(dst)
 
 
@@ -65,41 +52,28 @@ class Builder:
         if not path.is_absolute():
             path = pathlib.Path.cwd() / path
 
-        # check that if the path exists that it is not a file
         if path.exists():
             if not path.is_dir():
                 raise IOError("build path is not a directory")
 
         parts = path.parts
-
-        # the build path can't be root
         if len(parts) == 1:
             raise IOError("build path can't be root '/'")
-
-        # the build path can't be in /tmp because the build step rebinds /tmp.
         if parts[1] == "tmp":
             raise IOError("build path can't be in '/tmp'")
-
-        # the build path can't be in $HOME because the build step rebinds $HOME
-        # NOTE that this would be much easier to determine with PosixPath.is_relative_to
-        # introduced in Python 3.9.
         home_parts = pathlib.Path.home().parts
         if (len(home_parts) <= len(parts)) and (home_parts == parts[: len(home_parts)]):
             raise IOError("build path can't be in '$HOME' or '~'")
-        # if path.is_relative_to(pathlib.Path.home()):
-        # raise IOError("build path can't be in '$HOME' or '~'")
 
         self.path = path
         self.root = pathlib.Path(__file__).parent.resolve()
 
     @property
     def configuration_meta(self):
-        """Meta data about the configuration and build"""
         return self._configuration_meta
 
     @configuration_meta.setter
     def configuration_meta(self, recipe):
-        # generate configuration meta data
         meta = {}
         meta["time"] = datetime.now().strftime("%Y%m%d %H:%M:%S")
         host_data = platform.uname()
@@ -123,40 +97,10 @@ class Builder:
 
     @property
     def environment_meta(self):
-        """The meta data file that describes the environments"""
         return self._environment_meta
 
     @environment_meta.setter
     def environment_meta(self, recipe):
-        """
-        The output that we want to generate looks like the following,
-        Which should correspond directly to the environment_view_meta provided
-        by the recipe.
-
-        {
-          name: "prgenv-gnu",
-          description: "useful programming tools",
-          mount: "/user-environment"
-          modules: {
-              "root": /user-environment/modules,
-          },
-          views: {
-            "default": {
-              "root": /user-environment/env/default,
-              "activate": /user-environment/env/default/activate.sh,
-              "description": "simple devolpment env: compilers, MPI, python, cmake."
-              "env_vars": {
-                ...
-              }
-            },
-            "tools": {
-              "root": /user-environment/env/tools,
-              "activate": /user-environment/env/tools/activate.sh,
-              "description": "handy tools"
-            }
-          }
-        }
-        """
         conf = recipe.config
         meta = {}
         meta["name"] = conf["name"]
@@ -171,34 +115,25 @@ class Builder:
         self._environment_meta = meta
 
     def generate(self, recipe):
-        """Setup the recipe build environment."""
-        # make the paths, in case bwrap is not used, directly write to recipe.mount
+        self.path.mkdir(exist_ok=True, parents=True)
+
         store_path = self.path / "store" if not recipe.no_bwrap else pathlib.Path(recipe.mount)
         tmp_path = self.path / "tmp"
         config_path = self.path / "config"
+        env_path = self.path / "env"
 
-        self.path.mkdir(exist_ok=True, parents=True)
         store_path.mkdir(exist_ok=True)
         tmp_path.mkdir(exist_ok=True)
         config_path.mkdir(exist_ok=True)
+        env_path.mkdir(exist_ok=True)
 
-        # check out the version of spack
-        spack_version = recipe.spack_version
-        self._logger.debug(f"spack version for templates: {spack_version}")
-
-        # set general build and configuration meta data for the project
         self.configuration_meta = recipe
-
-        # set the environment view meta data
         self.environment_meta = recipe
 
-        # Clone the spack repository and check out commit if one was given
+        # Clone spack
         spack = recipe.config["spack"]
-        spack_repo = spack["repo"]
-        spack_commit = spack["commit"]
         spack_path = self.path / "spack"
-
-        spack_git_commit_result = self._git_clone("spack", spack_repo, spack_commit, spack_path)
+        spack_git_commit = self._git_clone("spack", spack["repo"], spack["commit"], spack_path)
 
         package_repos = recipe.spack_package_repos
         for pkg_repo in package_repos:
@@ -206,19 +141,24 @@ class Builder:
             pkg_repo["commit"] = self._git_clone(pkg_repo["name"], pkg_repo["url"], pkg_repo["ref"], pkg_repo["path"])
 
         spack_meta = {
-            "url": spack_repo,
-            "ref": spack_commit,
-            "commit": spack_git_commit_result,
+            "url": spack["repo"],
+            "ref": spack["commit"],
+            "commit": spack_git_commit,
             "packages": package_repos,
         }
 
-        # load the jinja templating environment
+        # Jinja environment for templates
         template_path = self.root / "templates"
         jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(template_path),
             trim_blocks=True,
             lstrip_blocks=True,
         )
+
+        # --- Write the unified spack.yaml ---
+        with (env_path / "spack.yaml").open("w") as f:
+            f.write(recipe.spack_yaml)
+            f.write("\n")
 
         # Write the spack mirror config artifacts (mirrors.yaml, bootstrap config,
         # and the relocated gpg keys) into the config scope. These were fully
@@ -229,17 +169,7 @@ class Builder:
             dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_bytes(content)
 
-        # Spack 1.2 makes the new (parallel) installer the default.
-        # Stackinator 6 the behaviour of the old installer, so pin config:installer to
-        # "old" for spack >= 1.2.
-        if spack_version >= (1, 2):
-            config_yaml_path = config_path / "config.yaml"
-            config_doc = yaml.safe_load(config_yaml_path.read_text()) if config_yaml_path.exists() else None
-            config_doc = config_doc or {}
-            config_doc.setdefault("config", {})["installer"] = "old"
-            config_yaml_path.write_text(yaml.dump(config_doc, default_flow_style=False))
-
-        # generate top level makefiles
+        # --- Write Makefile ---
         makefile_template = jinja_env.get_template("Makefile")
 
         # Extract module types that were configured in recipe.py
@@ -248,6 +178,8 @@ class Builder:
             roots = recipe.modules.get("modules", {}).get("default", {}).get("roots", {})
             module_types = list(roots.keys())
 
+        has_views = any(env_cfg["views"] for env_cfg in recipe.environments.values())
+
         with (self.path / "Makefile").open("w") as f:
             f.write(
                 makefile_template.render(
@@ -255,22 +187,25 @@ class Builder:
                     module_types=module_types,
                     post_install_hook=recipe.post_install_hook,
                     pre_install_hook=recipe.pre_install_hook,
-                    spack_version=spack_version,
                     spack_meta=spack_meta,
+                    environments=recipe.environments,
+                    compiler_names=recipe.compiler_names,
                     gpg_keys=recipe.mirrors.gpg_key_paths(config_path),
-                    cache=recipe.build_cache_mirror,
+                    buildcache=recipe.build_cache_mirror,
                     buildcache_push=recipe.push_to_build_cache,
                     exclude_from_cache=["nvhpc", "cuda", "perl"],
-                    verbose=False,
+                    has_views=has_views,
+                    cleanup=recipe.config["cleanup"],
+                    system_gcc=recipe.system_gcc,
                 )
             )
             f.write("\n")
 
+        # --- Write Make.user ---
         make_user_template = jinja_env.get_template("Make.user")
         with (self.path / "Make.user").open("w") as f:
             f.write(
                 make_user_template.render(
-                    spack_version=spack_version,
                     build_path=self.path,
                     store=recipe.mount,
                     no_bwrap=recipe.no_bwrap,
@@ -279,11 +214,25 @@ class Builder:
             )
             f.write("\n")
 
+        # --- Write the sandbox wrapper (binds baked in, self-labelling) ---
+        sandbox_template = jinja_env.get_template("sandbox")
+        sandbox_dst = self.path / "sandbox"
+        with sandbox_dst.open("w") as f:
+            f.write(
+                sandbox_template.render(
+                    build_path=self.path,
+                    store=recipe.mount,
+                    no_bwrap=recipe.no_bwrap,
+                )
+            )
+        os.chmod(sandbox_dst, os.stat(sandbox_dst).st_mode | stat.S_IEXEC)
+
+        # --- Copy static files from etc/ ---
         etc_path = self.root / "etc"
-        for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "envvars.py"]:
+        for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "envvars.py", "compiler-config.py"]:
             shutil.copy2(etc_path / f_etc, self.path / f_etc)
 
-        # used to configure both pre and post install hooks, if they are provided.
+        # --- Install hooks if provided ---
         hook_env = {
             "mount": recipe.mount,
             "config": recipe.mount / "config",
@@ -291,88 +240,51 @@ class Builder:
             "spack": self.path / "spack",
         }
 
-        # copy post install hook file, if provided
-        post_hook = recipe.post_install_hook
-        if post_hook is not None:
-            self._logger.debug("installing post-install-hook script")
-            jinja_recipe_env = jinja2.Environment(loader=jinja2.FileSystemLoader(recipe.path))
-            post_hook_template = jinja_recipe_env.get_template("post-install")
-            post_hook_destination = store_path / "post-install-hook"
-
-            with post_hook_destination.open("w") as f:
-                f.write(post_hook_template.render(env=hook_env, verbose=False))
-                f.write("\n")
-
-            os.chmod(
-                post_hook_destination,
-                os.stat(post_hook_destination).st_mode | stat.S_IEXEC,
-            )
-
-        # copy pre install hook file, if provided
-        pre_hook = recipe.pre_install_hook
-        if pre_hook is not None:
-            self._logger.debug("installing pre-install-hook script")
-            jinja_recipe_env = jinja2.Environment(loader=jinja2.FileSystemLoader(recipe.path))
-            pre_hook_template = jinja_recipe_env.get_template("pre-install")
-            pre_hook_destination = store_path / "pre-install-hook"
-
-            with pre_hook_destination.open("w") as f:
-                f.write(pre_hook_template.render(env=hook_env, verbose=False))
-                f.write("\n")
-
-            os.chmod(
-                pre_hook_destination,
-                os.stat(pre_hook_destination).st_mode | stat.S_IEXEC,
-            )
-
-        # Generate the system configuration: the compilers, environments, etc.
-        # that are defined for the target cluster.
-        packages_path = config_path / "packages.yaml"
+        for hook_name, hook_src in [
+            ("post-install", recipe.post_install_hook),
+            ("pre-install", recipe.pre_install_hook),
+        ]:
+            if hook_src is not None:
+                self._logger.debug(f"installing {hook_name} script")
+                jinja_recipe_env = jinja2.Environment(loader=jinja2.FileSystemLoader(recipe.path))
+                hook_template = jinja_recipe_env.get_template(hook_src.name)
+                hook_dst = store_path / f"{hook_name}-hook"
+                with hook_dst.open("w") as f:
+                    f.write(hook_template.render(env=hook_env, verbose=False))
+                    f.write("\n")
+                os.chmod(hook_dst, os.stat(hook_dst).st_mode | stat.S_IEXEC)
 
         # the packages.yaml configuration that will be used when building all environments
         # - the system packages.yaml with gcc removed
         # - plus additional packages provided by the recipe
-        global_packages_yaml = yaml.dump(recipe.packages["global"])
-        global_packages_path = config_path / "packages.yaml"
-        with global_packages_path.open("w") as fid:
-            fid.write(global_packages_yaml)
+        with (config_path / "packages.yaml").open("w") as f:
+            f.write(yaml.dump(recipe.packages["build"]))
+
+        config_yaml = {"config": {"install_tree": {"root": str(recipe.mount)}}}
+        with (config_path / "config.yaml").open("w") as f:
+            f.write(yaml.dump(config_yaml))
 
         # Add custom spack package recipes, configured via Spack repos.
-        # Step 1: copy Spack repos to store_path where they will be used to
-        #         build the stack, and then be part of the upstream provided
-        #         to users of the stack.
-        #
-        # Packages in the recipe are prioritised over cluster specific packages,
-        # etc. The order of preference from highest to lowest is:
-        #
-        # 3. recipe/repo
-        # 2. cluster-config/repos.yaml
-        #   - if the repos.yaml file exists it will contain a list of relative paths
-        #     to search for package
-        # 1. package repos from config.yaml in the order specified (typically
-        #    only spack-packages builtin repo)
-
-        # Build a list of repos with packages to install from system config and recipe.
+        # Build a list of repos with packages to install from system config.
+        # Packages in the recipe are prioritised over cluster specific packages.
+        # Order of preference from highest to lowest:
+        #   3. recipe/repo
+        #   2. cluster-config/repos.yaml entries
+        #   1. package repos from config.yaml (e.g. spack-packages builtin)
         repos = []
 
         # look for repos.yaml file in the system configuration
-        repo_yaml = recipe.system_config_path / "repos.yaml"
-        if repo_yaml.exists() and repo_yaml.is_file():
-            # open repos.yaml file and reat the list of repos
-            with repo_yaml.open() as fid:
+        repo_yaml_path = recipe.system_config_path / "repos.yaml"
+        if repo_yaml_path.exists() and repo_yaml_path.is_file():
+            with repo_yaml_path.open() as fid:
                 raw = yaml.load(fid, Loader=yaml.Loader)
-                P = raw["repos"]
-
-            self._logger.debug(f"the system configuration has a repo file {repo_yaml} refers to {P}")
-
-            # test each path
-            for rel_path in P:
+            for rel_path in raw["repos"]:
                 repo_path = (recipe.system_config_path / rel_path).resolve()
                 if spack_util.is_repo(repo_path):
                     repos.append(repo_path)
                     self._logger.debug(f"adding site spack package repo: {repo_path}")
                 else:
-                    self._logger.error(f"{repo_path} from {repo_yaml} is not a spack package repository")
+                    self._logger.error(f"{repo_path} from {repo_yaml_path} is not a spack package repository")
                     raise RuntimeError("invalid system-provided package repository")
 
         self._logger.debug(f"full list of system spack package repos: {repos}")
@@ -381,15 +293,10 @@ class Builder:
         # Do this so that incremental builds (though not officially supported) won't break if a repo is updated.
         repos_path = store_path / "repos" / "spack_repo"
         repo_dst = repos_path / "alps"
-        self._logger.debug(f"creating the stack spack repo in {repo_dst}")
         if repo_dst.exists():
-            self._logger.debug(f"{repo_dst} exists ... deleting")
             shutil.rmtree(repo_dst)
-
-        # create the repository step 1: create the repo directory
         pkg_dst = repo_dst / "packages"
         pkg_dst.mkdir(mode=0o755, parents=True)
-        self._logger.debug(f"created the repo packages path {pkg_dst}")
 
         # create the repository step 2: create the repo.yaml file that
         # configures the alps repo
@@ -419,7 +326,6 @@ class Builder:
                     self._logger.debug(f"  installing recipe package {pkg_path} to {recipe_pkg_dst}")
                     install(pkg_path, dst)
 
-        # create the repository step 2: create the repos.yaml file in build_path/config
         repos_yaml_template = jinja_env.get_template("repos.yaml")
         with (config_path / "repos.yaml").open("w") as f:
             repo_path = recipe.mount / "repos" / "spack_repo" / "alps"
@@ -469,101 +375,70 @@ class Builder:
                 shutil.rmtree(dst_path)
             install(src_path, dst_path)
 
-        # Generate the makefile and spack.yaml files that describe the compilers
-        compiler_files = recipe.compiler_files
-        compiler_path = self.path / "compilers"
-        compiler_path.mkdir(exist_ok=True)
-        with (compiler_path / "Makefile").open(mode="w") as f:
-            f.write(compiler_files["makefile"])
-
-        for name, files in compiler_files["config"].items():
-            compiler_config_path = compiler_path / name
-            compiler_config_path.mkdir(exist_ok=True)
-            for file, raw in files.items():
-                with (compiler_config_path / file).open(mode="w") as f:
-                    f.write(raw)
-
-        # generate the makefile and spack.yaml files that describe the environments
-        environment_files = recipe.environment_files
-        environments_path = self.path / "environments"
-        os.makedirs(environments_path, exist_ok=True)
-        with (environments_path / "Makefile").open(mode="w") as f:
-            f.write(environment_files["makefile"])
-
-        for name, yml in environment_files["config"].items():
-            env_config_path = environments_path / name
-            env_config_path.mkdir(exist_ok=True)
-            with (env_config_path / "spack.yaml").open(mode="w") as f:
-                f.write(yml)
-
-        # generate the makefile that generates the configuration for the spack
-        # installation in the generate-config sub-directory of the build path.
-        make_config_template = jinja_env.get_template("Makefile.generate-config")
+        # --- generate-config subdirectory ---
         generate_config_path = self.path / "generate-config"
         generate_config_path.mkdir(exist_ok=True)
 
-        # write generate-config/Makefile
-        all_compilers = [x for x in recipe.compilers.keys()]
+        make_config_template = jinja_env.get_template("Makefile.generate-config")
         with (generate_config_path / "Makefile").open("w") as f:
             f.write(
                 make_config_template.render(
                     modules=recipe.with_modules,
                     build_path=self.path.as_posix(),
-                    all_compilers=all_compilers,
-                    release_compilers=all_compilers,
-                    verbose=False,
+                    compiler_names=recipe.compiler_names,
+                    system_gcc=recipe.system_gcc,
                 )
             )
+            f.write("\n")
+        with (generate_config_path / "packages.yaml").open("w") as f:
+            f.write(yaml.dump(recipe.packages["install"]))
+        with (generate_config_path / "upstreams.yaml").open("w") as f:
+            yaml.safe_dump(recipe.upstream_config, f, default_flow_style=False, sort_keys=False)
 
-        # write modules/modules.yaml
+        # --- modules ---
         if recipe.with_modules:
-            generate_modules_path = self.path / "modules"
-            generate_modules_path.mkdir(exist_ok=True)
-            with (generate_modules_path / "modules.yaml").open("w") as f:
+            modules_path = self.path / "modules"
+            modules_path.mkdir(exist_ok=True)
+            with (modules_path / "modules.yaml").open("w") as f:
                 yaml.dump(recipe.modules, f)
+            with (modules_path / "packages.yaml").open("w") as f:
+                f.write(yaml.dump(recipe.packages["install"]))
+            with (modules_path / "upstreams.yaml").open("w") as f:
+                yaml.safe_dump(recipe.upstream_config, f, default_flow_style=False, sort_keys=False)
 
-        # write the meta data
+        # --- metadata ---
         meta_path = store_path / "meta"
         meta_path.mkdir(exist_ok=True)
-        # write a json file with basic meta data
+
         with (meta_path / "configure.json").open("w") as f:
-            # default serialisation is str to serialise the pathlib.PosixPath
             f.write(json.dumps(self.configuration_meta, sort_keys=True, indent=2, default=str))
             f.write("\n")
 
-        # write a json file with the environment view meta data
         with (meta_path / "env.json.in").open("w") as f:
-            # default serialisation is str to serialise the pathlib.PosixPath
             f.write(json.dumps(self.environment_meta, sort_keys=True, indent=2, default=str))
             f.write("\n")
 
-        # copy the recipe to a recipe subdirectory of the meta path
         meta_recipe_path = meta_path / "recipe"
-        meta_recipe_path.mkdir(exist_ok=True)
         if meta_recipe_path.exists():
             shutil.rmtree(meta_recipe_path)
         install(recipe.path, meta_recipe_path, ignore=shutil.ignore_patterns(".git"))
 
-        # create the meta/extra path and copy recipe meta data if it exists
         meta_extra_path = meta_path / "extra"
-        meta_extra_path.mkdir(exist_ok=True)
         if meta_extra_path.exists():
             shutil.rmtree(meta_extra_path)
         if recipe.user_extra is not None:
-            self._logger.debug(f"copying extra recipe meta data to {meta_extra_path}")
             install(recipe.user_extra, meta_extra_path)
+        else:
+            meta_extra_path.mkdir()
 
-        # create debug helper script
-        debug_script_path = self.path / "stack-debug.sh"
-        debug_script_template = jinja_env.get_template("stack-debug.sh")
-        with debug_script_path.open("w") as f:
+        # --- debug helper ---
+        debug_template = jinja_env.get_template("stack-debug.sh")
+        with (self.path / "stack-debug.sh").open("w") as f:
             f.write(
-                debug_script_template.render(
+                debug_template.render(
                     mount_path=recipe.mount,
                     build_path=str(self.path),
                     use_bwrap=not recipe.no_bwrap,
-                    spack_version=spack_version,
-                    verbose=False,
                 )
             )
             f.write("\n")
@@ -571,8 +446,6 @@ class Builder:
     def _git_clone(self, name, repo, commit, path):
         if not (path / ".git").is_dir():
             self._logger.info(f"{name}: clone repository {repo} to {path}")
-
-            # clone the repository
             capture = subprocess.run(
                 ["git", "clone", "--filter=tree:0", repo, path],
                 shell=False,
@@ -580,7 +453,6 @@ class Builder:
                 stderr=subprocess.STDOUT,
             )
             self._logger.debug(capture.stdout.decode("utf-8"))
-
             if capture.returncode != 0:
                 self._logger.error(f"error cloning the repository {repo}")
                 capture.check_returncode()
@@ -588,7 +460,6 @@ class Builder:
             self._logger.info(f"{name}: {repo} already cloned to {path}")
 
         if commit:
-            # Fetch the specific branch
             self._logger.info(f"{name}: fetching {commit}")
             capture = subprocess.run(
                 ["git", "-C", path, "fetch", "origin", commit],
@@ -597,12 +468,9 @@ class Builder:
                 stderr=subprocess.STDOUT,
             )
             self._logger.debug(capture.stdout.decode("utf-8"))
-
             if capture.returncode != 0:
-                self._logger.debug(f"unable to fetch {commit}")
                 capture.check_returncode()
 
-            # Check out the specific branch
             self._logger.info(f"{name}: checking out {commit}")
             capture = subprocess.run(
                 ["git", "-C", path, "checkout", commit],
@@ -611,15 +479,12 @@ class Builder:
                 stderr=subprocess.STDOUT,
             )
             self._logger.debug(capture.stdout.decode("utf-8"))
-
             if capture.returncode != 0:
-                self._logger.debug(f"unable to change to the requested commit {commit}")
                 capture.check_returncode()
         else:
             self._logger.info(f"{name}: no commit set")
 
-        # get the commit
-        git_commit_result = (
+        git_commit = (
             subprocess.run(
                 ["git", "-C", path, "rev-parse", "HEAD"],
                 shell=False,
@@ -629,7 +494,5 @@ class Builder:
             .stdout.strip()
             .decode("utf-8")
         )
-
-        self._logger.info(f"{name}: commit hash is {git_commit_result}")
-
-        return git_commit_result
+        self._logger.info(f"{name}: commit hash is {git_commit}")
+        return git_commit
