@@ -5,20 +5,13 @@
 
 all: store.squashfs
 
-# Keep track of what Spack version was used.
-spack-version:
-	$(SANDBOX) $(SPACK) --version > $@
-
 # Sanity check: confirm spack works and bootstrap the concretizer.
-#
-#
-spack-setup: spack-version
-	@printf "spack arch... " ; \
+spack-setup:
+	$(call banner,bootstrap spack)
 	arch="$$($(SANDBOX) $(SPACK) arch)"; \
-	printf "%s\n" "$$arch"; \
-	printf "spack version... "; \
 	version="$$($(SANDBOX) $(SPACK) --version)"; \
-	printf "%s\n" "$$version"; \
+	printf "spack arch:   ...  %s\n" "$$arch"; \
+	printf "spack version....  %s\n" "$$version"; \
 	printf "bootstrapping spack... "; \
 	$(SANDBOX) $(SPACK_HELPER) bootstrap now > $(BUILD_ROOT)/spack-bootstrap-output 2>&1; \
 	if [ "$$?" != "0" ]; then \
@@ -37,7 +30,7 @@ pre-install: spack-setup
 {% endif %}
 	touch pre-install
 
-mirror-setup: spack-setup pre-install
+mirror-setup: pre-install
 
 	$(call banner,build cache / mirror setup)
 	{% if buildcache %}
@@ -54,7 +47,9 @@ mirror-setup: spack-setup pre-install
 
 concretize: mirror-setup env/spack.yaml
 	$(call banner,concretize)
-	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) concretize #--force
+	# --non-defaults marks non-default variants and settings in the concretizer output
+	# --force is required to reconcretize when env/spack.yaml is changed
+	$(SANDBOX) $(SPACK) -e $(ENV_ROOT) concretize --non-defaults --force
 	touch concretize
 
 # Clear MAKEFLAGS for the install. When run with `make -j`, GNU make advertises a
@@ -182,7 +177,7 @@ store.squashfs: env-meta post-install cache-push
 		-all-time $$(date +%s) -no-recovery -noappend -Xcompression-level 3
 
 clean:
-	rm -rf -- spack-version spack-setup{% if pre_install_hook %} pre-install{% endif %} mirror-setup \
+	rm -rf -- spack-setup{% if pre_install_hook %} pre-install{% endif %} mirror-setup \
 		concretize install cleanup{% if push_to_cache and cache.key %} cache-push{% endif %} \
 		compiler-config.yaml views generate-config/.done \
 		{% if modules %}modules-done {% endif %}env-meta{% if post_install_hook %} post-install{% endif %} \
