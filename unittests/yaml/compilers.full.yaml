@@ -1,5 +1,6 @@
 gcc:
   version: "11"
+  spec: "~bootstrap+nvptx"
 llvm:
   version: "13"
 nvhpc:

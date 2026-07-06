@@ -497,19 +497,26 @@ class Recipe:
 
         gcc_version = raw["gcc"]["version"]
         if gcc_version == "system":
+            if raw["gcc"].get("spec"):
+                self._logger.warning("compilers.yaml: the 'spec' field is ignored when gcc version is 'system'")
             compilers["gcc"] = {"system": True}
         else:
-            compilers["gcc"] = {"specs": [f"gcc@{gcc_version} +bootstrap"], "version": gcc_version}
+            suffix = raw["gcc"].get("spec") or "+bootstrap"
+            compilers["gcc"] = {"specs": [f"gcc@{gcc_version} {suffix}"], "version": gcc_version}
 
-        for name, spec_template in [
-            ("nvhpc", "nvhpc@{version} ~mpi~blas~lapack"),
-            ("llvm", "llvm@{version} +clang ~gold"),
-            ("llvm-amdgpu", "llvm-amdgpu@{version}"),
-            ("intel-oneapi-compilers", "intel-oneapi-compilers@{version}"),
+        # the default spec (variants etc) for each compiler, used when the recipe
+        # does not provide an explicit 'spec' field
+        for name, default_suffix in [
+            ("nvhpc", "~mpi~blas~lapack"),
+            ("llvm", "+clang ~gold"),
+            ("llvm-amdgpu", ""),
+            ("intel-oneapi-compilers", ""),
         ]:
             if raw.get(name) is not None:
                 version = raw[name]["version"]
-                compilers[name] = {"specs": [spec_template.format(version=version)], "version": version}
+                suffix = raw[name].get("spec") or default_suffix
+                spec = f"{name}@{version} {suffix}".strip()
+                compilers[name] = {"specs": [spec], "version": version}
 
         self.compilers = compilers
 

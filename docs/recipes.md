@@ -120,7 +120,31 @@ The first step - building `gcc` - is required, so that the simplest stack will p
 
     * `nvhpc:version:"21.7"` generates `nvhpc@21.7 ~mpi~blas~lapack`
     * `llvm:version:"14"` generates `llvm@14 +clang ~gold`
-    * `gcc:version:"13"` generates `gcc@13 build_type=Release +profiled +strip +bootstrap`
+    * `gcc:version:"13"` generates `gcc@13 +bootstrap`
+
+The default variants can be customised by setting the optional `spec` field on a compiler, which **replaces** the default variants for that compiler:
+
+```yaml title="compilers.yaml with a custom gcc spec"
+gcc:
+  version: "13"
+  spec: "~bootstrap+nvptx"   # generates gcc@13 ~bootstrap+nvptx
+llvm:
+  version: "16"              # generates the default llvm@16 +clang ~gold
+```
+
+The `spec` string is appended verbatim to `name@version`.
+Because it replaces the defaults, restate any default variants that should be kept.
+
+!!! example "`gcc` with support for openmp offload on GPU"
+    ```yaml title='cuda offload'
+    gcc:
+        version: "15" # compatible with cuda@13.x
+        speac: "+nvptx~bootstrap"
+    ```
+    Bootstrapping needs to be explicitly disabled to compile gcc.
+
+!!! note
+    The `spec` field is ignored when `gcc:version` is `system`.
 
 ## Environments
 

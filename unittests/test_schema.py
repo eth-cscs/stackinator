@@ -117,15 +117,19 @@ def test_compilers_yaml(yaml_path):
     with open(yaml_path / "compilers.defaults.yaml") as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
         schema.CompilersValidator.validate(raw)
-        assert raw["gcc"] == {"version": "10.2"}
+        assert raw["gcc"] == {"version": "10.2", "spec": None}
         assert raw["llvm"] is None
 
     with open(yaml_path / "compilers.full.yaml") as fid:
         raw = yaml.load(fid, Loader=yaml.Loader)
         schema.CompilersValidator.validate(raw)
-        assert raw["gcc"] == {"version": "11"}
-        assert raw["llvm"] == {"version": "13"}
-        assert raw["nvhpc"] == {"version": "25.1"}
+        assert raw["gcc"] == {"version": "11", "spec": "~bootstrap+nvptx"}
+        assert raw["llvm"] == {"version": "13", "spec": None}
+        assert raw["nvhpc"] == {"version": "25.1", "spec": None}
+
+    # spec must be a string (or null)
+    with pytest.raises(schema.ValidationError):
+        schema.CompilersValidator.validate({"gcc": {"version": "13", "spec": ["+nvptx"]}})
 
 
 def test_recipe_compilers_yaml(recipe_paths):
