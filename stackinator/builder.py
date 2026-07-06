@@ -260,8 +260,14 @@ class Builder:
         with (config_path / "packages.yaml").open("w") as f:
             f.write(yaml.dump(recipe.packages["build"]))
 
-        config_yaml = {"config": {"install_tree": {"root": str(recipe.mount)}}}
-        with (config_path / "config.yaml").open("w") as f:
+        # Merge install_tree into any config.yaml the mirror layer already wrote
+        # (e.g. config:source_cache from mirrors.yaml at lines 167-170 above).
+        config_file = config_path / "config.yaml"
+        config_yaml = {}
+        if config_file.exists():
+            config_yaml = yaml.safe_load(config_file.read_text()) or {}
+        config_yaml.setdefault("config", {})["install_tree"] = {"root": str(recipe.mount)}
+        with config_file.open("w") as f:
             f.write(yaml.dump(config_yaml))
 
         # Add custom spack package recipes, configured via Spack repos.
