@@ -1,0 +1,1464 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../interfaces/">
+      
+      
+        <link rel="next" href="../porting/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Mirrors & Build Caches - Stackinator</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#mirrors-and-build-caches" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Stackinator" class="md-header__button md-logo" aria-label="Stackinator" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Stackinator
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Mirrors & Build Caches
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/eth-cscs/stackinator" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../configuring/" class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../development/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Development
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Stackinator" class="md-nav__button md-logo" aria-label="Stackinator" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Stackinator
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/eth-cscs/stackinator" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuring Stacks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../building/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building Stacks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installing Stacks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recipes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cluster-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cluster Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interfaces/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interfaces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mirrors & Build Caches
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mirrors & Build Caches
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#build-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build cache
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Build cache">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#read-only-build-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Read-only build cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mount_specific" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mount_specific
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-build-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating a build cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#force-pushing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Force pushing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bootstrap-mirror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bootstrap mirror
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#source-mirrors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Source mirrors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#connections-and-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connections and authentication
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#source-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Source cache
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#concretizer-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concretizer cache
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keys
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#legacy-cache-option" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legacy --cache option
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../porting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Spack 1.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#build-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build cache
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Build cache">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#read-only-build-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Read-only build cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mount_specific" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mount_specific
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-build-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating a build cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#force-pushing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Force pushing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bootstrap-mirror" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bootstrap mirror
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#source-mirrors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Source mirrors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#connections-and-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connections and authentication
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#source-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Source cache
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#concretizer-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concretizer cache
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keys
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#legacy-cache-option" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legacy --cache option
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<p><a href="" id="ref-mirrors"></a></p>
+<h1 id="mirrors-and-build-caches">Mirrors and Build Caches<a class="headerlink" href="#mirrors-and-build-caches" title="Permanent link">&para;</a></h1>
+<p>Spack can use <em>mirrors</em> and <em>caches</em> to speed up image builds and to build on systems with limited or no internet access.</p>
+<p>They are configured in a single YAML file passed to <code>stack-config</code> using the <code>--mirror</code> flag:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>stack-config<span class="w"> </span>-b<span class="w"> </span><span class="nv">$build</span><span class="w"> </span>-r<span class="w"> </span><span class="nv">$recipe</span><span class="w"> </span>-s<span class="w"> </span><span class="nv">$system</span><span class="w"> </span>--mirror<span class="w"> </span>mirrors.yaml
+</span></code></pre></div>
+<p>The file is not part of the <a class="autorefs autorefs-internal" title="Cluster Configuration" href="../cluster-config/#cluster-configuration">system configuration</a>: mirror locations are usually specific to the person running the build, so each invocation provides its own.</p>
+<p>A <code>mirrors.yaml</code> can describe five kinds of entry, each optional and each documented below:</p>
+<table>
+<thead>
+<tr>
+<th>Entry</th>
+<th>Count</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#build-cache"><code>buildcache</code></a></td>
+<td>one</td>
+<td>binary cache of built packages (the big build-time speed up)</td>
+</tr>
+<tr>
+<td><a href="#bootstrap-mirror"><code>bootstrap</code></a></td>
+<td>one</td>
+<td>mirror used to bootstrap Spack itself</td>
+</tr>
+<tr>
+<td><a href="#source-mirrors"><code>sourcemirror</code></a></td>
+<td>many</td>
+<td>read-only mirrors that provide package sources</td>
+</tr>
+<tr>
+<td><a href="#source-cache"><code>sourcecache</code></a></td>
+<td>one</td>
+<td>writable local cache that fills with sources as you build</td>
+</tr>
+<tr>
+<td><a href="#concretizer-cache"><code>concretizer</code></a></td>
+<td>one</td>
+<td>writable local cache that persists concretization results</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="language-yaml highlight"><span class="filename">mirrors.yaml</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">buildcache</span><span class="p">:</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">file:///capstor/scratch/team/uenv-cache</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">private_key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/capstor/scratch/bobsmith/.keys/spack-push-key.gpg</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">mount_specific</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nt">bootstrap</span><span class="p">:</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://bootstrap.spack.io</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="nt">sourcemirror</span><span class="p">:</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="c1"># more than one source mirror can be configred.</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="nt">netmirror</span><span class="p">:</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://example.com/spack-sources</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="nt">localmirror</span><span class="p">:</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">file://scratch/group15/spack-sources</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="nt">sourcecache</span><span class="p">:</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">  </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/capstor/scratch/bobsmith/spack-sources</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="nt">concretizer</span><span class="p">:</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">  </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/capstor/scratch/bobsmith/spack-concretizer</span>
+</span></code></pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Paths inside the file (such as relative gpg key paths) are resolved relative to the directory containing the <code>mirrors.yaml</code>, so a self-contained mirror directory (the <code>mirrors.yaml</code> plus its keys) can be moved around freely.</p>
+</div>
+<p>To stop using any entry, remove (or comment out) it from <code>mirrors.yaml</code>.</p>
+<h2 id="build-cache">Build cache<a class="headerlink" href="#build-cache" title="Permanent link">&para;</a></h2>
+<p>A build cache is a binary cache of built packages.
+Reusing binaries instead of rebuilding from source is roughly a 10x speed up — the difference between a 3 minute and a 30 minute image build — so a build cache is essential if you build images regularly.</p>
+<p>During a build Spack fetches packages from the cache when it can, and signs and pushes any package it has to build itself, so the cache improves over time.</p>
+<div class="language-yaml highlight"><span class="filename">mirrors.yaml</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">buildcache</span><span class="p">:</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">file:///capstor/scratch/team/uenv-cache</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">private_key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/capstor/scratch/bobsmith/.keys/spack-push-key.gpg</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td>yes<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup></td>
+<td>location of the cache (a <code>file://</code> path, or an <code>http(s)://</code>, <code>s3://</code> or <code>oci://</code> URL)</td>
+</tr>
+<tr>
+<td><code>private_key</code></td>
+<td>no</td>
+<td>PGP key used to sign and push packages (see <a href="#keys">Keys</a>); omit for a read-only cache</td>
+</tr>
+<tr>
+<td><code>public_key</code></td>
+<td>no</td>
+<td>PGP key used to verify downloaded packages</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>no</td>
+<td>name Spack registers the mirror under (default <code>buildcache</code>)</td>
+</tr>
+<tr>
+<td><code>mount_specific</code></td>
+<td>no</td>
+<td>store the cache in a per-mount-point sub-directory (default <code>false</code>)</td>
+</tr>
+<tr>
+<td><code>fetch</code> / <code>push</code></td>
+<td>no<sup id="fnref2:1"><a class="footnote-ref" href="#fn:1">1</a></sup></td>
+<td>separate read/write <a href="#connections-and-authentication">connections</a>, used instead of a single <code>url</code></td>
+</tr>
+<tr>
+<td><code>binary</code></td>
+<td>no</td>
+<td>the cache holds binary packages (default <code>true</code>)</td>
+</tr>
+<tr>
+<td><code>source</code></td>
+<td>no</td>
+<td>the cache also holds package sources (default <code>false</code>)</td>
+</tr>
+<tr>
+<td><code>signed</code></td>
+<td>no</td>
+<td>whether Spack signs/verifies binaries with GPG (passed through to Spack)</td>
+</tr>
+<tr>
+<td><code>autopush</code></td>
+<td>no</td>
+<td>Spack pushes each package as soon as it is installed (passed through to Spack)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="read-only-build-cache">Read-only build cache<a class="headerlink" href="#read-only-build-cache" title="Permanent link">&para;</a></h3>
+<p>Omit <code>private_key</code> to configure a read-only cache: Spack fetches packages from it but never signs or pushes anything back.
+This is useful for consuming a shared team cache that you are not permitted to write to.</p>
+<div class="language-yaml highlight"><span class="filename">mirrors.yaml</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">buildcache</span><span class="p">:</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">file:///capstor/scratch/team/uenv-cache</span>
+</span></code></pre></div>
+<h3 id="mount_specific"><code>mount_specific</code><a class="headerlink" href="#mount_specific" title="Permanent link">&para;</a></h3>
+<p>Spack binaries embed the install prefix (the image's mount point), so binaries built for <code>/user-environment</code> cannot be reused at a different mount point.
+Set <code>mount_specific: true</code> to append the mount point to the cache URL, giving each mount point its own sub-directory and avoiding relocation issues:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">buildcache</span><span class="p">:</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">file:///capstor/scratch/team/uenv-cache</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">private_key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/capstor/scratch/bobsmith/.keys/spack-push-key.gpg</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="nt">mount_specific</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">   </span><span class="c1"># packages stored under .../uenv-cache/user-environment</span>
+</span></code></pre></div>
+<h3 id="creating-a-build-cache">Creating a build cache<a class="headerlink" href="#creating-a-build-cache" title="Permanent link">&para;</a></h3>
+<p>A build cache needs an empty directory and a PGP signing key:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># 1. create the cache directory</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>/capstor/scratch/bobsmith/uenv-cache
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># 2. generate and export a signing key</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>spack<span class="w"> </span>gpg<span class="w"> </span>create<span class="w"> </span>&lt;name&gt;<span class="w"> </span>&lt;e-mail&gt;
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>spack<span class="w"> </span>gpg<span class="w"> </span><span class="nb">export</span><span class="w"> </span>--secret<span class="w"> </span>/capstor/scratch/bobsmith/.keys/spack-push-key.gpg
+</span></code></pre></div>
+<p>See <a href="#keys">Keys</a> for where to store the key.</p>
+<h3 id="force-pushing">Force pushing<a class="headerlink" href="#force-pushing" title="Permanent link">&para;</a></h3>
+<p>Packages are pushed to the cache after each environment builds successfully; nothing is pushed if a build fails.
+When iterating on a recipe with failing builds, force-push everything built so far with the <code>cache-force</code> target:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>env<span class="w"> </span>--ignore-environment<span class="w"> </span><span class="nv">PATH</span><span class="o">=</span>/usr/bin:/bin:<span class="sb">`</span><span class="nb">pwd</span><span class="w"> </span>-P<span class="sb">`</span>/spack/bin<span class="w"> </span>make<span class="w"> </span>cache-force
+</span></code></pre></div>
+<h2 id="bootstrap-mirror">Bootstrap mirror<a class="headerlink" href="#bootstrap-mirror" title="Permanent link">&para;</a></h2>
+<p>Spack bootstraps some of its own dependencies (such as the <code>clingo</code> concretizer) on first use.
+A bootstrap mirror lets it do this without reaching the internet — useful on air-gapped systems.</p>
+<p>No key is needed: bootstrap binaries are verified by their sha256 sum, not by a GPG signature.</p>
+<p>The <code>url</code> can take two forms.</p>
+<p><strong>A local bootstrap mirror directory</strong> (recommended) — a directory created with <code>spack bootstrap mirror</code>, which contains its own <code>metadata/sources</code> and <code>metadata/binaries</code> descriptors:</p>
+<div class="language-yaml highlight"><span class="filename">mirrors.yaml</span><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">bootstrap</span><span class="p">:</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/capstor/scratch/team/bootstrap-mirror</span>
+</span></code></pre></div>
+<p>Stackinator references the mirror's own metadata directly, so both source and binary bootstrapping work. Create one on a connected system and copy it across:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>spack<span class="w"> </span>bootstrap<span class="w"> </span>mirror<span class="w"> </span>--binary-packages<span class="w"> </span>/capstor/scratch/team/bootstrap-mirror
+</span></code></pre></div>
+<p><strong>A remote url</strong> — <code>https://</code>, <code>s3://</code> or <code>oci://</code>:</p>
+<div class="language-yaml highlight"><span class="filename">mirrors.yaml</span><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nt">bootstrap</span><span class="p">:</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://bootstrap.example.com/mirror</span>
+</span></code></pre></div>
+<p>A remote mirror supports <strong>source</strong> bootstrapping only; remote binary bootstrapping is not supported (it needs the per-package metadata that a local mirror directory provides).</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td>yes</td>
+<td>a local <code>spack bootstrap mirror</code> directory, or a remote <code>https</code>/<code>s3</code>/<code>oci</code> url</td>
+</tr>
+</tbody>
+</table>
+<h2 id="source-mirrors">Source mirrors<a class="headerlink" href="#source-mirrors" title="Permanent link">&para;</a></h2>
+<p>Source mirrors provide package <strong>source</strong> archives, and are read-only: Spack fetches sources from them but never writes to them.
+Use them to build on air-gapped systems — populate a mirror on a connected system, mount it read-only, and Spack will fetch sources from it.
+Any number of source mirrors can be listed; Spack searches them in order.</p>
+<div class="language-yaml highlight"><span class="filename">mirrors.yaml</span><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nt">sourcemirror</span><span class="p">:</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="nt">internal</span><span class="p">:</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://mirror.example.com/spack-sources</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">  </span><span class="nt">scratch</span><span class="p">:</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">file:///capstor/scratch/team/spack-sources</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td>yes<sup id="fnref3:1"><a class="footnote-ref" href="#fn:1">1</a></sup></td>
+<td>location of the source mirror</td>
+</tr>
+<tr>
+<td><code>fetch</code> / <code>push</code></td>
+<td>no<sup id="fnref4:1"><a class="footnote-ref" href="#fn:1">1</a></sup></td>
+<td>separate read/write <a href="#connections-and-authentication">connections</a>, used instead of a single <code>url</code></td>
+</tr>
+<tr>
+<td><code>source</code></td>
+<td>no</td>
+<td>the mirror holds package sources (default <code>true</code>)</td>
+</tr>
+<tr>
+<td><code>binary</code></td>
+<td>no</td>
+<td>the mirror also holds binary packages (default <code>false</code>)</td>
+</tr>
+<tr>
+<td><code>signed</code></td>
+<td>no</td>
+<td>whether Spack signs/verifies binaries with GPG (passed through to Spack)</td>
+</tr>
+<tr>
+<td><code>autopush</code></td>
+<td>no</td>
+<td>Spack pushes to the mirror as soon as a package is installed (passed through to Spack)</td>
+</tr>
+</tbody>
+</table>
+<p>Source mirrors need no keys: Spack verifies every downloaded source against the checksum in its package recipe, whether it comes from the upstream url or a mirror.</p>
+<p>Populate a source mirror on an internet-connected system with Spack:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>spack<span class="w"> </span>mirror<span class="w"> </span>create<span class="w"> </span>--directory<span class="w"> </span>/path/to/mirror<span class="w"> </span>--all
+</span></code></pre></div>
+<h2 id="connections-and-authentication">Connections and authentication<a class="headerlink" href="#connections-and-authentication" title="Permanent link">&para;</a></h2>
+<p>Both the <a href="#build-cache">build cache</a> and <a href="#source-mirrors">source mirrors</a> describe <em>where</em> and <em>how</em> Spack reaches a mirror with the same connection model, taken directly from Spack's own <a href="https://spack.readthedocs.io/en/latest/mirrors.html"><code>mirrors.yaml</code></a>. Stackinator passes these fields through to Spack unchanged.</p>
+<p>The simplest form is a single <code>url</code>, used for both reading and writing:</p>
+<div class="language-yaml highlight"><span class="filename">mirrors.yaml</span><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nt">buildcache</span><span class="p">:</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">file:///capstor/scratch/team/uenv-cache</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span><span class="nt">private_key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$SCRATCH/.keys/spack-push-key.gpg</span>
+</span></code></pre></div>
+<p>When the read and write endpoints differ, or the mirror needs authentication, replace the top-level <code>url</code> with explicit <code>fetch</code> and <code>push</code> connection blocks. This example is an S3 build cache with credentials supplied through environment variables:</p>
+<div class="language-yaml highlight"><span class="filename">mirrors.yaml</span><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nt">buildcache</span><span class="p">:</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="nt">private_key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$SCRATCH/.keys/spack-push-key.gpg</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span><span class="nt">fetch</span><span class="p">:</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://my-bucket/buildcache</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">    </span><span class="nt">endpoint_url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://s3.example.com</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">    </span><span class="nt">access_pair</span><span class="p">:</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">      </span><span class="nt">id_variable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">AWS_ACCESS_KEY_ID</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">      </span><span class="nt">secret_variable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">AWS_SECRET_ACCESS_KEY</span>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w">  </span><span class="nt">push</span><span class="p">:</span>
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://my-bucket/buildcache</span>
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">    </span><span class="nt">endpoint_url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://s3.example.com</span>
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="w">    </span><span class="nt">access_pair</span><span class="p">:</span>
+</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="w">      </span><span class="nt">id_variable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">AWS_ACCESS_KEY_ID</span>
+</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="w">      </span><span class="nt">secret_variable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">AWS_SECRET_ACCESS_KEY</span>
+</span></code></pre></div>
+<p>A connection — whether given as the top-level shorthand or inside a <code>fetch</code>/<code>push</code> block — accepts:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>url</code></td>
+<td>location of the mirror (<code>file://</code>, <code>http(s)://</code>, <code>s3://</code> or <code>oci://</code>)</td>
+</tr>
+<tr>
+<td><code>endpoint_url</code></td>
+<td>custom endpoint URL for S3-compatible storage</td>
+</tr>
+<tr>
+<td><code>profile</code></td>
+<td>AWS profile name to use for S3 authentication</td>
+</tr>
+<tr>
+<td><code>access_token_variable</code></td>
+<td>environment variable holding an access token for OCI registry authentication</td>
+</tr>
+<tr>
+<td><code>access_pair</code></td>
+<td>ID + secret credential pair (see below)</td>
+</tr>
+<tr>
+<td><code>view</code></td>
+<td>mirror view (passed through to Spack)</td>
+</tr>
+</tbody>
+</table>
+<p><code>access_pair</code> holds the credential pair:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>secret_variable</code></td>
+<td>yes</td>
+<td>environment variable holding the secret key</td>
+</tr>
+<tr>
+<td><code>id_variable</code></td>
+<td>one of</td>
+<td>environment variable holding the access key ID</td>
+</tr>
+<tr>
+<td><code>id</code></td>
+<td>one of</td>
+<td>the access key ID as a literal string (prefer <code>id_variable</code>)</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Keep secrets out of the file</p>
+<p>Reference credentials through environment variables (<code>*_variable</code>) rather than writing them into <code>mirrors.yaml</code>. The secret itself is never a required field — only the <em>name</em> of the variable that holds it.</p>
+</div>
+<p>See Spack's <a href="https://spack.readthedocs.io/en/latest/mirrors.html">mirror documentation</a> for the full reference on these fields.</p>
+<h2 id="source-cache">Source cache<a class="headerlink" href="#source-cache" title="Permanent link">&para;</a></h2>
+<p>A source cache is a single, <strong>writable</strong> local directory that Spack fills as it downloads sources.
+On internet-connected systems Spack checks the cache first; on a miss it downloads the source and stores it, so later builds reuse it and download times shrink over time.</p>
+<p>Unlike a source mirror it is written to automatically, and is created on demand.</p>
+<div class="language-yaml highlight"><span class="filename">mirrors.yaml</span><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nt">sourcecache</span><span class="p">:</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/capstor/scratch/bobsmith/spack-sources</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>path</code></td>
+<td>yes</td>
+<td>absolute path to a local directory (environment variables are expanded)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="concretizer-cache">Concretizer cache<a class="headerlink" href="#concretizer-cache" title="Permanent link">&para;</a></h2>
+<p>The concretizer cache is a single, <strong>writable</strong> local directory in which Spack persists its <strong>concretization results</strong> — the output of concretizing a set of specs, so it does not have to be recomputed.
+Concretization can be a large fraction of build time, so pointing this at a persistent location is worthwhile when build directories are ephemeral (e.g. created in <code>/dev/shm</code> and deleted after each build).</p>
+<div class="language-yaml highlight"><span class="filename">mirrors.yaml</span><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nt">concretizer</span><span class="p">:</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/capstor/scratch/bobsmith/spack-concretizer</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>path</code></td>
+<td>yes</td>
+<td>absolute path to a local directory (environment variables are expanded)</td>
+</tr>
+</tbody>
+</table>
+<p>This emits a <code>concretizer.yaml</code> that sets <code>concretizer:concretization_cache:{enable: true, url}</code>.
+The cache is keyed by the hash of the solver inputs, so it can be reused safely across builds — stale entries simply miss.</p>
+<div class="admonition info">
+<p class="admonition-title">concretizer cache is not a silver bullet</p>
+<p>The cache stores only the <em>result of the solve</em> for a given set of inputs.
+Before it can be consulted, Spack still has to rebuild the full concretization problem on every run, loading the package recipes and enumerating the reusable packages, and that setup work is often the larger part of concretization.
+So a cache hit skips the solver but not the setup: concretization gets faster, not free.</p>
+<p>The win is therefore largest for repeated builds of the same stack against a stable build cache (the previous solve is replayed), and smallest when the bulk of concretization time is in setup.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Requires Spack ≥ 1.1</p>
+<p>The <code>concretizer:concretization_cache</code> config key was introduced in Spack 1.1, and Spack 1.0 rejects it.
+Stackinator infers the Spack version from the <code>spack.commit</code> in <code>config.yaml</code> (defaulting to a supported version when the commit is a branch or arbitrary SHA that cannot be pinned).
+When it detects Spack 1.0 it skips the concretizer cache with a warning rather than producing a config that would fail the build.</p>
+</div>
+<h2 id="keys">Keys<a class="headerlink" href="#keys" title="Permanent link">&para;</a></h2>
+<p>The build cache's <code>private_key</code> and <code>public_key</code> fields accept either:</p>
+<ul>
+<li>a <strong>path</strong> — absolute, or relative to the directory containing <code>mirrors.yaml</code>; or</li>
+<li>a <strong>base64-encoded key</strong> inlined directly in <code>mirrors.yaml</code>.</li>
+</ul>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nt">buildcache</span><span class="p">:</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">file:///capstor/scratch/team/uenv-cache</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span><span class="nt">private_key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$SCRATCH/.keys/spack-push-key.gpg</span><span class="w">     </span><span class="c1"># a path</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">  </span><span class="nt">public_key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mQINBGm4GvsBEACTyzQF...==</span><span class="w">              </span><span class="c1"># inline base64</span>
+</span></code></pre></div>
+<p>Generate a key with Spack, and keep the secret key somewhere private:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>mkdir<span class="w"> </span><span class="nv">$SCRATCH</span>/.keys<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">700</span><span class="w"> </span><span class="nv">$SCRATCH</span>/.keys
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>spack<span class="w"> </span>gpg<span class="w"> </span>create<span class="w"> </span>&lt;name&gt;<span class="w"> </span>&lt;e-mail&gt;
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>spack<span class="w"> </span>gpg<span class="w"> </span><span class="nb">export</span><span class="w"> </span>--secret<span class="w"> </span><span class="nv">$SCRATCH</span>/.keys/spack-push-key.gpg
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>chmod<span class="w"> </span><span class="m">600</span><span class="w"> </span><span class="nv">$SCRATCH</span>/.keys/spack-push-key.gpg
+</span></code></pre></div>
+<p>See the <a href="https://spack.readthedocs.io/en/latest/getting_started.html#gpg-signing">Spack documentation</a> for more on GPG keys.</p>
+<div class="admonition warning">
+<p class="admonition-title">Don't use <code>$HOME</code></p>
+<p>The build remounts <code>~</code> as a tmpfs, so keys under <code>$HOME</code> are not visible during the build and Spack will fail to read them. Use scratch storage instead.</p>
+</div>
+<h2 id="legacy-cache-option">Legacy <code>--cache</code> option<a class="headerlink" href="#legacy-cache-option" title="Permanent link">&para;</a></h2>
+<p>Before <code>mirrors.yaml</code>, a build cache was configured with a separate <code>cache.yaml</code> file passed to <code>stack-config</code> via <code>-c/--cache</code>:</p>
+<div class="language-yaml highlight"><span class="filename">cache.yaml</span><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nt">root</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$SCRATCH/uenv-cache</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="nt">key</span><span class="p">:</span><span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">$SCRATCH/.keys/spack-push-key.gpg</span>
+</span></code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>stack-config<span class="w"> </span>-b<span class="w"> </span><span class="nv">$build</span><span class="w"> </span>-r<span class="w"> </span><span class="nv">$recipe</span><span class="w"> </span>-s<span class="w"> </span><span class="nv">$system</span><span class="w"> </span>-c<span class="w"> </span>cache.yaml
+</span></code></pre></div>
+<p>This is <strong>deprecated</strong> and equivalent to a single <code>buildcache</code> entry (with <code>mount_specific: true</code>). Prefer configuring the build cache in <code>mirrors.yaml</code>.</p>
+<p>Setting <code>key: null</code> configures a read-only cache that Spack fetches from but never pushes to.</p>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:1">
+<p>Give either a top-level <code>url</code> <em>or</em> explicit <code>fetch</code>/<code>push</code> connections — see <a href="#connections-and-authentication">Connections and authentication</a>.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy", "content.code.annotate", "content.footnote.tooltips", "navigation.tabs"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
