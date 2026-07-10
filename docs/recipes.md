@@ -139,7 +139,7 @@ Because it replaces the defaults, restate any default variants that should be ke
     ```yaml title='cuda offload'
     gcc:
         version: "15" # compatible with cuda@13.x
-        speac: "+nvptx~bootstrap"
+        spec: "+nvptx~bootstrap"
     ```
     Bootstrapping needs to be explicitly disabled to compile gcc.
 
