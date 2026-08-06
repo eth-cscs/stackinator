@@ -110,8 +110,15 @@ The compilers are built in multiple stages:
     * `gcc:version`: The version of gcc
 1. *llvm*: (optional) The llvm toolchain is built using the gcc toolchain installed in step 1.
     * `llvm:version`: The version of llvm
+1. *llvm-amdgpu*: (optional) The AMD ROCm llvm toolchain is built using the gcc toolchain installed in step 1.
+    * `llvm-amdgpu:version`: The version of llvm-amdgpu
 1. *nvhpc*: (optional) The nvhpc toolchain is built using the gcc toolchain installed in step 1.
     * `nvhpc:version`: The version of nvhpc
+1. *intel-oneapi*: (optional) The Intel oneAPI (`icx`/`icpx`/`ifx`) toolchain is built using the gcc toolchain installed in step 1.
+    * `intel-oneapi:version`: The version of the oneAPI compilers (spack package `intel-oneapi-compilers`)
+1. *intel-classic*: (optional) The classic Intel (`icc`/`icpc`/`ifort`) toolchain is built using the gcc toolchain installed in step 1.
+    * `intel-classic:version`: The version of the classic compilers (spack package `intel-oneapi-compilers-classic`)
+    * **note**: the intel-classic compiler is used to provide a compiler, and will install a copy of `intel-oneapi-compilers` to provide the C and C++ compilers.
 
 The first step - building `gcc` - is required, so that the simplest stack will provide at least one version of gcc compiled for the target architecture.
 
@@ -121,6 +128,13 @@ The first step - building `gcc` - is required, so that the simplest stack will p
     * `nvhpc:version:"21.7"` generates `nvhpc@21.7 ~mpi~blas~lapack`
     * `llvm:version:"14"` generates `llvm@14 +clang ~gold`
     * `gcc:version:"13"` generates `gcc@13 +bootstrap`
+    * `intel-oneapi:version:"2024.1"` generates `intel-oneapi-compilers@2024.1`
+    * `intel-classic:version:"2021.10.0"` generates `intel-oneapi-compilers-classic@2021.10.0`
+
+!!! note
+    The `intel-oneapi` and `intel-classic` keys use short recipe names that map to
+    the longer spack package names `intel-oneapi-compilers` and
+    `intel-oneapi-compilers-classic` respectively.
 
 The default variants can be customised by setting the optional `spec` field on a compiler, which **replaces** the default variants for that compiler:
 

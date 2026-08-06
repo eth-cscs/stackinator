@@ -69,19 +69,36 @@ spack:
         reuse: false
 
 {% endif %}
-{% if compilers.get('intel-oneapi-compilers') %}
-  - group: intel-oneapi-compilers
+{% if compilers.get('intel-oneapi') %}
+  - group: intel-oneapi
     explicit: false
 {% if not system_gcc %}
     needs: [gcc]
 {% endif %}
     specs:
-{% for spec in compilers['intel-oneapi-compilers'].specs %}
+{% for spec in compilers['intel-oneapi'].specs %}
     - '{{ spec }}'
 {% endfor %}
     override:
       concretizer:
         unify: when_possible
+        reuse: false
+
+{% endif %}
+{% if compilers.get('intel-classic') %}
+  - group: intel-classic
+    explicit: false
+{% if not system_gcc %}
+    needs: [gcc]
+{% endif %}
+    specs:
+    - 'intel-oneapi-compilers'
+{% for spec in compilers['intel-classic'].specs %}
+    - '{{ spec }}'
+{% endfor %}
+    override:
+      concretizer:
+        unify: true
         reuse: false
 
 {% endif %}

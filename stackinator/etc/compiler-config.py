@@ -22,6 +22,7 @@ _COMPILER_BINS = {
     "llvm-amdgpu": [("clang", "c"), ("clang++", "cxx"), ("flang-new", "fortran")],
     "nvhpc": [("nvc", "c"), ("nvc++", "cxx"), ("nvfortran", "fortran")],
     "intel-oneapi-compilers": [("icx", "c"), ("icpx", "cxx"), ("ifx", "fortran")],
+    "intel-oneapi-compilers-classic": [("icc", "c"), ("icpc", "cxx"), ("ifort", "fortran")],
 }
 
 

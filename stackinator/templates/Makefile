@@ -101,7 +101,7 @@ views: install compiler-config.yaml
 	$(SANDBOX) mkdir -p $(STORE)/env/{{ view.name }}
 	$(SANDBOX) sh -c '$(SPACK) env activate -d $(ENV_ROOT) --with-view {{ view.name }} --sh > $(STORE)/env/{{ view.name }}/activate.sh'
 	$(SANDBOX) $(BUILD_ROOT)/envvars.py view \
-		{% if view.extra.add_compilers %}--compilers=$(BUILD_ROOT)/compiler-config.yaml --compiler-names={{ config.compiler | join(',') }} {% endif %}\
+		{% if view.extra.add_compilers %}--compilers=$(BUILD_ROOT)/compiler-config.yaml --compiler-names={{ config.compiler_packages | join(',') }} {% endif %}\
 		--prefix_paths="{{ view.extra.prefix_string }}" \
 		$(STORE)/env/{{ view.name }} \
 		$(BUILD_ROOT)

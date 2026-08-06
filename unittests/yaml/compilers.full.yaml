@@ -7,3 +7,7 @@ nvhpc:
   version: "25.1"
 llvm-amdgpu:
   version: "6.3"
+intel-oneapi:
+  version: "2024.1"
+intel-classic:
+  version: "2021.10.0"

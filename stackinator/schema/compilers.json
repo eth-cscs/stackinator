@@ -89,7 +89,30 @@
             ],
             "default": null
         },
-        "intel-oneapi-compilers": {
+        "intel-oneapi": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "version": {"type": "string"},
+                        "spec": {
+                            "oneOf": [
+                                {"type": "string"},
+                                {"type": "null"}
+                            ],
+                            "default": null
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": ["version"]
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null
+        },
+        "intel-classic": {
             "oneOf": [
                 {
                     "type": "object",

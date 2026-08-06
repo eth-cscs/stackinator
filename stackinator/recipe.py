@@ -382,8 +382,13 @@ class Recipe:
 
     @property
     def compiler_names(self):
-        """Names of the compiler packages installed in this recipe (excludes system gcc)."""
-        return [name for name, c in self.compilers.items() if not c.get("system", False)]
+        """Spack package names of the compilers installed in this recipe (excludes system gcc).
+
+        The recipe key (e.g. 'intel-classic') can differ from the spack package
+        name (e.g. 'intel-oneapi-compilers-classic'); the latter is what the spack
+        DB is queried with, so return the 'package' field when present.
+        """
+        return [c.get("package", name) for name, c in self.compilers.items() if not c.get("system", False)]
 
     # creates the self.environments field that describes the full specifications
     # for all of the environments sets, grouped in environments, from the raw
@@ -432,9 +437,10 @@ class Recipe:
         for name, config in environments.items():
             if config["prefer"] is None:
                 compiler_key = config["compiler"][0]
-                # spack uses a different name for the intel oneapi compilers
-                # than the package that installs them.
-                compiler_name = "oneapi" if compiler_key == "intel-oneapi-compilers" else compiler_key
+                # spack uses a different name for the intel compilers than the
+                # recipe key or the package that installs them.
+                spack_compiler_names = {"intel-oneapi": "oneapi", "intel-classic": "intel"}
+                compiler_name = spack_compiler_names.get(compiler_key, compiler_key)
                 compiler_version = self.compilers[compiler_key].get("version")
                 versioned = f"{compiler_name}@{compiler_version}" if compiler_version else compiler_name
                 config["prefer"] = [
@@ -444,6 +450,12 @@ class Recipe:
         # Compute spec group needs: only compilers with actual (non-system) spec groups.
         for name, config in environments.items():
             config["needs"] = [c for c in config["compiler"] if not self.compilers.get(c, {}).get("system", False)]
+
+        # Map each environment's compilers (recipe keys) to their spack package
+        # names. Used by the view-symlink step, which filters the generated
+        # packages.yaml (keyed by spack package name) to this environment's compilers.
+        for name, config in environments.items():
+            config["compiler_packages"] = [self.compilers.get(c, {}).get("package", c) for c in config["compiler"]]
 
         # Build view metadata
         env_names = set()
@@ -506,17 +518,22 @@ class Recipe:
 
         # the default spec (variants etc) for each compiler, used when the recipe
         # does not provide an explicit 'spec' field
-        for name, default_suffix in [
-            ("nvhpc", "~mpi~blas~lapack"),
-            ("llvm", "+clang ~gold"),
-            ("llvm-amdgpu", ""),
-            ("intel-oneapi-compilers", ""),
+        # each entry is (recipe key, spack package name, default variant suffix).
+        # the recipe key can differ from the spack package name (e.g. the intel
+        # compilers), so the package name is used to build the spec and stored on
+        # the compiler dict for downstream steps (compiler-config, view symlinks).
+        for name, package, default_suffix in [
+            ("nvhpc", "nvhpc", "~mpi~blas~lapack"),
+            ("llvm", "llvm", "+clang ~gold"),
+            ("llvm-amdgpu", "llvm-amdgpu", ""),
+            ("intel-oneapi", "intel-oneapi-compilers", ""),
+            ("intel-classic", "intel-oneapi-compilers-classic", ""),
         ]:
             if raw.get(name) is not None:
                 version = raw[name]["version"]
                 suffix = raw[name].get("spec") or default_suffix
-                spec = f"{name}@{version} {suffix}".strip()
-                compilers[name] = {"specs": [spec], "version": version}
+                spec = f"{package}@{version} {suffix}".strip()
+                compilers[name] = {"specs": [spec], "version": version, "package": package}
 
         self.compilers = compilers
 

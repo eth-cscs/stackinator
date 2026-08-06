@@ -83,11 +83,15 @@ llvm:                    # optional
   version: "16"
 llvm-amdgpu:             # optional
   version: "6.0"
-intel-oneapi-compilers:  # optional
+intel-oneapi:            # optional; spack package intel-oneapi-compilers
   version: "2024.1"
+intel-classic:           # optional; spack package intel-oneapi-compilers-classic
+  version: "2021.10.0"
 ```
 
-Build order: `gcc` is built first (using system compiler), then `nvhpc`/`llvm`/`llvm-amdgpu`/`intel-oneapi-compilers` are built using the gcc toolchain. Stackinator appends opinionated variants (e.g. `gcc@13 +bootstrap`, `nvhpc@25.1 ~mpi~blas~lapack`, `llvm@16 +clang ~gold`). Each compiler becomes a separate spec group in the unified `spack.yaml`.
+Build order: `gcc` is built first (using system compiler), then `nvhpc`/`llvm`/`llvm-amdgpu`/`intel-oneapi`/`intel-classic` are built using the gcc toolchain. Stackinator appends opinionated variants (e.g. `gcc@13 +bootstrap`, `nvhpc@25.1 ~mpi~blas~lapack`, `llvm@16 +clang ~gold`). Each compiler becomes a separate spec group in the unified `spack.yaml`.
+
+The `intel-oneapi` and `intel-classic` recipe keys differ from their spack package names. Three distinct names are involved: the **recipe key** (`intel-oneapi`/`intel-classic`; used in compilers.yaml, environments.yaml `compiler`, spec-group names, `needs`), the **spack package** (`intel-oneapi-compilers`/`intel-oneapi-compilers-classic`; used to build the spec, query the spack DB in `compiler-config.py`, and as the packages.yaml key), and the **spack compiler name** (`oneapi`/`intel`; used only in the auto-generated `prefer` constraint). `Recipe` stores the package name in `self.compilers[key]["package"]`; `compiler_names` returns package names, and each environment gets a `compiler_packages` list mapping its recipe keys to package names for the view-symlink filter.
 
 ### `environments.yaml` (required)
 ```yaml
@@ -291,7 +295,7 @@ The build runs inside a bwrap sandbox (`bwrap-mutable-root.sh`) that:
 The unified `spack.yaml` uses Spack 1.2 spec groups to express the build order and per-group concretizer settings. Structure:
 
 - **gcc group**: `explicit: false`, override sets static-library variants for gcc's dependencies (mpc, gmp, mpfr, zstd, zlib)
-- **nvhpc/llvm/llvm-amdgpu/intel-oneapi-compilers groups**: `explicit: false`, `needs: [gcc]`, `reuse: false`
+- **nvhpc/llvm/llvm-amdgpu/intel-oneapi/intel-classic groups**: `explicit: false`, `needs: [gcc]`, `reuse: false`
 - **uenv_tools group**: `explicit: false`, `needs: [gcc]`, installs `squashfs`
 - **user environment groups**: `needs: [compiler list]`, override sets `concretizer.unify`, `concretizer.duplicates.strategy`, `packages.all.prefer`, `packages.all.variants`, and `packages.mpi.require` per-environment
 

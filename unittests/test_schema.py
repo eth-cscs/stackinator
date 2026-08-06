@@ -126,6 +126,8 @@ def test_compilers_yaml(yaml_path):
         assert raw["gcc"] == {"version": "11", "spec": "~bootstrap+nvptx"}
         assert raw["llvm"] == {"version": "13", "spec": None}
         assert raw["nvhpc"] == {"version": "25.1", "spec": None}
+        assert raw["intel-oneapi"] == {"version": "2024.1", "spec": None}
+        assert raw["intel-classic"] == {"version": "2021.10.0", "spec": None}
 
     # spec must be a string (or null)
     with pytest.raises(schema.ValidationError):
