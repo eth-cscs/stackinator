@@ -27,6 +27,7 @@ def recipes():
         "base-nvgpu",
         "cache",
         "with-repo",
+        "with-multi-repos",
     ]
 
 
@@ -42,7 +43,7 @@ def test_config_yaml(yaml_path):
         schema.ConfigValidator.validate(raw)
         assert raw["store"] == "/user-environment"
         assert raw["spack"]["commit"] is None
-        assert raw["spack"]["packages"]["commit"] is None
+        assert raw["spack"]["packages"].get("commit") is None
         assert raw["description"] is None
 
     # no spack:commit
@@ -80,7 +81,7 @@ def test_config_yaml(yaml_path):
     )
     schema.ConfigValidator.validate(raw)
     assert raw["spack"]["commit"] == "develop"
-    assert raw["spack"]["packages"]["commit"] is None
+    assert raw["spack"]["packages"].get("commit") is None
     assert raw["description"] is None
 
     # full config
@@ -102,6 +103,50 @@ def test_config_yaml(yaml_path):
         """)
         raw = yaml.load(config, Loader=yaml.Loader)
         schema.ConfigValidator.validate(raw)
+
+
+def test_config_yaml_multiple_package_repos():
+    # multiple package repos in spack:packages must validate (regression: the
+    # default-injecting validator used to mutate the map while trialling the
+    # single-repo oneOf branch, spuriously adding a `commit: null` key and
+    # breaking validation of the multi-repo form).
+    config = dedent("""
+    version: 3
+    name: multi-repo-env
+    spack:
+        repo: https://github.com/spack/spack.git
+        commit: releases/v1.2
+        packages:
+            c2sm:
+                repo: https://github.com/C2SM/spack-c2sm.git
+                commit: v1.1.1.0
+            builtin:
+                repo: https://github.com/spack/spack-packages.git
+                commit: releases/v2026.06
+    """)
+    raw = yaml.load(config, Loader=yaml.Loader)
+    schema.ConfigValidator.validate(raw)
+    # the packages map must contain exactly the named repos and no injected keys
+    assert set(raw["spack"]["packages"].keys()) == {"c2sm", "builtin"}
+    assert raw["spack"]["packages"]["c2sm"]["commit"] == "v1.1.1.0"
+
+    # commit is optional per-repo in the multi-repo form
+    config = dedent("""
+    version: 3
+    name: multi-repo-env
+    spack:
+        repo: https://github.com/spack/spack.git
+        packages:
+            myrepo:
+                repo: https://github.com/example/spack-packages.git
+            builtin:
+                repo: https://github.com/spack/spack-packages.git
+                commit: develop
+    """)
+    raw = yaml.load(config, Loader=yaml.Loader)
+    schema.ConfigValidator.validate(raw)
+    assert set(raw["spack"]["packages"].keys()) == {"myrepo", "builtin"}
+    assert raw["spack"]["packages"]["myrepo"].get("commit") is None
 
 
 def test_recipe_config_yaml(recipe_paths):

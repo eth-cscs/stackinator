@@ -17,8 +17,7 @@
                     "oneOf": [
                         {"type": "string"},
                         {"type": "null"}
-                    ],
-                    "default": null
+                    ]
                 },
                 "path": {
                     "type": "string"
