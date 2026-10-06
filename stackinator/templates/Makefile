@@ -94,7 +94,7 @@ compiler-config.yaml: cleanup
 
 # Generate activate.sh and env.json for each environment view. All views are
 # built in a single target so their output is not interleaved under make -j.
-views: install compiler-config.yaml
+views: cleanup compiler-config.yaml
 {% for name, config in environments.items() %}
 {% for view in config.views %}
 	$(call banner,view: {{ view.name }})
