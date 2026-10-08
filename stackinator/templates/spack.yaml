@@ -184,4 +184,6 @@ spack:
 {% endif %}
 {% endfor %}
 {% endfor %}
+{% else %}
+  view: false
 {% endif %}
