@@ -64,6 +64,7 @@ class Recipe:
 
         # optional modules.yaml file
         self.modules = None
+        self._module_types = []
         modules_path = self.path / "modules.yaml"
         self._logger.debug(f"opening {modules_path}")
         if modules_path.is_file():
@@ -106,6 +107,9 @@ class Recipe:
                             f"Supported types: {', '.join(sorted(VALID_MODULE_TYPES))}"
                         )
                     roots[module_type] = (self.mount / "modules").as_posix()
+
+                # the module rules depend on the environments, which are read below
+                self._module_types = module_types
 
         self._logger.debug("creating packages")
 
@@ -167,6 +171,9 @@ class Recipe:
             schema.EnvironmentsValidator.validate(raw)
             self._check_environments_v3(raw)
             self.generate_environment_specs(raw)
+
+        if self.with_modules:
+            self._apply_module_rules()
 
         # check that the default view exists (if one has been set)
         self._default_view = self.config["default-view"]
@@ -390,6 +397,68 @@ class Recipe:
         """
         return [c.get("package", name) for name, c in self.compilers.items() if not c.get("system", False)]
 
+    def _is_system(self, compiler):
+        return self.compilers.get(compiler, {}).get("system", False)
+
+    @property
+    def exposed_compilers(self):
+        """Recipe keys of the compilers that a view exposes to users.
+
+        A compiler no view exposes was built only to compile something else: it
+        gets no module file, and `spack gc` may collect it.
+        """
+        exposed = set()
+        for config in self.environments.values():
+            if any(v["extra"]["add_compilers"] for v in config["views"]):
+                exposed.update(config["compiler"])
+        return exposed
+
+    @property
+    def provided_compilers(self):
+        """Exposed compilers whose spec group is marked explicit.
+
+        Explicit groups are gc roots, and spack generates their module files.
+        """
+        return {c for c in self.exposed_compilers if not self._is_system(c)}
+
+    @property
+    def compiler_module_specs(self):
+        """Exposed compilers that need an "include" entry to get a module file.
+
+        Only externals: they have no spec group, so unlike provided_compilers
+        they cannot be made explicit.
+        """
+        return sorted(self.compilers[c].get("package", c) for c in self.exposed_compilers if self._is_system(c))
+
+    def _apply_module_rules(self):
+        """Add the include/exclude entries that stackinator owns in modules.yaml.
+
+        Merges into whatever the recipe set, rather than replacing it.
+        """
+        defaults = self.modules["modules"]["default"]
+
+        # "include" wins over "exclude_implicits", which would otherwise hide an
+        # external compiler.
+        include = self.compiler_module_specs
+
+        # squashfs is in the uenv_tools group, which is explicit so that `spack gc`
+        # cannot break the image step. That also makes spack generate a module for
+        # it, which is internal noise - unless the recipe asked for squashfs itself.
+        exclude = []
+        if not any(s.split()[0] == "squashfs" for c in self.environments.values() for s in c["specs"]):
+            exclude = ["squashfs"]
+
+        for module_type in self._module_types:
+            type_config = defaults.setdefault(module_type, {})
+            for key, values in (("include", include), ("exclude", exclude)):
+                current = type_config.setdefault(key, [])
+                current.extend(v for v in values if v not in current)
+
+        if include:
+            self._logger.debug(f"modules: including {', '.join(include)}")
+        if exclude:
+            self._logger.debug(f"modules: excluding {', '.join(exclude)}")
+
     # creates the self.environments field that describes the full specifications
     # for all of the environments sets, grouped in environments, from the raw
     # environments.yaml input.
@@ -575,6 +644,10 @@ class Recipe:
         env.filters["py2yaml"] = schema.py2yaml
 
         has_views = any(env_cfg["views"] for env_cfg in self.environments.values())
+
+        provided = self.provided_compilers
+        for name, c in self.compilers.items():
+            c["provided"] = name in provided
 
         template = env.get_template("spack.yaml")
         return template.render(

@@ -53,7 +53,9 @@ def build_compiler_packages(compiler_names):
 
     packages = {}
     for name in compiler_names:
-        specs = list(spack.store.STORE.db.query(name, explicit=False))
+        # no explicit= filter: a compiler exposed by a view is installed explicitly.
+        # externals are dropped below, which is what actually narrows this query.
+        specs = list(spack.store.STORE.db.query(name))
         if not specs:
             print(f"  compiler-config: no installed specs found for '{name}'", file=sys.stderr)
             continue
