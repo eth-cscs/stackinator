@@ -105,7 +105,6 @@ spack:
   # ---- Internal tools group ----
   # squashfs is required to create the final squashfs image.
   - group: uenv_tools
-    explicit: false
 {% if not system_gcc %}
     needs: [gcc]
 {% endif %}
