@@ -512,6 +512,7 @@ def view_impl(args):
     # (nvhpc, llvm, etc.) the binary names are already canonical, so we fall
     # back to os.path.basename which gives the right name (nvc, clang, etc.).
     _GCC_ROLE_CANONICAL = {"c": "gcc", "cxx": "g++", "fortran": "gfortran"}
+    _ROLE_ENVVARS = {"c": ["CC"], "cxx": ["CXX"], "fortran": ["FC", "F77"]}
 
     if args.compilers is not None:
         if not os.path.isfile(args.compilers):
@@ -523,9 +524,13 @@ def view_impl(args):
 
         # Restrict the symlinked compilers to those wired to this view's
         # environment (environments.yaml: compiler). When None, link them all.
-        allowed = None
-        if args.compiler_names:
-            allowed = {n for n in args.compiler_names.split(",") if n}
+        # Order matters: the first is the environment's default compiler, and
+        # the one CC/CXX/FC/F77 point at below.
+        ordered_names = [n for n in (args.compiler_names or "").split(",") if n]
+        allowed = set(ordered_names) if args.compiler_names else None
+
+        # package name -> {role: symlink name}, for setting CC/CXX/FC/F77 below
+        linked = {}
 
         for pkg_name, pkg_data in data["packages"].items():
             if allowed is not None and pkg_name not in allowed:
@@ -549,6 +554,29 @@ def view_impl(args):
                     if os.path.exists(dst):
                         os.remove(dst)
                     os.symlink(src, dst)
+                    linked.setdefault(pkg_name, {})[role] = link_name
+
+        # Set CC/CXX/FC/F77 ourselves. Spack's activate.sh only sets them for a
+        # compiler it installed, so an external one ('gcc: version: "system"')
+        # leaves them unset - and cmake then falls back to /usr/bin/cc, which is
+        # not what the stack was built with. Recipe env_vars are merged after
+        # this in meta_impl, so a recipe can still override.
+        for pkg_name in ordered_names:
+            roles = linked.get(pkg_name)
+            if not roles:
+                continue
+            for role, link_name in roles.items():
+                value = os.path.join(bin_path, link_name)
+                for var in _ROLE_ENVVARS.get(role, []):
+                    print(f"compiler env: {var}={value}")
+                    envvars.set_scalar(var, value)
+            break
+    else:
+        # No compilers in this view (uenv:add_compilers is off), but spack's
+        # activate.sh still points CC/CXX/FC/F77 at paths inside it, which
+        # nothing creates. Drop them: a dangling CC breaks cmake outright.
+        for var in (v for vs in _ROLE_ENVVARS.values() for v in vs):
+            envvars.scalars.pop(var, None)
 
     if args.prefix_paths:
         for p in args.prefix_paths.split(","):

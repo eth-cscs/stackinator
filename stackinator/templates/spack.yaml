@@ -7,7 +7,7 @@ spack:
 {% if not system_gcc %}
   # gcc is built first using the system compiler.
   - group: gcc
-    explicit: false
+    explicit: {{ compilers.gcc.provided | string | lower }}
     specs:
 {% for spec in compilers.gcc.specs %}
     - '{{ spec }}'
@@ -23,7 +23,7 @@ spack:
 {% endif %}
 {% if compilers.nvhpc %}
   - group: nvhpc
-    explicit: false
+    explicit: {{ compilers.nvhpc.provided | string | lower }}
 {% if not system_gcc %}
     needs: [gcc]
 {% endif %}
@@ -39,7 +39,7 @@ spack:
 {% endif %}
 {% if compilers.llvm %}
   - group: llvm
-    explicit: false
+    explicit: {{ compilers.llvm.provided | string | lower }}
 {% if not system_gcc %}
     needs: [gcc]
 {% endif %}
@@ -55,7 +55,7 @@ spack:
 {% endif %}
 {% if compilers.get('llvm-amdgpu') %}
   - group: llvm-amdgpu
-    explicit: false
+    explicit: {{ compilers['llvm-amdgpu'].provided | string | lower }}
 {% if not system_gcc %}
     needs: [gcc]
 {% endif %}
@@ -71,7 +71,7 @@ spack:
 {% endif %}
 {% if compilers.get('intel-oneapi') %}
   - group: intel-oneapi
-    explicit: false
+    explicit: {{ compilers['intel-oneapi'].provided | string | lower }}
 {% if not system_gcc %}
     needs: [gcc]
 {% endif %}
@@ -87,7 +87,7 @@ spack:
 {% endif %}
 {% if compilers.get('intel-classic') %}
   - group: intel-classic
-    explicit: false
+    explicit: {{ compilers['intel-classic'].provided | string | lower }}
 {% if not system_gcc %}
     needs: [gcc]
 {% endif %}
@@ -103,9 +103,10 @@ spack:
 
 {% endif %}
   # ---- Internal tools group ----
-  # squashfs is required to create the final squashfs image.
+  # squashfs is required to create the final squashfs image. explicit, so that
+  # `spack gc` cannot collect it before the image step runs.
   - group: uenv_tools
-    explicit: false
+    explicit: true
 {% if not system_gcc %}
     needs: [gcc]
 {% endif %}

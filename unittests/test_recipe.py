@@ -91,3 +91,59 @@ def test_generate_compiler_specs_system_gcc():
     recipe.generate_compiler_specs({"gcc": {"version": "system", "spec": "+nvptx"}})
     assert recipe.compilers["gcc"] == {"system": True}
     assert recipe.use_system_gcc
+
+
+def _env(compilers, add_compilers):
+    return {"compiler": compilers, "views": [{"extra": {"add_compilers": add_compilers}}], "specs": []}
+
+
+def test_compiler_module_specs_built_compiler():
+    """A built compiler is made explicit instead, so it needs no include entry."""
+    recipe = make_recipe()
+    recipe.generate_compiler_specs({"gcc": {"version": "14", "spec": None}})
+    recipe.environments = {"a": _env(["gcc"], True)}
+    assert recipe.compiler_module_specs == []
+
+
+def test_compiler_module_specs_system_gcc():
+    """The system gcc is an external, so it needs an include entry to get a module."""
+    recipe = make_recipe()
+    recipe.generate_compiler_specs({"gcc": {"version": "system", "spec": None}})
+    recipe.environments = {"a": _env(["gcc"], True)}
+    assert recipe.compiler_module_specs == ["gcc"]
+
+
+def test_compiler_module_specs_not_exposed():
+    """A compiler no view exposes gets no module, system or not."""
+    recipe = make_recipe()
+    recipe.generate_compiler_specs({"gcc": {"version": "system", "spec": None}})
+    recipe.environments = {"a": _env(["gcc"], False)}
+    assert recipe.compiler_module_specs == []
+    assert recipe.provided_compilers == set()
+
+
+def test_provided_compilers():
+    """A compiler is provided when a view with add_compilers exposes it."""
+    recipe = make_recipe()
+    recipe.generate_compiler_specs({"gcc": {"version": "14", "spec": None}, "nvhpc": {"version": "25.1", "spec": None}})
+    recipe.environments = {"a": _env(["gcc"], True), "b": _env(["nvhpc"], False)}
+    assert recipe.provided_compilers == {"gcc"}
+
+
+def test_provided_compilers_excludes_system():
+    """A system compiler is an external, so there is no group to mark explicit."""
+    recipe = make_recipe()
+    recipe.generate_compiler_specs(
+        {"gcc": {"version": "system", "spec": None}, "llvm": {"version": "20", "spec": None}}
+    )
+    recipe.environments = {"a": _env(["llvm", "gcc"], True)}
+    assert recipe.provided_compilers == {"llvm"}
+    assert recipe.exposed_compilers == {"llvm", "gcc"}
+
+
+def test_provided_compilers_no_views():
+    """No view exposing compilers means none are provided."""
+    recipe = make_recipe()
+    recipe.generate_compiler_specs({"gcc": {"version": "14", "spec": None}})
+    recipe.environments = {"a": {"compiler": ["gcc"], "views": [], "specs": []}}
+    assert recipe.provided_compilers == set()

@@ -254,7 +254,7 @@ Writes all files to the build path. Key responsibilities:
 JSON schema validation using `jsonschema`. The `validator()` function extends the validator to auto-inject `default` values from schemas into parsed instances, so downstream code can rely on optional fields always being present. `check_config_version` enforces version 3 and gives a clear error for v1/v2 recipes pointing to the `releases/v6` branch.
 
 ### `etc/compiler-config.py`
-Replaces `spack compiler find`. Run as `spack -e BUILD_ROOT python compiler-config.py OUTPUT_YAML COMPILER...`. Uses `spack.store.STORE.db.query()` to find installed compiler packages, walks the install prefix to locate binaries, and writes (or merges into) a `packages.yaml` with `extra_attributes.compilers` entries. This is how compilers become available to downstream Spack users without a `compilers.yaml`.
+Replaces `spack compiler find`. Run as `spack -e BUILD_ROOT python compiler-config.py OUTPUT_YAML COMPILER...`. Uses `spack.store.STORE.db.query()` (with no `explicit=` filter, since a compiler exposed by a view is installed explicitly) to find installed compiler packages, walks the install prefix to locate binaries, and writes (or merges into) a `packages.yaml` with `extra_attributes.compilers` entries. This is how compilers become available to downstream Spack users without a `compilers.yaml`.
 
 ### `etc/envvars.py`
 A standalone CLI tool (copied into the build directory) with two subcommands:
@@ -294,10 +294,12 @@ The build runs inside a bwrap sandbox (`bwrap-mutable-root.sh`) that:
 
 The unified `spack.yaml` uses Spack 1.2 spec groups to express the build order and per-group concretizer settings. Structure:
 
-- **gcc group**: `explicit: false`, override sets static-library variants for gcc's dependencies (mpc, gmp, mpfr, zstd, zlib)
-- **nvhpc/llvm/llvm-amdgpu/intel-oneapi/intel-classic groups**: `explicit: false`, `needs: [gcc]`, `reuse: false`
+- **gcc group**: `explicit` follows `Recipe.provided_compilers`, override sets static-library variants for gcc's dependencies (mpc, gmp, mpfr, zstd, zlib)
+- **nvhpc/llvm/llvm-amdgpu/intel-oneapi/intel-classic groups**: `explicit` follows `Recipe.provided_compilers`, `needs: [gcc]`, `reuse: false`
 - **uenv_tools group**: `explicit: false`, `needs: [gcc]`, installs `squashfs`
 - **user environment groups**: `needs: [compiler list]`, override sets `concretizer.unify`, `concretizer.duplicates.strategy`, `packages.all.prefer`, `packages.all.variants`, and `packages.mpi.require` per-environment
+
+A compiler group is `explicit: true` when some view exposes it (`uenv:add_compilers`, the default). Explicit groups are gc roots, so `cleanup: runtime` does not collect them, and Spack generates their module files. A compiler that no view exposes was built only to compile something else: it stays `explicit: false` and remains collectable.
 
 Per-group `override:` blocks are pushed as the highest-priority config scope during that group's concretization, so `unify` and `duplicates.strategy` settings are truly per-group.
 
@@ -339,6 +341,7 @@ The test coverage is limited — the schema validators and their default-injecti
 - **`mirrors.yaml` in recipes is unsupported**: use `--cache` CLI flag instead.
 - **`default-view` must exist**: if set in `config.yaml`, the named view must be defined in `environments.yaml` (or be `modules`/`spack`).
 - **`prefer` is auto-set**: if `null` in the recipe, Stackinator generates a `prefer` constraint using Spack's `%[when=...]` syntax to pin the default compiler.
-- **`uenv_tools` is reserved**: a spec group named `uenv_tools` is hardcoded in the spack.yaml template to install `squashfs`. Recipe authors must not use this environment name.
+- **`uenv_tools` is reserved**: a spec group named `uenv_tools` is hardcoded in the spack.yaml template to install `squashfs`. Recipe authors must not use this environment name. It is `explicit: false`, so `cleanup: runtime` collects it — a recipe that needs `squashfs` in its image must list it in its own `specs`.
+- **Views set `CC`/`CXX`/`FC`/`F77`**: `envvars.py` sets them from the first entry of the environment's `compiler` list. Spack's `activate.sh` only sets them for a compiler it installed, so an external (`gcc: version: "system"`) would otherwise leave them unset and cmake would fall back to `/usr/bin/cc`.
 - **`packages` field in environments.yaml is ignored**: in v3 recipes, the `packages` list (formerly used to drive `spack external find`) is silently ignored with a warning. Add external packages to `packages.yaml` instead.
 - **compiler-config.py must run inside spack python**: it imports `spack.store` and must be invoked as `spack -e BUILD_ROOT python compiler-config.py` to access the correct spack DB.
