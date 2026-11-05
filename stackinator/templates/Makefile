@@ -166,7 +166,7 @@ store.squashfs: env-meta post-install cache-push
 	$(SANDBOX) chmod -R a+rX $(STORE)
 	$(SANDBOX) env -u SOURCE_DATE_EPOCH \
 		"$$($(SANDBOX) $(SPACK_HELPER) -e $(ENV_ROOT) find --format='{prefix}' squashfs | head -n1)/bin/mksquashfs" \
-		$(STORE) $@ -force-uid nobody -force-gid nobody \
+		$(STORE) $@ -all-root \
 		-all-time $$(date +%s) -no-recovery -noappend -Xcompression-level 3
 
 clean:
