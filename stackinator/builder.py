@@ -229,7 +229,7 @@ class Builder:
 
         # --- Copy static files from etc/ ---
         etc_path = self.root / "etc"
-        for f_etc in ["Make.inc", "bwrap-mutable-root.sh", "envvars.py", "compiler-config.py"]:
+        for f_etc in ["Make.inc", "envvars.py", "compiler-config.py"]:
             shutil.copy2(etc_path / f_etc, self.path / f_etc)
 
         # --- Install hooks if provided ---

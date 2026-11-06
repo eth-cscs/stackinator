@@ -42,7 +42,6 @@ stackinator/           # Python package
     stack-debug.sh      # Debug helper script
   etc/
     Make.inc            # Shared make rules
-    bwrap-mutable-root.sh  # Bubblewrap sandbox wrapper
     compiler-config.py  # Spack Python script: generates packages.yaml with compiler externals
     envvars.py          # CLI tool: generates env.json for views and uenv metadata
 docs/                  # MkDocs documentation source
@@ -198,7 +197,6 @@ BUILD/
   Makefile              # top-level orchestration (single concretize + install)
   Make.user             # variables: BUILD_ROOT, STORE, SANDBOX, etc.
   Make.inc              # shared make rules (copied from etc/)
-  bwrap-mutable-root.sh # sandbox wrapper (copied from etc/)
   envvars.py            # view/meta generator (copied from etc/)
   compiler-config.py    # compiler external generator (copied from etc/)
   spack.yaml            # unified spack.yaml with all spec groups
@@ -247,7 +245,7 @@ Writes all files to the build path. Key responsibilities:
 - Merges and writes the consolidated `alps` spack package repo
 - Writes the unified `spack.yaml`, `packages.yaml`, and `config.yaml` to `BUILD_ROOT`
 - Renders Makefile, Make.user, generate-config/Makefile from Jinja2 templates
-- Copies `Make.inc`, `bwrap-mutable-root.sh`, `envvars.py`, `compiler-config.py` from `etc/`
+- Copies `Make.inc`, `envvars.py`, `compiler-config.py` from `etc/`
 - Writes metadata JSON files
 
 ### `schema.py`
@@ -285,7 +283,7 @@ The `uenv_tools` spec group (hardcoded in the `spack.yaml` template) installs `s
 
 All spack commands use `$(SANDBOX) $(SPACK) -e $(BUILD_ROOT)` — there is a single spack environment at the build root.
 
-The build runs inside a bwrap sandbox (`bwrap-mutable-root.sh`) that:
+The build runs inside a squashfs-mount sandbox that:
 - Bind-mounts `BUILD/store` → `STORE` (the recipe mount point)
 - Bind-mounts `BUILD/tmp` → `/tmp`
 - Puts a tmpfs over `$HOME` (isolates user config)
@@ -333,7 +331,7 @@ The test coverage is limited — the schema validators and their default-injecti
 
 ## Key Invariants and Pitfalls
 
-- **Build path restrictions**: cannot be in `/tmp`, `$HOME`, or root `/`. The bwrap sandbox rebinds these.
+- **Build path restrictions**: cannot be in `/tmp`, `$HOME`, or root `/`. The squashfs-mount sandbox rebinds these.
 - **Version 3 is required**: `config.yaml` must have `version: 3`. Versions 1 and 2 raise a clear error pointing to the `releases/v6` branch.
 - **gcc is required**: cluster `packages.yaml` must define an external `gcc`. It is merged into the global packages.yaml and used by the gcc spec group's override.
 - **MPI validation**: the MPI name in `network.mpi` must match a key in `network.yaml:mpi` templates from the cluster config. Unknown MPI implementations raise an error.
