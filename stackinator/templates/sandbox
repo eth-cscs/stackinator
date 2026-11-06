@@ -10,9 +10,8 @@ fi
 {% if no_bwrap %}
 exec "$@"
 {% else %}
-exec {{ build_path }}/bwrap-mutable-root.sh \
+exec squashfs-mount \
 	--tmpfs ~ \
-	--bind {{ build_path }}/tmp /tmp \
-	--bind {{ build_path }}/store {{ store }} \
-	"$@"
+	--bind-mount {{ build_path }}/tmp:/tmp,{{ build_path}}/store:{{ store }} \
+	-- "$@"
 {% endif %}
